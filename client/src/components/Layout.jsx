@@ -123,9 +123,9 @@ export default function Layout() {
         navigate('/login');
     };
 
-    // Mobile bottom nav: first 5 items across all sections
+    // Mobile bottom nav: first 4 items across all sections (leaving room for logout)
     const allItems = config.sections.flatMap(s => s.items);
-    const bottomItems = allItems.slice(0, 5);
+    const bottomItems = allItems.slice(0, 4);
 
     return (
         <div className="app-layout">
@@ -199,6 +199,10 @@ export default function Layout() {
                             <span>{item.text}</span>
                         </NavLink>
                     ))}
+                    <button className="bottom-nav-item" onClick={handleLogout}>
+                        <span className="icon">🚪</span>
+                        <span>Logout</span>
+                    </button>
                 </div>
             </nav>
 
