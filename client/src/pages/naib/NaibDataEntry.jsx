@@ -161,14 +161,39 @@ export default function NaibDashboard() {
                 </div>
             ) : (
                 <>
-                    {/* Table Tabs */}
-                    <div className="tabs">
+                    {/* Table Selection — Vertical List */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-xs)', marginBottom: 'var(--space-xl)' }}>
                         {tables.map(t => (
                             <button
                                 key={t.id}
-                                className={`tab-btn ${activeTable?.id === t.id ? 'active' : ''}`}
                                 onClick={() => { setActiveTable(t); setEditingEntry(null); }}
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 'var(--space-md)',
+                                    width: '100%',
+                                    textAlign: 'left',
+                                    padding: 'var(--space-md) var(--space-lg)',
+                                    borderRadius: 'var(--radius-md)',
+                                    border: activeTable?.id === t.id ? '1px solid var(--color-primary)' : '1px solid var(--color-border)',
+                                    background: activeTable?.id === t.id ? 'var(--color-primary-soft)' : 'var(--color-surface)',
+                                    color: activeTable?.id === t.id ? 'var(--color-primary)' : 'var(--color-text)',
+                                    cursor: 'pointer',
+                                    fontWeight: activeTable?.id === t.id ? 600 : 400,
+                                    fontSize: 'var(--font-size-sm)',
+                                    transition: 'all 0.15s ease',
+                                }}
                             >
+                                <span style={{
+                                    width: 24, height: 24,
+                                    borderRadius: '50%',
+                                    background: activeTable?.id === t.id ? 'var(--color-primary)' : 'var(--color-border)',
+                                    color: activeTable?.id === t.id ? '#fff' : 'var(--color-text-secondary)',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    fontSize: '11px', fontWeight: 700, flexShrink: 0,
+                                }}>
+                                    {tables.indexOf(t) + 1}
+                                </span>
                                 {t.name}
                             </button>
                         ))}
@@ -253,7 +278,7 @@ export default function NaibDashboard() {
                         <div className="empty-state">
                             <div className="icon">📋</div>
                             <h3>Select a Table</h3>
-                            <p>Choose a data entry table from the tabs above</p>
+                            <p>Choose a data entry table from the list above</p>
                         </div>
                     )}
                 </>
