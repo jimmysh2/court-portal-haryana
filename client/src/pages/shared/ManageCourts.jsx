@@ -109,11 +109,11 @@ export default function ManageCourts() {
                     <tbody>
                         {courts.map(c => (
                             <tr key={c.id}>
-                                <td><span className="badge badge-secondary">{c.courtNo}</span></td>
-                                <td>{c.name}</td>
-                                <td>{c.district?.name}</td>
-                                <td>{c.magistrate ? c.magistrate.name : <span className="text-muted">Not assigned</span>}</td>
-                                <td>
+                                <td data-label="Court No"><span className="badge badge-secondary">{c.courtNo}</span></td>
+                                <td data-label="Name">{c.name}</td>
+                                <td data-label="District">{c.district?.name}</td>
+                                <td data-label="Magistrate">{c.magistrate ? c.magistrate.name : <span className="text-muted">Not assigned</span>}</td>
+                                <td data-label="Actions">
                                     <div className="flex gap-sm">
                                         <button className="btn btn-secondary btn-sm" onClick={() => handleEdit(c)}>Edit</button>
                                         <button className="btn btn-danger btn-sm" onClick={() => handleDelete(c.id)}>Delete</button>

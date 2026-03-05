@@ -80,11 +80,11 @@ export default function ManageDataTables() {
                                 <tbody>
                                     {t.columns?.map(col => (
                                         <tr key={col.id}>
-                                            <td>{col.name}</td>
-                                            <td style={{ fontFamily: 'monospace', fontSize: 'var(--font-size-xs)' }}>{col.slug}</td>
-                                            <td><span className="badge badge-secondary">{col.dataType}</span></td>
-                                            <td>{col.isRequired ? '✅' : '—'}</td>
-                                            <td>{col.enumOptions ? (col.enumOptions).join(', ') : '—'}</td>
+                                            <td data-label="Column">{col.name}</td>
+                                            <td data-label="Slug" style={{ fontFamily: 'monospace', fontSize: 'var(--font-size-xs)' }}>{col.slug}</td>
+                                            <td data-label="Type"><span className="badge badge-secondary">{col.dataType}</span></td>
+                                            <td data-label="Required">{col.isRequired ? '✅' : '—'}</td>
+                                            <td data-label="Options">{col.enumOptions ? (col.enumOptions).join(', ') : '—'}</td>
                                         </tr>
                                     ))}
                                 </tbody>

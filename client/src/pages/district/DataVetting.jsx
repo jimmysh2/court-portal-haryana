@@ -59,11 +59,11 @@ export default function DataVetting() {
                         <tbody>
                             {entries.map(e => (
                                 <tr key={e.id}>
-                                    <td>{new Date(e.entryDate).toLocaleDateString('en-IN')}</td>
-                                    <td><span className="badge badge-primary">{e.table?.name}</span></td>
-                                    <td>{e.court?.name}</td>
-                                    <td>{e.createdByUser?.name}</td>
-                                    <td style={{ maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                    <td data-label="Date">{new Date(e.entryDate).toLocaleDateString('en-IN')}</td>
+                                    <td data-label="Table"><span className="badge badge-primary">{e.table?.name}</span></td>
+                                    <td data-label="Court">{e.court?.name}</td>
+                                    <td data-label="Entered By">{e.createdByUser?.name}</td>
+                                    <td data-label="Data" style={{ maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                         {Object.entries(e.values || {}).map(([k, v]) => `${k}: ${v}`).join(' | ')}
                                     </td>
                                 </tr>

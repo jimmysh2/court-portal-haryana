@@ -105,11 +105,11 @@ export default function ManageNaibCourts() {
                     <tbody>
                         {naibCourts.map(n => (
                             <tr key={n.id}>
-                                <td>{n.username}</td>
-                                <td>{n.name}</td>
-                                <td>{n.district?.name || '—'}</td>
-                                <td>{n.lastSelectedCourt?.name || <span className="text-muted">None</span>}</td>
-                                <td>
+                                <td data-label="Username">{n.username}</td>
+                                <td data-label="Name">{n.name}</td>
+                                <td data-label="District">{n.district?.name || '—'}</td>
+                                <td data-label="Last Court">{n.lastSelectedCourt?.name || <span className="text-muted">None</span>}</td>
+                                <td data-label="Actions">
                                     <div className="flex gap-sm" style={{ flexWrap: 'wrap' }}>
                                         <button className="btn btn-secondary btn-sm" onClick={() => { setEditItem(n); setForm({ username: n.username, password: '', name: n.name, districtId: n.districtId || '', phone: n.phone || '' }); setShowForm(true); }}>Edit</button>
                                         {canTransfer && (

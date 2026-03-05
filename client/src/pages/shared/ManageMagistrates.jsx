@@ -114,11 +114,11 @@ export default function ManageMagistrates() {
                     <tbody>
                         {magistrates.map(m => (
                             <tr key={m.id}>
-                                <td>{m.name}</td>
-                                <td><span className="badge badge-primary">{m.designation}</span></td>
-                                <td>{m.district?.name || <span className="text-muted">Unassigned</span>}</td>
-                                <td>{m.courts?.length ? m.courts.map(c => c.name).join(', ') : <span className="text-muted">None</span>}</td>
-                                <td>
+                                <td data-label="Name">{m.name}</td>
+                                <td data-label="Designation"><span className="badge badge-primary">{m.designation}</span></td>
+                                <td data-label="District">{m.district?.name || <span className="text-muted">Unassigned</span>}</td>
+                                <td data-label="Court">{m.courts?.length ? m.courts.map(c => c.name).join(', ') : <span className="text-muted">None</span>}</td>
+                                <td data-label="Actions">
                                     <div className="flex gap-sm" style={{ flexWrap: 'wrap' }}>
                                         {canCreate && <button className="btn btn-secondary btn-sm" onClick={() => { setEditItem(m); setForm({ name: m.name, designation: m.designation, districtId: m.district?.id || '', phone: m.phone || '' }); setShowForm(true); }}>Edit</button>}
                                         {canTransfer && (

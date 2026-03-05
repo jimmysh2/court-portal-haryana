@@ -158,9 +158,9 @@ export default function ReportsPage() {
                                     <tbody>
                                         {reportData.summaries.map(s => (
                                             <tr key={s.district.id}>
-                                                <td>{s.district.name}</td>
-                                                <td>{s.totalCourts}</td>
-                                                <td>{s.totalEntries}</td>
+                                                <td data-label="District">{s.district.name}</td>
+                                                <td data-label="Courts">{s.totalCourts}</td>
+                                                <td data-label="Total Entries">{s.totalEntries}</td>
                                             </tr>
                                         ))}
                                     </tbody>
@@ -208,11 +208,11 @@ export default function ReportsPage() {
                                 <tbody>
                                     {reportData.entries.slice(0, 100).map(e => (
                                         <tr key={e.id}>
-                                            <td>{new Date(e.entryDate).toLocaleDateString('en-IN')}</td>
-                                            <td><span className="badge badge-primary">{e.table?.name}</span></td>
-                                            <td>{e.court?.name || '—'}</td>
-                                            <td>{e.createdByUser?.name || '—'}</td>
-                                            <td style={{ maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                            <td data-label="Date">{new Date(e.entryDate).toLocaleDateString('en-IN')}</td>
+                                            <td data-label="Table"><span className="badge badge-primary">{e.table?.name}</span></td>
+                                            <td data-label="Court">{e.court?.name || '—'}</td>
+                                            <td data-label="Created By">{e.createdByUser?.name || '—'}</td>
+                                            <td data-label="Values" style={{ maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                                 {Object.entries(e.values || {}).map(([k, v]) => `${k}: ${v}`).join(' | ')}
                                             </td>
                                         </tr>

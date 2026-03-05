@@ -84,10 +84,10 @@ export default function ManageDistricts() {
                     <tbody>
                         {districts.map(d => (
                             <tr key={d.id}>
-                                <td>{d.id}</td>
-                                <td>{d.name}</td>
-                                <td><span className="badge badge-primary">{d.code}</span></td>
-                                <td>
+                                <td data-label="ID">{d.id}</td>
+                                <td data-label="Name">{d.name}</td>
+                                <td data-label="Code"><span className="badge badge-primary">{d.code}</span></td>
+                                <td data-label="Actions">
                                     <div className="flex gap-sm">
                                         <button className="btn btn-secondary btn-sm" onClick={() => handleEdit(d)}>Edit</button>
                                         <button className="btn btn-danger btn-sm" onClick={() => handleDelete(d.id)}>Delete</button>
