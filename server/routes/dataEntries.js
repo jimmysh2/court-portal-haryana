@@ -230,4 +230,41 @@ router.put('/:id', authenticate, requireRole('naib_court', 'district_admin', 'de
     } catch (err) { next(err); }
 });
 
+// DELETE /api/v1/data-entries/:id
+router.delete('/:id', authenticate, requireRole('naib_court', 'district_admin', 'developer'), async (req, res, next) => {
+    try {
+        const entryId = parseInt(req.params.id);
+
+        const entry = await prisma.dataEntry.findUnique({
+            where: { id: entryId }
+        });
+        if (!entry) return res.status(404).json({ error: 'Entry not found' });
+
+        // Check edit/delete window (same as PUT)
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const entryDate = new Date(entry.entryDate);
+        entryDate.setHours(0, 0, 0, 0);
+        const daysDiff = Math.floor((today - entryDate) / (1000 * 60 * 60 * 24));
+
+        if (req.user.role === 'naib_court' && daysDiff > 1) {
+            return res.status(403).json({ error: 'Naib courts can only delete data from today and yesterday' });
+        }
+        if (req.user.role === 'district_admin' && daysDiff > 2) {
+            return res.status(403).json({ error: 'District admins can only delete data from the past 3 days' });
+        }
+
+        // District scoping
+        if (['naib_court', 'district_admin'].includes(req.user.role) && entry.districtId !== req.user.districtId) {
+            return res.status(403).json({ error: 'Cannot delete entries outside your district' });
+        }
+
+        await prisma.dataEntry.delete({
+            where: { id: entryId }
+        });
+
+        res.json({ message: 'Entry deleted successfully' });
+    } catch (err) { next(err); }
+});
+
 module.exports = router;

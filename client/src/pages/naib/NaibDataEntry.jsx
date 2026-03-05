@@ -82,6 +82,23 @@ export default function NaibDashboard() {
         }
     };
 
+    const handleDeleteEntry = async (id) => {
+        if (!window.confirm('Are you sure you want to delete this entry?')) return;
+
+        setError('');
+        setSuccess('');
+        try {
+            await api.delete(`/data-entries/${id}`);
+            setSuccess('Entry deleted successfully!');
+            // Reload entries
+            const params = `?courtId=${selectedCourt}&tableId=${activeTable.id}&entryDate=${selectedDate}`;
+            const d = await api.get(`/data-entries${params}`);
+            setEntries(d.entries);
+        } catch (err) {
+            setError(err.details ? err.details.join(', ') : err.message);
+        }
+    };
+
     const renderField = (col) => {
         const value = formValues[col.slug] || '';
 
@@ -259,29 +276,28 @@ export default function NaibDashboard() {
                         </div>
                     )}
 
-                    {/* Entries Table */}
+                    {/* Entries List (Mobile-friendly Cards) */}
                     {entries.length > 0 && editingEntry === null && (
-                        <div className="data-table-wrapper">
-                            <table className="data-table">
-                                <thead>
-                                    <tr>
-                                        {activeTable.columns.map(col => <th key={col.id}>{col.name}</th>)}
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {entries.map(entry => (
-                                        <tr key={entry.id}>
-                                            {activeTable.columns.map(col => (
-                                                <td key={col.id}>{entry.values?.[col.slug] ?? '—'}</td>
-                                            ))}
-                                            <td>
-                                                <button className="btn btn-secondary btn-sm" onClick={() => handleEditEntry(entry)}>Edit</button>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
+                            {entries.map((entry, index) => (
+                                <div key={entry.id} className="card" style={{ padding: 'var(--space-md)' }}>
+                                    <div style={{ paddingBottom: 'var(--space-sm)', borderBottom: '1px solid var(--color-border)', marginBottom: 'var(--space-sm)', fontWeight: 600, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <span>Entry #{index + 1}</span>
+                                        <div style={{ display: 'flex', gap: 'var(--space-xs)' }}>
+                                            <button className="btn btn-secondary" style={{ padding: '4px 10px', fontSize: '12px' }} onClick={() => handleEditEntry(entry)}>✏️ Edit</button>
+                                            <button className="btn btn-secondary" style={{ padding: '4px 10px', fontSize: '12px', color: 'var(--color-danger)', borderColor: 'var(--color-danger-soft)', background: 'var(--color-danger-soft)' }} onClick={() => handleDeleteEntry(entry.id)}>🗑️ Delete</button>
+                                        </div>
+                                    </div>
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 'var(--space-sm)', fontSize: 'var(--font-size-sm)' }}>
+                                        {activeTable.columns.map(col => (
+                                            <div key={col.id}>
+                                                <div style={{ color: 'var(--color-text-secondary)', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{col.name}</div>
+                                                <div style={{ fontWeight: 500 }}>{entry.values?.[col.slug] ?? '—'}</div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            ))}
                         </div>
                     )}
 
