@@ -27,6 +27,10 @@ async function request(endpoint, options = {}) {
     const response = await fetch(`${API_BASE}${endpoint}`, config);
 
     if (response.status === 401) {
+        if (endpoint === '/auth/login') {
+            throw new ApiError('Invalid username or password', 401);
+        }
+
         // Try refresh
         const refreshed = await tryRefresh();
         if (refreshed) {

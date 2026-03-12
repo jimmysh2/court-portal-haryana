@@ -23,6 +23,7 @@ const authenticate = async (req, res, next) => {
                 role: true,
                 districtId: true,
                 lastSelectedCourtId: true,
+                deletedAt: true,
             },
         });
 
