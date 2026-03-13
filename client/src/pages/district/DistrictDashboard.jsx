@@ -60,6 +60,7 @@ export default function DistrictDashboard() {
                     <a className="btn btn-secondary" href="/district/alerts">View Alerts</a>
                     <a className="btn btn-secondary" href="/district/grievances">Grievances</a>
                     <a className="btn btn-secondary" href="/district/reports">Reports</a>
+                    <a className="btn btn-secondary" href="/district/change-password">Change Password</a>
                 </div>
             </div>
         </div>

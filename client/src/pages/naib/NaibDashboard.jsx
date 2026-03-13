@@ -44,6 +44,7 @@ export default function NaibDashboard() {
                     <a className="btn btn-secondary" href="/naib/entry">Data Entry</a>
                     <a className="btn btn-secondary" href="/naib/grievances">Grievances</a>
                     <a className="btn btn-secondary" href="/naib/reports">Reports</a>
+                    <a className="btn btn-secondary" href="/naib/change-password">Change Password</a>
                 </div>
             </div>
         </div>

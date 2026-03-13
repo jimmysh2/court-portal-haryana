@@ -64,6 +64,7 @@ export default function StateDashboard() {
                     <a className="btn btn-secondary" href="/state/alerts">View Alerts</a>
                     <a className="btn btn-secondary" href="/state/grievances">Grievances</a>
                     <a className="btn btn-secondary" href="/state/reports">Reports</a>
+                    <a className="btn btn-secondary" href="/state/change-password">Change Password</a>
                 </div>
             </div>
         </div>

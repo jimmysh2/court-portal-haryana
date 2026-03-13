@@ -56,6 +56,7 @@ export default function DevDashboard() {
                     <a className="btn btn-secondary" href="/dev/data-tables">Manage Tables</a>
                     <a className="btn btn-secondary" href="/dev/grievances">View Grievances</a>
                     <a className="btn btn-secondary" href="/dev/reports">View Reports</a>
+                    <a className="btn btn-secondary" href="/dev/change-password">Change Password</a>
                 </div>
             </div>
         </div>

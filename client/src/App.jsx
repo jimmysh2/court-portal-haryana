@@ -11,6 +11,7 @@ import ManageNaibCourts from './pages/shared/ManageNaibCourts';
 import GrievancesPage from './pages/shared/GrievancesPage';
 import ReportsPage from './pages/shared/ReportsPage';
 import AlertsPage from './pages/shared/AlertsPage';
+import ChangePassword from './pages/shared/ChangePassword';
 
 // Role dashboards
 import DevDashboard from './pages/dev/DevDashboard';
@@ -66,6 +67,7 @@ function App() {
             <Route path="/dev/data-tables" element={<ManageDataTables />} />
             <Route path="/dev/grievances" element={<GrievancesPage />} />
             <Route path="/dev/reports" element={<ReportsPage />} />
+            <Route path="/dev/change-password" element={<ChangePassword />} />
           </Route>
 
           {/* State Admin Routes */}
@@ -78,6 +80,7 @@ function App() {
             <Route path="/state/alerts" element={<AlertsPage />} />
             <Route path="/state/grievances" element={<GrievancesPage />} />
             <Route path="/state/reports" element={<ReportsPage />} />
+            <Route path="/state/change-password" element={<ChangePassword />} />
           </Route>
 
           {/* District Admin Routes */}
@@ -90,6 +93,7 @@ function App() {
             <Route path="/district/alerts" element={<AlertsPage />} />
             <Route path="/district/grievances" element={<GrievancesPage />} />
             <Route path="/district/reports" element={<ReportsPage />} />
+            <Route path="/district/change-password" element={<ChangePassword />} />
           </Route>
 
           {/* Naib Court Routes */}
@@ -100,12 +104,14 @@ function App() {
             <Route path="/naib/entry" element={<NaibDataEntry />} />
             <Route path="/naib/grievances" element={<GrievancesPage />} />
             <Route path="/naib/reports" element={<ReportsPage />} />
+            <Route path="/naib/change-password" element={<ChangePassword />} />
           </Route>
 
           {/* Viewer Routes */}
           <Route element={<PrivateRoute roles={['viewer_district', 'viewer_state']}><Layout /></PrivateRoute>}>
             <Route path="/viewer" element={<ViewerDashboard />} />
             <Route path="/viewer/reports" element={<ReportsPage />} />
+            <Route path="/viewer/change-password" element={<ChangePassword />} />
           </Route>
 
           <Route path="*" element={<RoleRedirect />} />
