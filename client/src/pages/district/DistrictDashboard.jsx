@@ -55,6 +55,8 @@ export default function DistrictDashboard() {
                 <div className="flex gap-md" style={{ flexWrap: 'wrap' }}>
                     <a className="btn btn-primary" href="/district/data-vetting">Data Vetting</a>
                     <a className="btn btn-secondary" href="/district/courts">Manage Courts</a>
+                    <a className="btn btn-secondary" href="/district/magistrates">Manage Judicial Officers</a>
+                    <a className="btn btn-secondary" href="/district/naib-courts">Manage Naib Courts</a>
                     <a className="btn btn-secondary" href="/district/alerts">View Alerts</a>
                     <a className="btn btn-secondary" href="/district/grievances">Grievances</a>
                     <a className="btn btn-secondary" href="/district/reports">Reports</a>

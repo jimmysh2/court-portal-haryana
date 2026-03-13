@@ -50,6 +50,9 @@ export default function DevDashboard() {
                 </div>
                 <div className="flex gap-md" style={{ flexWrap: 'wrap' }}>
                     <a className="btn btn-primary" href="/dev/districts">Manage Districts</a>
+                    <a className="btn btn-secondary" href="/dev/courts">Manage Courts</a>
+                    <a className="btn btn-secondary" href="/dev/magistrates">Manage Judicial Officers</a>
+                    <a className="btn btn-secondary" href="/dev/naib-courts">Manage Naib Courts</a>
                     <a className="btn btn-secondary" href="/dev/data-tables">Manage Tables</a>
                     <a className="btn btn-secondary" href="/dev/grievances">View Grievances</a>
                     <a className="btn btn-secondary" href="/dev/reports">View Reports</a>
