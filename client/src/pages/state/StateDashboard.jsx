@@ -58,7 +58,9 @@ export default function StateDashboard() {
                 <div className="card-header"><div className="card-title">Quick Actions</div></div>
                 <div className="flex gap-md" style={{ flexWrap: 'wrap' }}>
                     <a className="btn btn-primary" href="/state/districts">Manage Districts</a>
+                    <a className="btn btn-secondary" href="/state/courts">Manage Courts</a>
                     <a className="btn btn-secondary" href="/state/magistrates">Manage Judicial Officers</a>
+                    <a className="btn btn-secondary" href="/state/naib-courts">Manage Naib Courts</a>
                     <a className="btn btn-secondary" href="/state/alerts">View Alerts</a>
                     <a className="btn btn-secondary" href="/state/grievances">Grievances</a>
                     <a className="btn btn-secondary" href="/state/reports">Reports</a>

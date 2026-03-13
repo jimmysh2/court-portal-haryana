@@ -19,6 +19,7 @@ import StateDashboard from './pages/state/StateDashboard';
 import DistrictDashboard from './pages/district/DistrictDashboard';
 import DataVetting from './pages/district/DataVetting';
 import NaibDataEntry from './pages/naib/NaibDataEntry';
+import NaibDashboard from './pages/naib/NaibDashboard';
 import ViewerDashboard from './pages/viewer/ViewerDashboard';
 
 import './index.css';
@@ -94,6 +95,7 @@ function App() {
           {/* Naib Court Routes */}
           <Route element={<PrivateRoute roles={['naib_court']}><Layout /></PrivateRoute>}>
             <Route path="/naib" element={<Navigate to="/naib/select-court" replace />} />
+            <Route path="/naib/dashboard" element={<NaibDashboard />} />
             <Route path="/naib/select-court" element={<NaibDataEntry />} />
             <Route path="/naib/entry" element={<NaibDataEntry />} />
             <Route path="/naib/grievances" element={<GrievancesPage />} />

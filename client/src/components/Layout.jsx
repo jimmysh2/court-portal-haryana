@@ -74,6 +74,7 @@ const navConfig = {
     naib_court: {
         label: 'Naib Court',
         sections: [
+            { label: 'Overview', items: [{ to: '/naib/dashboard', icon: '📊', text: 'Dashboard' }] },
             {
                 label: 'Data Entry', items: [
                     { to: '/naib/select-court', icon: '⚖️', text: 'Select Court' },
@@ -155,7 +156,7 @@ export default function Layout() {
 
     // Mobile bottom nav: first 4 items across all sections (leaving room for logout)
     const allItems = config.sections.flatMap(s => s.items);
-    const bottomItems = allItems.slice(0, 4);
+    const bottomItems = allItems.slice(0, 3);
 
     return (
         <div className="app-layout">
@@ -234,6 +235,10 @@ export default function Layout() {
                             <span>{item.text}</span>
                         </NavLink>
                     ))}
+                    <button className="bottom-nav-item" onClick={() => setShowChangePassword(true)}>
+                        <span className="icon">🔑</span>
+                        <span>Password</span>
+                    </button>
                     <button className="bottom-nav-item" onClick={handleLogout}>
                         <span className="icon">🚪</span>
                         <span>Logout</span>
