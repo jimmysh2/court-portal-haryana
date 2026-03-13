@@ -130,4 +130,35 @@ router.get('/me', authenticate, async (req, res, next) => {
     }
 });
 
+// PUT /api/v1/auth/change-password
+router.put('/change-password', authenticate, async (req, res, next) => {
+    try {
+        const { currentPassword, newPassword } = req.body;
+
+        if (!currentPassword || !newPassword) {
+            return res.status(400).json({ error: 'Current and new password are required' });
+        }
+
+        const user = await prisma.user.findUnique({
+            where: { id: req.user.id }
+        });
+
+        const valid = await bcrypt.compare(currentPassword, user.passwordHash);
+        if (!valid) {
+            return res.status(401).json({ error: 'Incorrect current password' });
+        }
+
+        const newPasswordHash = await bcrypt.hash(newPassword, 10);
+
+        await prisma.user.update({
+            where: { id: req.user.id },
+            data: { passwordHash: newPasswordHash },
+        });
+
+        res.json({ message: 'Password changed successfully' });
+    } catch (err) {
+        next(err);
+    }
+});
+
 module.exports = router;

@@ -63,6 +63,14 @@ export default function ManageMagistrates() {
         } catch (err) { alert(err.message); }
     };
 
+    const handleDelete = async (id) => {
+        if (!confirm('Are you sure you want to delete this judicial officer?')) return;
+        try {
+            await api.delete(`/magistrates/${id}`);
+            load();
+        } catch (err) { alert(err.message); }
+    };
+
     return (
         <div>
             <div className="page-header">
@@ -143,6 +151,7 @@ export default function ManageMagistrates() {
                                 <td data-label="Actions">
                                     <div className="flex gap-sm" style={{ flexWrap: 'wrap' }}>
                                         {canCreate && <button className="btn btn-secondary btn-sm" onClick={() => { setEditItem(m); setForm({ name: m.name, designation: m.designation, gender: m.gender || '', districtId: m.district?.id || '', phone: m.phone || '' }); setShowForm(true); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>Edit</button>}
+                                        {canCreate && <button className="btn btn-danger btn-sm" onClick={() => handleDelete(m.id)}>Delete</button>}
                                         {canTransfer && (
                                             showTransfer === m.id ? (
                                                 <div className="flex gap-sm">

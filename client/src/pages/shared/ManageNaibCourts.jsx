@@ -52,6 +52,14 @@ export default function ManageNaibCourts() {
         } catch (err) { alert(err.message); }
     };
 
+    const handleDelete = async (id) => {
+        if (!confirm('Are you sure you want to delete this Naib Court?')) return;
+        try {
+            await api.delete(`/naib-courts/${id}`);
+            load();
+        } catch (err) { alert(err.message); }
+    };
+
     return (
         <div>
             <div className="page-header">
@@ -126,6 +134,7 @@ export default function ManageNaibCourts() {
                                 <td data-label="Actions">
                                     <div className="flex gap-sm" style={{ flexWrap: 'wrap' }}>
                                         <button className="btn btn-secondary btn-sm" onClick={() => { setEditItem(n); setForm({ username: n.username, password: '', name: n.name, districtId: n.districtId || '', phone: n.phone || '' }); setShowForm(true); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>Edit</button>
+                                        <button className="btn btn-danger btn-sm" onClick={() => handleDelete(n.id)}>Delete</button>
                                         {canTransfer && (
                                             showTransfer === n.id ? (
                                                 <div className="flex gap-sm">

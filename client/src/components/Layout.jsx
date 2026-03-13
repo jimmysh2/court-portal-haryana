@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import api from '../utils/api';
 
 const navConfig = {
     developer: {
@@ -115,12 +116,41 @@ export default function Layout() {
     const { user, logout } = useAuth();
     const navigate = useNavigate();
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [showChangePassword, setShowChangePassword] = useState(false);
+    const [passwordForm, setPasswordForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
+    const [passwordError, setPasswordError] = useState('');
+    const [passwordSuccess, setPasswordSuccess] = useState('');
 
     const config = navConfig[user?.role] || navConfig.viewer_district;
 
     const handleLogout = async () => {
         await logout();
         navigate('/login');
+    };
+
+    const handleChangePasswordSubmit = async (e) => {
+        e.preventDefault();
+        setPasswordError('');
+        setPasswordSuccess('');
+
+        if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+            return setPasswordError('New passwords do not match');
+        }
+
+        try {
+            await api.put('/auth/change-password', {
+                currentPassword: passwordForm.currentPassword,
+                newPassword: passwordForm.newPassword
+            });
+            setPasswordSuccess('Password changed successfully');
+            setTimeout(() => {
+                setShowChangePassword(false);
+                setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+                setPasswordSuccess('');
+            }, 2000);
+        } catch (err) {
+            setPasswordError(err.message || 'Failed to change password');
+        }
     };
 
     // Mobile bottom nav: first 4 items across all sections (leaving room for logout)
@@ -163,9 +193,14 @@ export default function Layout() {
                             {user?.district?.name || 'State Level'}
                         </div>
                     </div>
-                    <button className="btn btn-secondary btn-sm w-full" onClick={handleLogout}>
-                        🚪 Logout
-                    </button>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <button className="btn btn-secondary btn-sm w-full" onClick={() => setShowChangePassword(true)}>
+                            🔑 Change Password
+                        </button>
+                        <button className="btn btn-secondary btn-sm w-full" onClick={handleLogout}>
+                            🚪 Logout
+                        </button>
+                    </div>
                 </div>
             </aside>
 
@@ -212,6 +247,57 @@ export default function Layout() {
                     style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 99 }}
                     onClick={() => setSidebarOpen(false)}
                 />
+            )}
+
+            {/* Change Password Modal */}
+            {showChangePassword && (
+                <div className="modal-backdrop">
+                    <div className="modal-content" style={{ maxWidth: 400 }}>
+                        <h3 className="mb-lg">Change Password</h3>
+
+                        {passwordError && <div className="form-error mb-md">{passwordError}</div>}
+                        {passwordSuccess && <div style={{ color: 'var(--color-success)', padding: '12px', background: 'rgba(34,197,94,0.1)', borderRadius: '4px', marginBottom: '16px' }}>{passwordSuccess}</div>}
+
+                        <form onSubmit={handleChangePasswordSubmit}>
+                            <div className="form-group">
+                                <label className="form-label">Current Password</label>
+                                <input
+                                    type="password"
+                                    className="form-input"
+                                    value={passwordForm.currentPassword}
+                                    onChange={e => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })}
+                                    required
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label className="form-label">New Password</label>
+                                <input
+                                    type="password"
+                                    className="form-input"
+                                    value={passwordForm.newPassword}
+                                    onChange={e => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
+                                    required
+                                    minLength={6}
+                                />
+                            </div>
+                            <div className="form-group mb-xl">
+                                <label className="form-label">Confirm New Password</label>
+                                <input
+                                    type="password"
+                                    className="form-input"
+                                    value={passwordForm.confirmPassword}
+                                    onChange={e => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
+                                    required
+                                    minLength={6}
+                                />
+                            </div>
+                            <div className="flex gap-md justify-end">
+                                <button type="button" className="btn btn-secondary" onClick={() => setShowChangePassword(false)}>Cancel</button>
+                                <button type="submit" className="btn btn-primary" disabled={!!passwordSuccess}>Update Password</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
             )}
         </div>
     );

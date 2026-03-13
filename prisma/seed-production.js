@@ -58,40 +58,18 @@ const generateUsername = (role, districtCode, index) => {
 async function main() {
     console.log('Starting production data seed...');
 
-    // CLEANUP: Remove old data to ensure a fresh start with Excel data
-    console.log('🧹 Cleaning up existing database records...');
-
-    // Delete in order to satisfy foreign key constraints
-    try { await prisma.grievanceComment.deleteMany({}); } catch (e) { }
-    try { await prisma.grievance.deleteMany({}); } catch (e) { }
-    try { await prisma.dataEntry.deleteMany({}); } catch (e) { }
-    try { await prisma.transferLog.deleteMany({}); } catch (e) { }
-    try { await prisma.dataEntryColumn.deleteMany({}); } catch (e) { }
-    try { await prisma.dataEntryTable.deleteMany({}); } catch (e) { }
-    try { await prisma.alert.deleteMany({}); } catch (e) { }
-
-    // User has a circular dependency with Court via lastSelectedCourtId
-    // Nullify the references first to allow deletion
-    await prisma.user.updateMany({ data: { lastSelectedCourtId: null } });
-
-    // Now delete main entities
-    await prisma.court.deleteMany({});
-    await prisma.magistrate.deleteMany({});
-
-    // Remove all users except possibly system ones, but we recreate them anyway
-    await prisma.user.deleteMany({});
-
-    // Finally clear districts
-    await prisma.district.deleteMany({});
-    console.log('✅ Cleanup complete.\n');
+    // Only seed base users and tables if they do not exist
+    console.log('Skipping global wipe to preserve existing data.');
 
     // Create base users (Developer, State Admin)
-    console.log('👤 Creating base system users...');
+    console.log('👤 Creating/Updating base system users...');
     const devPassword = await bcrypt.hash('admin123', 10);
     const statePassword = await bcrypt.hash('state123', 10);
 
-    await prisma.user.create({
-        data: {
+    const developer = await prisma.user.upsert({
+        where: { username: 'developer' },
+        update: {},
+        create: {
             username: 'developer',
             passwordHash: devPassword,
             name: 'System Developer',
@@ -99,8 +77,10 @@ async function main() {
         },
     });
 
-    await prisma.user.create({
-        data: {
+    await prisma.user.upsert({
+        where: { username: 'state_admin' },
+        update: {},
+        create: {
             username: 'state_admin',
             passwordHash: statePassword,
             name: 'State Admin',
@@ -108,7 +88,6 @@ async function main() {
         },
     });
     console.log('✅ Base users created.');
-    const developer = await prisma.user.findUnique({ where: { username: 'developer' } });
 
     // ─── 16 Predefined Data Entry Tables ───────────────
     const tables = [
@@ -324,28 +303,31 @@ async function main() {
         },
     ];
 
-    console.log('📋 Creating data entry tables...');
+    console.log('📋 Creating/Updating data entry tables...');
     for (const t of tables) {
-        await prisma.dataEntryTable.create({
-            data: {
-                name: t.name,
-                slug: t.slug,
-                description: t.description,
-                singleRow: t.singleRow,
-                createdBy: developer.id,
-                columns: {
-                    create: t.columns.map((col) => ({
-                        name: col.name,
-                        slug: col.slug,
-                        dataType: col.dataType,
-                        enumOptions: col.enumOptions || null,
-                        isRequired: col.isRequired !== undefined ? col.isRequired : true,
-                        sortOrder: col.sortOrder,
-                    })),
+        const existingTable = await prisma.dataEntryTable.findUnique({ where: { slug: t.slug } });
+        if (!existingTable) {
+            await prisma.dataEntryTable.create({
+                data: {
+                    name: t.name,
+                    slug: t.slug,
+                    description: t.description,
+                    singleRow: t.singleRow,
+                    createdBy: developer.id,
+                    columns: {
+                        create: t.columns.map((col) => ({
+                            name: col.name,
+                            slug: col.slug,
+                            dataType: col.dataType,
+                            enumOptions: col.enumOptions || null,
+                            isRequired: col.isRequired !== undefined ? col.isRequired : true,
+                            sortOrder: col.sortOrder,
+                        })),
+                    },
                 },
-            },
-        });
-        console.log(`  ✅ Table: ${t.name}`);
+            });
+            console.log(`  ✅ Table Created: ${t.name}`);
+        }
     }
 
     const files = fs.readdirSync(dir).filter(f => f.endsWith('.xlsx') && !f.startsWith('~$'));
