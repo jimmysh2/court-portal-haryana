@@ -445,6 +445,7 @@ async function main() {
                         cleanName = judgeNameStr
                             .replace(/^(Ms\.?|Mrs\.?|Smt\.?|Sh\.?|Shri\.?|Mr\.?|Dr\.?|Er\.?)\s*/i, '')
                             .replace(/^,\s*/, '')
+                            .replace(/,\s*$/, '') // Remove trailing commas
                             .trim();
                         // Reset gender
                         gender = null;
