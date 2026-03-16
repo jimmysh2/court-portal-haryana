@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../utils/api';
 
@@ -15,7 +16,7 @@ export default function DevDashboard() {
             setStats({
                 districts: d.districts?.length || 0,
                 tables: t.tables?.length || 0,
-                grievances: g.grievances?.filter(gr => gr.status !== 'resolved').length || 0,
+                grievances: g.grievances?.filter(gr => !['resolved', 'cancelled'].includes(gr.status)).length || 0,
             });
         }).catch(console.error);
     }, []);
@@ -27,21 +28,21 @@ export default function DevDashboard() {
             </div>
 
             <div className="stat-cards">
-                <div className="stat-card">
+                <Link to="/dev/districts" className="stat-card">
                     <div className="stat-icon">🏛️</div>
                     <div className="stat-value">{stats?.districts ?? '—'}</div>
                     <div className="stat-label">Districts</div>
-                </div>
-                <div className="stat-card">
+                </Link>
+                <Link to="/dev/data-tables" className="stat-card">
                     <div className="stat-icon">📋</div>
                     <div className="stat-value">{stats?.tables ?? '—'}</div>
                     <div className="stat-label">Data Tables</div>
-                </div>
-                <div className="stat-card">
+                </Link>
+                <Link to="/dev/grievances" className="stat-card">
                     <div className="stat-icon">🎫</div>
                     <div className="stat-value">{stats?.grievances ?? '—'}</div>
                     <div className="stat-label">Open Grievances</div>
-                </div>
+                </Link>
             </div>
 
             <div className="card">
@@ -49,12 +50,9 @@ export default function DevDashboard() {
                     <div className="card-title">Quick Actions</div>
                 </div>
                 <div className="flex gap-md" style={{ flexWrap: 'wrap' }}>
-                    <a className="btn btn-primary" href="/dev/districts">Manage Districts</a>
                     <a className="btn btn-secondary" href="/dev/courts">Manage Courts</a>
                     <a className="btn btn-secondary" href="/dev/magistrates">Manage Judicial Officers</a>
                     <a className="btn btn-secondary" href="/dev/naib-courts">Manage Naib Courts</a>
-                    <a className="btn btn-secondary" href="/dev/data-tables">Manage Tables</a>
-                    <a className="btn btn-secondary" href="/dev/grievances">View Grievances</a>
                     <a className="btn btn-secondary" href="/dev/reports">View Reports</a>
                     <a className="btn btn-secondary" href="/dev/change-password">Change Password</a>
                 </div>
