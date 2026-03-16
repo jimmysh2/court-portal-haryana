@@ -138,14 +138,14 @@ export default function GrievancesPage() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)' }}>
                 {filteredGrievances.map(g => (
                     <div className="card" key={g.id} style={{ cursor: 'pointer' }} onClick={() => setActiveGrievance(activeGrievance === g.id ? null : g.id)}>
-                        <div className="flex-between">
-                            <div>
-                                <div style={{ fontWeight: 600 }}>{g.subject}</div>
-                                <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-muted)', marginTop: '4px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 'var(--space-md)' }}>
+                            <div style={{ flex: '1 1 200px', minWidth: 0 }}>
+                                <div style={{ fontWeight: 600, wordBreak: 'break-word' }}>{g.subject}</div>
+                                <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-muted)', marginTop: '4px', wordBreak: 'break-word' }}>
                                     By {g.raisedByUser?.name} • {g.district?.name || 'State level'} • {new Date(g.createdAt).toLocaleDateString('en-IN')}
                                 </div>
                             </div>
-                            <div className="flex gap-sm">
+                            <div className="flex gap-sm" style={{ flexWrap: 'wrap' }}>
                                 {statusBadge(g.status)}
                                 <span className="badge badge-secondary">{g.currentLevel}</span>
                             </div>
@@ -172,7 +172,7 @@ export default function GrievancesPage() {
                                 {/* Add comment */}
                                 {['resolved', 'cancelled'].indexOf(g.status) === -1 && (
                                     <div className="flex gap-md mb-lg">
-                                        <input className="form-input" placeholder="Add a comment..." value={activeGrievance === g.id ? commentText : ''} onChange={e => setCommentText(e.target.value)} />
+                                        <input className="form-input" style={{ flex: 1, minWidth: 0 }} placeholder="Add a comment..." value={activeGrievance === g.id ? commentText : ''} onChange={e => setCommentText(e.target.value)} />
                                         <button className="btn btn-secondary btn-sm" onClick={() => handleComment(g.id)}>Send</button>
                                     </div>
                                 )}
