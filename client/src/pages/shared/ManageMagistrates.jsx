@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { useLanguage } from '../../context/LanguageContext';
 import api from '../../utils/api';
 
 export default function ManageMagistrates() {
     const { user } = useAuth();
+    const { t } = useLanguage();
     const [magistrates, setMagistrates] = useState([]);
     const [districts, setDistricts] = useState([]);
     const [courts, setCourts] = useState([]);
@@ -74,10 +76,10 @@ export default function ManageMagistrates() {
     return (
         <div>
             <div className="page-header">
-                <h2>Manage Judicial Officers</h2>
+                <h2>{t('manageJudicialOfficers')}</h2>
                 {canCreate && (
                     <button className="btn btn-primary" onClick={() => { setShowForm(true); setEditItem(null); setForm({ name: '', designation: '', gender: '', districtId: filterDistrict || '', phone: '' }); }}>
-                        + Add Judicial Officer
+                        + {t('addJudicialOfficer')}
                     </button>
                 )}
             </div>
@@ -85,7 +87,7 @@ export default function ManageMagistrates() {
             {canCreate && (
                 <div className="mb-xl">
                     <select className="form-select" style={{ maxWidth: 300 }} value={filterDistrict} onChange={e => setFilterDistrict(e.target.value)}>
-                        <option value="">All Districts</option>
+                        <option value="">{t('allDistricts')}</option>
                         {districts.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
                     </select>
                 </div>
@@ -93,42 +95,42 @@ export default function ManageMagistrates() {
 
             {showForm && (
                 <div className="card mb-xl">
-                    <h3 className="card-title mb-lg">{editItem ? 'Edit' : 'Add'} Judicial Officer</h3>
+                    <h3 className="card-title mb-lg">{editItem ? t('editJudicialOfficer') : t('addJudicialOfficer')}</h3>
                     {error && <div className="form-error mb-lg">{error}</div>}
                     <form onSubmit={handleSubmit}>
                         <div className="form-row">
                             <div className="form-group">
-                                <label className="form-label">Name</label>
+                                <label className="form-label">{t('nameLabel')}</label>
                                 <input className="form-input" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} required />
                             </div>
                             <div className="form-group">
-                                <label className="form-label">Designation</label>
+                                <label className="form-label">{t('designationLabel')}</label>
                                 <input className="form-input" value={form.designation} onChange={e => setForm({ ...form, designation: e.target.value })} placeholder="e.g. ADJ, CJM" required />
                             </div>
                             <div className="form-group">
-                                <label className="form-label">District</label>
+                                <label className="form-label">{t('district')}</label>
                                 <select className="form-select" value={form.districtId} onChange={e => setForm({ ...form, districtId: e.target.value })}>
-                                    <option value="">No District</option>
+                                    <option value="">{t('noDistrict')}</option>
                                     {districts.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
                                 </select>
                             </div>
                             <div className="form-group">
-                                <label className="form-label">Gender</label>
+                                <label className="form-label">{t('gender')}</label>
                                 <select className="form-select" value={form.gender} onChange={e => setForm({ ...form, gender: e.target.value })}>
-                                    <option value="">Select Gender</option>
-                                    <option value="Male">Male</option>
-                                    <option value="Female">Female</option>
-                                    <option value="Other">Other</option>
+                                    <option value="">{t('selectGender')}</option>
+                                    <option value="Male">{t('male')}</option>
+                                    <option value="Female">{t('female')}</option>
+                                    <option value="Other">{t('other')}</option>
                                 </select>
                             </div>
                             <div className="form-group">
-                                <label className="form-label">Phone</label>
+                                <label className="form-label">{t('phoneLabel')}</label>
                                 <input className="form-input" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} />
                             </div>
                         </div>
                         <div className="flex gap-md">
-                            <button className="btn btn-primary" type="submit">Save</button>
-                            <button className="btn btn-secondary" type="button" onClick={() => setShowForm(false)}>Cancel</button>
+                            <button className="btn btn-primary" type="submit">{t('save')}</button>
+                            <button className="btn btn-secondary" type="button" onClick={() => setShowForm(false)}>{t('cancel')}</button>
                         </div>
                     </form>
                 </div>
@@ -137,49 +139,57 @@ export default function ManageMagistrates() {
             <div className="data-table-wrapper">
                 <table className="data-table">
                     <thead>
-                        <tr><th>S.No.</th><th>Name</th><th>Gender</th><th>Designation</th><th>District</th><th>Court</th><th>Actions</th></tr>
+                        <tr>
+                            <th>{t('serialNo')}</th>
+                            <th>{t('nameLabel')}</th>
+                            <th>{t('genderLabel')}</th>
+                            <th>{t('designationLabel')}</th>
+                            <th>{t('district')}</th>
+                            <th>{t('courtLabel')}</th>
+                            <th>{t('actions')}</th>
+                        </tr>
                     </thead>
                     <tbody>
                         {magistrates.map((m, idx) => (
                             <tr key={m.id}>
-                                <td data-label="S.No.">{idx + 1}</td>
-                                <td data-label="Name">{m.name}</td>
-                                <td data-label="Gender">{m.gender || <span className="text-muted">—</span>}</td>
-                                <td data-label="Designation"><span className="badge badge-primary">{m.designation}</span></td>
-                                <td data-label="District">{m.district?.name || <span className="text-muted">Unassigned</span>}</td>
-                                <td data-label="Court">{m.courts?.length ? m.courts.map(c => c.name).join(', ') : <span className="text-muted">None</span>}</td>
-                                <td data-label="Actions">
+                                <td data-label={t('serialNo')}>{idx + 1}</td>
+                                <td data-label={t('nameLabel')}>{m.name}</td>
+                                <td data-label={t('genderLabel')}>{m.gender || <span className="text-muted">—</span>}</td>
+                                <td data-label={t('designationLabel')}><span className="badge badge-primary">{m.designation}</span></td>
+                                <td data-label={t('district')}>{m.district?.name || <span className="text-muted">{t('unassigned')}</span>}</td>
+                                <td data-label={t('courtLabel')}>{m.courts?.length ? m.courts.map(c => c.name).join(', ') : <span className="text-muted">{t('none')}</span>}</td>
+                                <td data-label={t('actions')}>
                                     <div className="flex gap-sm" style={{ flexWrap: 'wrap' }}>
-                                        {canCreate && <button className="btn btn-secondary btn-sm" onClick={() => { setEditItem(m); setForm({ name: m.name, designation: m.designation, gender: m.gender || '', districtId: m.district?.id || '', phone: m.phone || '' }); setShowForm(true); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>Edit</button>}
-                                        {canCreate && <button className="btn btn-danger btn-sm" onClick={() => handleDelete(m.id)}>Delete</button>}
-                                        {canTransfer && (
-                                            showTransfer === m.id ? (
-                                                <div className="flex gap-sm">
-                                                    <select className="form-select" style={{ minWidth: 120 }} value={transferTo} onChange={e => setTransferTo(e.target.value)}>
-                                                        <option value="">To District...</option>
-                                                        {districts.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
-                                                    </select>
-                                                    <button className="btn btn-primary btn-sm" onClick={() => handleTransfer(m.id)} disabled={!transferTo}>Go</button>
-                                                    <button className="btn btn-secondary btn-sm" onClick={() => setShowTransfer(null)}>✕</button>
-                                                </div>
-                                            ) : (
-                                                <button className="btn btn-secondary btn-sm" onClick={() => setShowTransfer(m.id)}>Transfer</button>
-                                            )
-                                        )}
-                                        {canAssign && (
-                                            showAssign === m.id ? (
-                                                <div className="flex gap-sm">
-                                                    <select className="form-select" style={{ minWidth: 140 }} value={assignCourt} onChange={e => setAssignCourt(e.target.value)}>
-                                                        <option value="">Assign Court...</option>
-                                                        {courts.filter(c => !m.districtId || c.districtId === m.districtId).map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                                                    </select>
-                                                    <button className="btn btn-primary btn-sm" onClick={() => handleAssign(m.id)} disabled={!assignCourt}>Go</button>
-                                                    <button className="btn btn-secondary btn-sm" onClick={() => setShowAssign(null)}>✕</button>
-                                                </div>
-                                            ) : (
-                                                <button className="btn btn-secondary btn-sm" onClick={() => setShowAssign(m.id)}>Assign Court</button>
-                                            )
-                                        )}
+                                        {canCreate && <button className="btn btn-secondary btn-sm" onClick={() => { setEditItem(m); setForm({ name: m.name, designation: m.designation, gender: m.gender || '', districtId: m.district?.id || '', phone: m.phone || '' }); setShowForm(true); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>{t('edit')}</button>}
+                                         {canCreate && <button className="btn btn-danger btn-sm" onClick={() => handleDelete(m.id)}>{t('delete')}</button>}
+                                         {canTransfer && (
+                                             showTransfer === m.id ? (
+                                                 <div className="flex gap-sm">
+                                                     <select className="form-select" style={{ minWidth: 120 }} value={transferTo} onChange={e => setTransferTo(e.target.value)}>
+                                                         <option value="">{t('toDistrict')}</option>
+                                                         {districts.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                                                     </select>
+                                                     <button className="btn btn-primary btn-sm" onClick={() => handleTransfer(m.id)} disabled={!transferTo}>{t('go') || 'Go'}</button>
+                                                     <button className="btn btn-secondary btn-sm" onClick={() => setShowTransfer(null)}>✕</button>
+                                                 </div>
+                                             ) : (
+                                                 <button className="btn btn-secondary btn-sm" onClick={() => setShowTransfer(m.id)}>{t('transfer') || 'Transfer'}</button>
+                                             )
+                                         )}
+                                         {canAssign && (
+                                             showAssign === m.id ? (
+                                                 <div className="flex gap-sm">
+                                                     <select className="form-select" style={{ minWidth: 140 }} value={assignCourt} onChange={e => setAssignCourt(e.target.value)}>
+                                                         <option value="">{t('assignCourt')}</option>
+                                                         {courts.filter(c => !m.districtId || c.districtId === m.districtId).map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                                                     </select>
+                                                     <button className="btn btn-primary btn-sm" onClick={() => handleAssign(m.id)} disabled={!assignCourt}>{t('go') || 'Go'}</button>
+                                                     <button className="btn btn-secondary btn-sm" onClick={() => setShowAssign(null)}>✕</button>
+                                                 </div>
+                                             ) : (
+                                                 <button className="btn btn-secondary btn-sm" onClick={() => setShowAssign(m.id)}>{t('assignCourtShort') || 'Assign Court'}</button>
+                                             )
+                                         )}
                                     </div>
                                 </td>
                             </tr>

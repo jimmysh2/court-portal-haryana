@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../utils/api';
+import { useLanguage } from '../../context/LanguageContext';
 
 export default function ManageCourts() {
     const { user } = useAuth();
+    const { t } = useLanguage();
     const [courts, setCourts] = useState([]);
     const [districts, setDistricts] = useState([]);
     const [magistrates, setMagistrates] = useState([]);
@@ -47,7 +49,7 @@ export default function ManageCourts() {
     };
 
     const handleDelete = async (id) => {
-        if (!confirm('Delete this court?')) return;
+        if (!confirm(t('confirmDeleteCourt'))) return;
         await api.delete(`/courts/${id}`);
         load();
     };
@@ -55,16 +57,16 @@ export default function ManageCourts() {
     return (
         <div>
             <div className="page-header">
-                <h2>Manage Courts</h2>
+                <h2>{t('manageCourts')}</h2>
                 <button className="btn btn-primary" onClick={() => { setShowForm(true); setEditItem(null); setForm({ districtId: user.districtId || filterDistrict || '', name: '', courtNo: '' }); }}>
-                    + Add Court
+                    + {t('addCourt')}
                 </button>
             </div>
 
             {['developer', 'state_admin'].includes(user.role) && (
                 <div className="mb-xl">
                     <select className="form-select" style={{ maxWidth: 300 }} value={filterDistrict} onChange={e => setFilterDistrict(e.target.value)}>
-                        <option value="">All Districts</option>
+                        <option value="">{t('allDistricts')}</option>
                         {districts.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
                     </select>
                 </div>
@@ -72,29 +74,29 @@ export default function ManageCourts() {
 
             {showForm && (
                 <div className="card mb-xl">
-                    <h3 className="card-title mb-lg">{editItem ? 'Edit Court' : 'Add Court'}</h3>
+                    <h3 className="card-title mb-lg">{editItem ? t('editCourt') : t('addCourt')}</h3>
                     {error && <div className="form-error mb-lg">{error}</div>}
                     <form onSubmit={handleSubmit}>
                         <div className="form-row">
                             <div className="form-group">
-                                <label className="form-label">District</label>
+                                <label className="form-label">{t('district')}</label>
                                 <select className="form-select" value={form.districtId} onChange={e => setForm({ ...form, districtId: e.target.value })} required>
-                                    <option value="">Select District</option>
+                                    <option value="">{t('selectDistrict')}</option>
                                     {districts.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
                                 </select>
                             </div>
                             <div className="form-group">
-                                <label className="form-label">Court Name</label>
+                                <label className="form-label">{t('courtNameLabel')}</label>
                                 <input className="form-input" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} required />
                             </div>
                             <div className="form-group">
-                                <label className="form-label">Court ID</label>
+                                <label className="form-label">{t('courtIdLabel')}</label>
                                 <input className="form-input" value={form.courtNo} onChange={e => setForm({ ...form, courtNo: e.target.value })} required />
                             </div>
                         </div>
                         <div className="flex gap-md">
-                            <button className="btn btn-primary" type="submit">Save</button>
-                            <button className="btn btn-secondary" type="button" onClick={() => setShowForm(false)}>Cancel</button>
+                            <button className="btn btn-primary" type="submit">{t('save')}</button>
+                            <button className="btn btn-secondary" type="button" onClick={() => setShowForm(false)}>{t('cancel')}</button>
                         </div>
                     </form>
                 </div>
@@ -104,32 +106,32 @@ export default function ManageCourts() {
                 <table className="data-table">
                     <thead>
                         <tr>
-                            <th>S.No.</th>
-                            <th>Court ID</th>
-                            <th>Name</th>
-                            <th>District</th>
-                            <th>Judicial Officer</th>
-                            <th>Actions</th>
+                            <th>{t('serialNo')}</th>
+                            <th>{t('courtIdLabel')}</th>
+                            <th>{t('nameLabel')}</th>
+                            <th>{t('district')}</th>
+                            <th>{t('judicialOfficerLabel')}</th>
+                            <th>{t('actions')}</th>
                         </tr>
                     </thead>
                     <tbody>
                         {courts.map((c, idx) => (
                             <tr key={c.id}>
-                                <td data-label="S.No.">{idx + 1}</td>
-                                <td data-label="Court ID"><span className="badge badge-secondary">{c.courtNo}</span></td>
-                                <td data-label="Name">{c.name}</td>
-                                <td data-label="District">{c.district?.name}</td>
-                                <td data-label="Judicial Officer">{c.magistrate ? c.magistrate.name : <span className="text-muted">Not assigned</span>}</td>
-                                <td data-label="Actions">
+                                <td data-label={t('serialNo')}>{idx + 1}</td>
+                                <td data-label={t('courtIdLabel')}><span className="badge badge-secondary">{c.courtNo}</span></td>
+                                <td data-label={t('nameLabel')}>{c.name}</td>
+                                <td data-label={t('district')}>{c.district?.name}</td>
+                                <td data-label={t('judicialOfficerLabel')}>{c.magistrate ? c.magistrate.name : <span className="text-muted">{t('notAssigned')}</span>}</td>
+                                <td data-label={t('actions')}>
                                     <div className="flex gap-sm">
-                                        <button className="btn btn-secondary btn-sm" onClick={() => handleEdit(c)}>Edit</button>
-                                        <button className="btn btn-danger btn-sm" onClick={() => handleDelete(c.id)}>Delete</button>
+                                        <button className="btn btn-secondary btn-sm" onClick={() => handleEdit(c)}>{t('edit')}</button>
+                                        <button className="btn btn-danger btn-sm" onClick={() => handleDelete(c.id)}>{t('delete')}</button>
                                     </div>
                                 </td>
                             </tr>
                         ))}
                         {courts.length === 0 && (
-                            <tr><td colSpan="6" className="text-center text-muted">No courts found</td></tr>
+                            <tr><td colSpan="6" className="text-center text-muted">{t('noCourtsFound')}</td></tr>
                         )}
                     </tbody>
                 </table>

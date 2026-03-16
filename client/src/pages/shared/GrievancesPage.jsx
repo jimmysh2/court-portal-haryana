@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { useLanguage } from '../../context/LanguageContext';
 import api from '../../utils/api';
 
 export default function GrievancesPage() {
     const { user } = useAuth();
+    const { t } = useLanguage();
     const [grievances, setGrievances] = useState([]);
     const [showForm, setShowForm] = useState(false);
     const [form, setForm] = useState({ subject: '', description: '' });
@@ -91,26 +93,26 @@ export default function GrievancesPage() {
     return (
         <div>
             <div className="page-header">
-                <h2>Ticket Mechanism</h2>
-                {canCreate && <button className="btn btn-primary" onClick={() => setShowForm(true)}>+ Raise Ticket</button>}
+                <h2>{t('ticketMechanism')}</h2>
+                {canCreate && <button className="btn btn-primary" onClick={() => setShowForm(true)}>{t('raiseTicketShort')}</button>}
             </div>
 
             {showForm && (
                 <div className="card mb-xl">
-                    <h3 className="card-title mb-lg">Raise New Grievance</h3>
+                    <h3 className="card-title mb-lg">{t('raiseNewGrievance')}</h3>
                     {error && <div className="form-error mb-lg">{error}</div>}
                     <form onSubmit={handleSubmit}>
                         <div className="form-group">
-                            <label className="form-label">Subject</label>
+                            <label className="form-label">{t('subject') || 'Subject'}</label>
                             <input className="form-input" value={form.subject} onChange={e => setForm({ ...form, subject: e.target.value })} required />
                         </div>
                         <div className="form-group">
-                            <label className="form-label">Description</label>
+                            <label className="form-label">{t('description') || 'Description'}</label>
                             <textarea className="form-textarea" rows={4} value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} required />
                         </div>
                         <div className="flex gap-md">
-                            <button className="btn btn-primary" type="submit">Submit</button>
-                            <button className="btn btn-secondary" type="button" onClick={() => setShowForm(false)}>Cancel</button>
+                            <button className="btn btn-primary" type="submit">{t('submit')}</button>
+                            <button className="btn btn-secondary" type="button" onClick={() => setShowForm(false)}>{t('cancel')}</button>
                         </div>
                     </form>
                 </div>
@@ -121,14 +123,14 @@ export default function GrievancesPage() {
                   className={`tab-btn ${activeTab === 'open' ? 'active' : ''}`} 
                   onClick={() => setActiveTab('open')}
                 >
-                  Open Tickets
+                  {t('openTickets')}
                   <span className="count-badge">{grievances.filter(g => !['resolved', 'cancelled'].includes(g.status)).length}</span>
                 </button>
                 <button 
                   className={`tab-btn ${activeTab === 'closed' ? 'active' : ''}`} 
                   onClick={() => setActiveTab('closed')}
                 >
-                  Closed Tickets
+                  {t('closedTickets')}
                   <span className="count-badge">{grievances.filter(g => ['resolved', 'cancelled'].includes(g.status)).length}</span>
                 </button>
             </div>
