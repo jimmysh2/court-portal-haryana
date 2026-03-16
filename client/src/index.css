@@ -68,9 +68,14 @@
   box-sizing: border-box;
 }
 
+a, button, input, select, textarea {
+  touch-action: manipulation;
+}
+
 html {
   font-size: 16px;
   -webkit-text-size-adjust: 100%;
+  overflow-y: scroll;
 }
 
 body {
@@ -324,6 +329,8 @@ a:hover {
   border-radius: var(--radius-lg);
   padding: var(--space-xl);
   transition: all var(--transition-normal);
+  max-width: 100%;
+  overflow-wrap: break-word;
 }
 
 .card:hover {
@@ -997,8 +1004,27 @@ a:hover {
 }
 
 @media (max-width: 480px) {
+  html, body {
+    overflow-x: hidden;
+    width: 100%;
+  }
+
   .stat-cards {
     grid-template-columns: 1fr;
+  }
+
+  .tabs {
+    display: flex;
+    flex-wrap: wrap;
+    width: 100%;
+  }
+
+  .tab-btn {
+    flex: 1;
+    justify-content: center;
+    white-space: normal;
+    text-align: center;
+    min-width: 45%;
   }
 }
 
