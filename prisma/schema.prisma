@@ -28,6 +28,7 @@ enum GrievanceStatus {
   in_progress
   escalated
   resolved
+  cancelled
 }
 
 enum GrievanceLevel {

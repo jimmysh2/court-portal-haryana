@@ -10,9 +10,10 @@ export default function GrievancesPage() {
     const [commentText, setCommentText] = useState('');
     const [activeGrievance, setActiveGrievance] = useState(null);
     const [error, setError] = useState('');
+    const [activeTab, setActiveTab] = useState('open');
 
-    const canCreate = user.role === 'naib_court';
-    const canEscalate = ['district_admin', 'state_admin', 'developer'].includes(user.role);
+    const canCreate = ['naib_court', 'district_admin', 'state_admin'].includes(user.role);
+    const isOwner = (g) => g.raisedBy === user.id;
 
     const load = () => api.get('/grievances').then(d => setGrievances(d.grievances)).catch(console.error);
     useEffect(() => { load(); }, []);
@@ -43,6 +44,13 @@ export default function GrievancesPage() {
         } catch (err) { alert(err.message); }
     };
 
+    const handleDeEscalate = async (id) => {
+        try {
+            await api.post(`/grievances/${id}/de-escalate`);
+            load();
+        } catch (err) { alert(err.message); }
+    };
+
     const handleResolve = async (id) => {
         try {
             await api.put(`/grievances/${id}`, { status: 'resolved' });
@@ -50,15 +58,40 @@ export default function GrievancesPage() {
         } catch (err) { alert(err.message); }
     };
 
-    const statusBadge = (status) => {
-        const map = { open: 'badge-warning', in_progress: 'badge-primary', escalated: 'badge-danger', resolved: 'badge-success' };
-        return <span className={`badge ${map[status] || 'badge-secondary'}`}>{status}</span>;
+    const handleCancel = async (id) => {
+        try {
+            await api.post(`/grievances/${id}/cancel`);
+            load();
+        } catch (err) { alert(err.message); }
     };
+
+    const handleReopen = async (id) => {
+        try {
+            await api.post(`/grievances/${id}/reopen`);
+            load();
+        } catch (err) { alert(err.message); }
+    };
+
+    const statusBadge = (status) => {
+        const map = { 
+            open: 'badge-warning', 
+            in_progress: 'badge-primary', 
+            escalated: 'badge-danger', 
+            resolved: 'badge-success',
+            cancelled: 'badge-secondary'
+        };
+        return <span className={`badge ${map[status] || 'badge-secondary'}`}>{status.replace('_', ' ')}</span>;
+    };
+
+    const filteredGrievances = grievances.filter(g => {
+        const isClosed = ['resolved', 'cancelled'].includes(g.status);
+        return activeTab === 'closed' ? isClosed : !isClosed;
+    });
 
     return (
         <div>
             <div className="page-header">
-                <h2>🎫 Grievances</h2>
+                <h2>Ticket Mechanism</h2>
                 {canCreate && <button className="btn btn-primary" onClick={() => setShowForm(true)}>+ Raise Ticket</button>}
             </div>
 
@@ -83,8 +116,25 @@ export default function GrievancesPage() {
                 </div>
             )}
 
+            <div className="tabs mb-lg">
+                <button 
+                  className={`tab-btn ${activeTab === 'open' ? 'active' : ''}`} 
+                  onClick={() => setActiveTab('open')}
+                >
+                  Open Tickets
+                  <span className="count-badge">{grievances.filter(g => !['resolved', 'cancelled'].includes(g.status)).length}</span>
+                </button>
+                <button 
+                  className={`tab-btn ${activeTab === 'closed' ? 'active' : ''}`} 
+                  onClick={() => setActiveTab('closed')}
+                >
+                  Closed Tickets
+                  <span className="count-badge">{grievances.filter(g => ['resolved', 'cancelled'].includes(g.status)).length}</span>
+                </button>
+            </div>
+
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)' }}>
-                {grievances.map(g => (
+                {filteredGrievances.map(g => (
                     <div className="card" key={g.id} style={{ cursor: 'pointer' }} onClick={() => setActiveGrievance(activeGrievance === g.id ? null : g.id)}>
                         <div className="flex-between">
                             <div>
@@ -118,28 +168,63 @@ export default function GrievancesPage() {
                                 )}
 
                                 {/* Add comment */}
-                                <div className="flex gap-md mb-lg">
-                                    <input className="form-input" placeholder="Add a comment..." value={activeGrievance === g.id ? commentText : ''} onChange={e => setCommentText(e.target.value)} />
-                                    <button className="btn btn-secondary btn-sm" onClick={() => handleComment(g.id)}>Send</button>
-                                </div>
-
-                                {/* Actions */}
-                                {g.status !== 'resolved' && canEscalate && (
-                                    <div className="flex gap-md">
-                                        {g.currentLevel !== 'developer' && <button className="btn btn-secondary btn-sm" onClick={() => handleEscalate(g.id)}>⬆️ Escalate</button>}
-                                        <button className="btn btn-primary btn-sm" onClick={() => handleResolve(g.id)}>✅ Resolve</button>
+                                {['resolved', 'cancelled'].indexOf(g.status) === -1 && (
+                                    <div className="flex gap-md mb-lg">
+                                        <input className="form-input" placeholder="Add a comment..." value={activeGrievance === g.id ? commentText : ''} onChange={e => setCommentText(e.target.value)} />
+                                        <button className="btn btn-secondary btn-sm" onClick={() => handleComment(g.id)}>Send</button>
                                     </div>
                                 )}
+
+                                {/* Actions */}
+                                <div className="flex gap-md flex-wrap">
+                                    {/* Action logic based on status and role */}
+                                    {activeTab === 'open' ? (
+                                        <>
+                                            {/* Resolve/Escalate logic for admins */}
+                                            {['developer', 'state_admin', 'district_admin'].includes(user.role) && (
+                                                <>
+                                                    {/* District admin can escalate district level to state */}
+                                                    {user.role === 'district_admin' && g.currentLevel === 'district' && <button className="btn btn-secondary btn-sm" onClick={() => handleEscalate(g.id)}>⬆️ Escalate to State</button>}
+                                                    {/* State admin can escalate state level to developer */}
+                                                    {user.role === 'state_admin' && g.currentLevel === 'state' && <button className="btn btn-secondary btn-sm" onClick={() => handleEscalate(g.id)}>⬆️ Escalate to Developer</button>}
+                                                    {/* Developer can escalate district to state, or state to developer */}
+                                                    {user.role === 'developer' && g.currentLevel !== 'developer' && <button className="btn btn-secondary btn-sm" onClick={() => handleEscalate(g.id)}>⬆️ Escalate</button>}
+
+                                                    {/* De-escalate logic */}
+                                                    {user.role === 'state_admin' && g.currentLevel === 'developer' && <button className="btn btn-secondary btn-sm" onClick={() => handleDeEscalate(g.id)}>⬇️ Pull Back to State</button>}
+                                                    {user.role === 'district_admin' && g.currentLevel === 'state' && <button className="btn btn-secondary btn-sm" onClick={() => handleDeEscalate(g.id)}>⬇️ Pull Back to District</button>}
+                                                    {user.role === 'developer' && g.currentLevel !== 'district' && <button className="btn btn-secondary btn-sm" onClick={() => handleDeEscalate(g.id)}>⬇️ De-escalate</button>}
+
+                                                    {/* Resolve - restricted by level? (usually anyone handling should be able to resolve) */}
+                                                    {/* If it's at their level, they can resolve */}
+                                                    {((user.role === 'district_admin' && g.currentLevel === 'district') || 
+                                                     (user.role === 'state_admin' && g.currentLevel === 'state') || 
+                                                     (user.role === 'developer')) && (
+                                                        <button className="btn btn-primary btn-sm" onClick={() => handleResolve(g.id)}>✅ Resolve</button>
+                                                    )}
+                                                </>
+                                            )}
+                                            
+                                            {/* Cancel only for owner */}
+                                            {isOwner(g) && <button className="btn btn-danger btn-sm" onClick={() => handleCancel(g.id)}>🚫 Cancel Ticket</button>}
+                                        </>
+                                    ) : (
+                                        <>
+                                            {/* Closed tab - only owner can reopen */}
+                                            {isOwner(g) && <button className="btn btn-secondary btn-sm" onClick={() => handleReopen(g.id)}>🔄 Reopen Ticket</button>}
+                                        </>
+                                    )}
+                                </div>
                             </div>
                         )}
                     </div>
                 ))}
 
-                {grievances.length === 0 && (
+                {filteredGrievances.length === 0 && (
                     <div className="empty-state">
                         <div className="icon">🎫</div>
-                        <h3>No grievances</h3>
-                        <p>{canCreate ? 'You can raise a ticket if you have an issue.' : 'No grievances to review.'}</p>
+                        <h3>No {activeTab} tickets</h3>
+                        <p>{activeTab === 'open' ? 'Everything is clear!' : 'No closed tickets found.'}</p>
                     </div>
                 )}
             </div>
