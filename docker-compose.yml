@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: court_portal
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  app:
+    build: .
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=postgresql://user:password@db:5432/court_portal?schema=public
+      - JWT_SECRET=court-portal-prod-secret-replace-me
+      - JWT_REFRESH_SECRET=court-portal-prod-refresh-replace-me
+      - NODE_ENV=production
+    depends_on:
+      - db
+
+volumes:
+  postgres_data:

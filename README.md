@@ -2,19 +2,39 @@
 
 This guide describes how to install and run the Court Portal on a new machine or Virtual Machine (VM).
 
-## Prerequisites
+---
 
+## 🐳 Option 1: One-Click Install (Using Docker)
+This is the easiest and most recommended method. It sets up the database, backend, and frontend automatically.
+
+**Prerequisites:** [Docker Desktop](https://www.docker.com/products/docker-desktop/) must be installed and running.
+
+1.  **Clone and Start**:
+    ```bash
+    git clone https://github.com/jimmysh2/court-portal-haryana.git
+    cd court-portal-haryana
+    docker-compose up --build -d
+    ```
+2.  **Initialize Database (First time only)**:
+    ```bash
+    docker-compose exec app npx prisma migrate deploy
+    docker-compose exec app node prisma/seed-production.js
+    ```
+3.  **Access App**: Open http://localhost:3000
+
+---
+
+## 🛠️ Option 2: Manual Installation
+Use this if you prefer to run the components separately without Docker.
+
+### Prerequisites (for manual install)
 Before starting, ensure the machine has the following installed:
-1.  **Node.js** (v18 or higher)
+1.  **Node.js** (v20 or higher)
 2.  **npm** (usually comes with Node.js)
 3.  **PostgreSQL** (Active and running)
 4.  **Git**
 
----
-
-## 🚀 Installation Steps
-
-### 1. Clone the Repository
+### 1. Clone the Repository (Manual)
 Open a terminal and run:
 ```bash
 git clone https://github.com/jimmysh2/court-portal-haryana.git
@@ -87,9 +107,7 @@ The app will be available at http://localhost:3000
 
 ---
 
-## 🔑 Default Credentials
-After seeding, you can log in with:
--   **Developer**: `developer` / `admin123`
--   **State Admin**: `state_admin` / `state123`
--   **District Admin**: Check `prisma/seed-production.js` for generated usernames per district.
--   **Naib Court**: Check `prisma/seed-production.js` for generated usernames.
+## 🔑 Post-Installation (Seeding)
+Once you have seeded the database (using either Docker or Manual method), the log output will display the generated usernames for District Admins, Naib Courts, and Viewers. 
+
+*Contact the system administrator for the initial developer and state admin credentials.*
