@@ -16,6 +16,7 @@ import ChangePassword from './pages/shared/ChangePassword';
 
 // Role dashboards
 import DevDashboard from './pages/dev/DevDashboard';
+import ResetPasswords from './pages/dev/ResetPasswords';
 import ManageDataTables from './pages/dev/ManageDataTables';
 import StateDashboard from './pages/state/StateDashboard';
 import DistrictDashboard from './pages/district/DistrictDashboard';
@@ -69,6 +70,7 @@ function App() {
             <Route path="/dev/data-tables" element={<ManageDataTables />} />
             <Route path="/dev/grievances" element={<GrievancesPage />} />
             <Route path="/dev/reports" element={<ReportsPage />} />
+            <Route path="/dev/reset-passwords" element={<ResetPasswords />} />
             <Route path="/dev/change-password" element={<ChangePassword />} />
           </Route>
 
