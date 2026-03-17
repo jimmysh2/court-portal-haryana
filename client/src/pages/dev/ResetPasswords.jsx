@@ -51,6 +51,12 @@ export default function ResetPasswords() {
         }
     };
 
+    const [userDistrictFilter, setUserDistrictFilter] = useState('');
+
+    const filteredUsers = userDistrictFilter 
+        ? users.filter(u => u.districtId === parseInt(userDistrictFilter))
+        : users;
+
     return (
         <div>
             <div className="page-header">
@@ -81,6 +87,9 @@ export default function ResetPasswords() {
                     <button className="btn btn-primary" onClick={handleResetDistrict} disabled={loading}>
                         Reset District Passwords
                     </button>
+                    <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)', display: 'block', width: '100%', marginTop: 'var(--space-sm)' }}>
+                        Resets all Naib Courts and District Admins within this district.
+                    </p>
                 </div>
             </div>
 
@@ -89,10 +98,16 @@ export default function ResetPasswords() {
                     <div className="card-title">Single User Reset</div>
                 </div>
                 <div className="flex gap-md" style={{ flexWrap: 'wrap', alignItems: 'center' }}>
-                    <select className="form-input" style={{ width: 350 }} value={selectedUser} onChange={e => setSelectedUser(e.target.value)}>
-                        <option value="">Select User...</option>
-                        {users.map(u => <option key={u.id} value={u.id}>{u.username} ({u.role}) - {u.name}</option>)}
-                    </select>
+                    <div style={{ display: 'flex', gap: 'var(--space-md)', flexWrap: 'wrap' }}>
+                        <select className="form-input" style={{ width: 200 }} value={userDistrictFilter} onChange={e => { setUserDistrictFilter(e.target.value); setSelectedUser(''); }}>
+                            <option value="">Filter by District...</option>
+                            {districts.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                        </select>
+                        <select className="form-input" style={{ width: 350 }} value={selectedUser} onChange={e => setSelectedUser(e.target.value)}>
+                            <option value="">Select User...</option>
+                            {filteredUsers.map(u => <option key={u.id} value={u.id}>{u.username} ({u.role}) - {u.name}</option>)}
+                        </select>
+                    </div>
                     <button className="btn btn-primary" onClick={handleResetUser} disabled={loading}>
                         Reset Specific User
                     </button>
