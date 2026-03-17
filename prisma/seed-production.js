@@ -632,6 +632,14 @@ async function main() {
         console.warn('⚠️ Disrtrict_PS.csv not found, skipping Police Station seed.');
     }
 
+    console.log('\n🔄 Enforcing default passwords for all users...');
+    await prisma.user.updateMany({ where: { role: 'developer' }, data: { passwordHash: devPassword } });
+    await prisma.user.updateMany({ where: { role: 'state_admin' }, data: { passwordHash: statePassword } });
+    await prisma.user.updateMany({ where: { role: 'district_admin' }, data: { passwordHash: adminPassword } });
+    await prisma.user.updateMany({ where: { role: { in: ['viewer_district', 'viewer_state'] } }, data: { passwordHash: viewerPassword } });
+    await prisma.user.updateMany({ where: { role: 'naib_court' }, data: { passwordHash: defaultPasswordHash } });
+    console.log('✅ Default passwords enforced.');
+
     console.log('\n✅ Data Import Complete!');
     console.log(`- Districts: ${processedDistricts.length}`);
     console.log(`- Courts: ${courtsCreated}`);
