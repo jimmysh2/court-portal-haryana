@@ -1,8 +1,7 @@
 const express = require('express');
-const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const prisma = require('../lib/prisma');
-const { authenticate } = require('../middleware/auth');
+const { authenticate, requireRole } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -24,8 +23,7 @@ router.post('/login', async (req, res, next) => {
             return res.status(401).json({ error: 'Invalid credentials' });
         }
 
-        const valid = await bcrypt.compare(password, user.passwordHash);
-        if (!valid) {
+        if (password !== user.password) {
             return res.status(401).json({ error: 'Invalid credentials' });
         }
 
@@ -46,7 +44,7 @@ router.post('/login', async (req, res, next) => {
             data: { refreshToken },
         });
 
-        const { passwordHash, refreshToken: _, ...safeUser } = user;
+        const { password: _password, refreshToken: _, ...safeUser } = user;
 
         res.json({ token, refreshToken, user: safeUser });
     } catch (err) {
@@ -123,7 +121,7 @@ router.get('/me', authenticate, async (req, res, next) => {
             },
         });
 
-        const { passwordHash, refreshToken, ...safeUser } = user;
+        const { password, refreshToken, ...safeUser } = user;
         res.json({ user: safeUser });
     } catch (err) {
         next(err);
@@ -143,19 +141,31 @@ router.put('/change-password', authenticate, async (req, res, next) => {
             where: { id: req.user.id }
         });
 
-        const valid = await bcrypt.compare(currentPassword, user.passwordHash);
-        if (!valid) {
+        if (currentPassword !== user.password) {
             return res.status(401).json({ error: 'Incorrect current password' });
         }
 
-        const newPasswordHash = await bcrypt.hash(newPassword, 10);
-
         await prisma.user.update({
             where: { id: req.user.id },
-            data: { passwordHash: newPasswordHash },
+            data: { password: newPassword },
         });
 
         res.json({ message: 'Password changed successfully' });
+    } catch (err) {
+        next(err);
+    }
+});
+
+// POST /api/v1/auth/reset-all-passwords
+router.post('/reset-all-passwords', authenticate, requireRole('developer'), async (req, res, next) => {
+    try {
+        await prisma.user.updateMany({ where: { role: 'developer' }, data: { password: 'admin123' } });
+        await prisma.user.updateMany({ where: { role: 'state_admin' }, data: { password: 'state123' } });
+        await prisma.user.updateMany({ where: { role: 'district_admin' }, data: { password: 'district123' } });
+        await prisma.user.updateMany({ where: { role: { in: ['viewer_district', 'viewer_state'] } }, data: { password: 'viewer123' } });
+        await prisma.user.updateMany({ where: { role: 'naib_court' }, data: { password: 'Welcome@123' } });
+        
+        res.json({ message: 'All passwords have been successfully reset to defaults.' });
     } catch (err) {
         next(err);
     }

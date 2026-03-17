@@ -1,5 +1,4 @@
 const express = require('express');
-const bcrypt = require('bcryptjs');
 const prisma = require('../lib/prisma');
 const { authenticate, requireRole } = require('../middleware/auth');
 
@@ -41,11 +40,10 @@ router.post('/', authenticate, requireRole('developer', 'state_admin', 'district
             return res.status(403).json({ error: 'Can only add naib courts to your own district' });
         }
 
-        const passwordHash = await bcrypt.hash(password, 10);
         const user = await prisma.user.create({
             data: {
                 username,
-                passwordHash,
+                password,
                 name,
                 role: 'naib_court',
                 districtId: parseInt(districtId),
@@ -53,7 +51,7 @@ router.post('/', authenticate, requireRole('developer', 'state_admin', 'district
             },
         });
 
-        const { passwordHash: _, refreshToken: __, ...safeUser } = user;
+        const { password: _pw, refreshToken: __, ...safeUser } = user;
         res.status(201).json({ naibCourt: safeUser });
     } catch (err) { next(err); }
 });
@@ -65,14 +63,14 @@ router.put('/:id', authenticate, requireRole('developer', 'state_admin', 'distri
         const data = {};
         if (name) data.name = name;
         if (phone !== undefined) data.phone = phone;
-        if (password) data.passwordHash = await bcrypt.hash(password, 10);
+        if (password) data.password = password;
 
         const user = await prisma.user.update({
             where: { id: parseInt(req.params.id) },
             data,
         });
 
-        const { passwordHash: _, refreshToken: __, ...safeUser } = user;
+        const { password: _pw, refreshToken: __, ...safeUser } = user;
         res.json({ naibCourt: safeUser });
     } catch (err) { next(err); }
 });
@@ -118,7 +116,7 @@ router.post('/:id/transfer', authenticate, requireRole('developer', 'state_admin
             },
         });
 
-        const { passwordHash: _, refreshToken: __, ...safeUser } = updated;
+        const { password: _pw, refreshToken: __, ...safeUser } = updated;
         res.json({ naibCourt: safeUser, message: 'Naib court transferred successfully' });
     } catch (err) { next(err); }
 });

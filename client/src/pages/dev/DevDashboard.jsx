@@ -21,6 +21,19 @@ export default function DevDashboard() {
         }).catch(console.error);
     }, []);
 
+    const handleResetPasswords = async () => {
+        if (!window.confirm("⚠️ WARNING ⚠️\n\nAre you sure you want to completely FACTORY RESET all passwords in the entire system to their default values?\n\nThis will instantly override any passwords users have manually changed.")) {
+            return;
+        }
+        
+        try {
+            const res = await api.post('/auth/reset-all-passwords');
+            alert(res.message || 'Passwords successfully reset.');
+        } catch (err) {
+            alert(err.message || 'Failed to reset passwords.');
+        }
+    };
+
     return (
         <div>
             <div className="page-header">
@@ -55,6 +68,20 @@ export default function DevDashboard() {
                     <a className="btn btn-secondary" href="/dev/naib-courts">Manage Naib Courts</a>
                     <a className="btn btn-secondary" href="/dev/reports">View Reports</a>
                     <a className="btn btn-secondary" href="/dev/change-password">Change Password</a>
+                </div>
+            </div>
+
+            <div className="card mt-lg" style={{ border: '1px solid var(--color-danger)' }}>
+                <div className="card-header">
+                    <div className="card-title" style={{ color: 'var(--color-danger)' }}>Danger Zone</div>
+                </div>
+                <div className="flex gap-md" style={{ flexWrap: 'wrap' }}>
+                    <button className="btn btn-danger" onClick={handleResetPasswords}>
+                        🚨 Factory Reset All Passwords
+                    </button>
+                    <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-text-secondary)', alignSelf: 'center', marginLeft: 'var(--space-md)' }}>
+                        Instantly resets all accounts across the entire application to their predefined default passwords.
+                    </p>
                 </div>
             </div>
         </div>
