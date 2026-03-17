@@ -2,7 +2,6 @@ const { PrismaClient } = require('@prisma/client');
 const xlsx = require('xlsx');
 const path = require('path');
 const fs = require('fs');
-const bcrypt = require('bcryptjs');
 
 const prisma = new PrismaClient();
 
@@ -63,15 +62,15 @@ async function main() {
 
     // Create base users (Developer, State Admin)
     console.log('👤 Creating/Updating base system users...');
-    const devPassword = await bcrypt.hash('admin123', 10);
-    const statePassword = await bcrypt.hash('state123', 10);
+    const devPassword = 'admin123';
+    const statePassword = 'state123';
 
     const developer = await prisma.user.upsert({
         where: { username: 'developer' },
         update: {},
         create: {
             username: 'developer',
-            passwordHash: devPassword,
+            password: devPassword,
             name: 'System Developer',
             role: 'developer',
         },
@@ -82,7 +81,7 @@ async function main() {
         update: {},
         create: {
             username: 'state_admin',
-            passwordHash: statePassword,
+            password: statePassword,
             name: 'State Admin',
             role: 'state_admin',
         },
@@ -338,9 +337,6 @@ async function main() {
     let magistratesCreated = 0;
     let usersCreated = 0;
 
-    // Hash default password once
-    const defaultPasswordHash = await bcrypt.hash('Welcome@123', 10);
-
     // District counters for username generation
     const districtUserCouters = {};
     // Track used CIS/courtNo per district to handle duplicates
@@ -519,7 +515,7 @@ async function main() {
                             },
                             create: {
                                 username: username,
-                                passwordHash: defaultPasswordHash,
+                                password: 'Welcome@123',
                                 name: naibNameStr,
                                 role: 'naib_court',
                                 districtId: district.id,
@@ -540,8 +536,8 @@ async function main() {
     // ─── Create District Admins & Viewers ──────────────────
     const processedDistricts = Object.keys(districtUserCouters);
     console.log(`👤 Creating accounts for ${processedDistricts.length} districts...`);
-    const adminPassword = await bcrypt.hash('district123', 10);
-    const viewerPassword = await bcrypt.hash('viewer123', 10);
+    const adminPassword = 'district123';
+    const viewerPassword = 'viewer123';
 
     for (const code of processedDistricts) {
         const district = await prisma.district.findUnique({ where: { code } });
@@ -554,7 +550,7 @@ async function main() {
             update: {},
             create: {
                 username: adminUsername,
-                passwordHash: adminPassword,
+                password: adminPassword,
                 name: `District Admin ${district.name}`,
                 role: 'district_admin',
                 districtId: district.id,
@@ -568,7 +564,7 @@ async function main() {
             update: {},
             create: {
                 username: viewerUsername,
-                passwordHash: viewerPassword,
+                password: viewerPassword,
                 name: `District Viewer ${district.name}`,
                 role: 'viewer_district',
                 districtId: district.id,
@@ -584,7 +580,7 @@ async function main() {
         update: {},
         create: {
             username: 'viewer_state',
-            passwordHash: viewerPassword,
+            password: viewerPassword,
             name: 'State Viewer',
             role: 'viewer_state',
         },
@@ -633,11 +629,11 @@ async function main() {
     }
 
     console.log('\n🔄 Enforcing default passwords for all users...');
-    await prisma.user.updateMany({ where: { role: 'developer' }, data: { passwordHash: devPassword } });
-    await prisma.user.updateMany({ where: { role: 'state_admin' }, data: { passwordHash: statePassword } });
-    await prisma.user.updateMany({ where: { role: 'district_admin' }, data: { passwordHash: adminPassword } });
-    await prisma.user.updateMany({ where: { role: { in: ['viewer_district', 'viewer_state'] } }, data: { passwordHash: viewerPassword } });
-    await prisma.user.updateMany({ where: { role: 'naib_court' }, data: { passwordHash: defaultPasswordHash } });
+    await prisma.user.updateMany({ where: { role: 'developer' }, data: { password: devPassword } });
+    await prisma.user.updateMany({ where: { role: 'state_admin' }, data: { password: statePassword } });
+    await prisma.user.updateMany({ where: { role: 'district_admin' }, data: { password: adminPassword } });
+    await prisma.user.updateMany({ where: { role: { in: ['viewer_district', 'viewer_state'] } }, data: { password: viewerPassword } });
+    await prisma.user.updateMany({ where: { role: 'naib_court' }, data: { password: 'Welcome@123' } });
     console.log('✅ Default passwords enforced.');
 
     console.log('\n✅ Data Import Complete!');

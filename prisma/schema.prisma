@@ -109,7 +109,7 @@ model Magistrate {
 model User {
   id                    Int       @id @default(autoincrement())
   username              String    @unique @db.VarChar(50)
-  passwordHash          String    @map("password_hash")
+  password              String    @map("password_hash")
   name                  String    @db.VarChar(150)
   role                  UserRole
   rank                  String?   @db.VarChar(50)
