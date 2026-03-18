@@ -57,6 +57,7 @@ export default function DistrictDashboard() {
                 <div className="card-header"><div className="card-title">{t('quickActions')}</div></div>
                 <div className="flex gap-md" style={{ flexWrap: 'wrap' }}>
                     <a className="btn btn-primary" href="/district/data-vetting">{t('dataVetting')}</a>
+                    <a className="btn btn-secondary" href="/district/police-stations">🚔 {t('policeStations')}</a>
                     <a className="btn btn-secondary" href="/district/magistrates">{t('manageJudicialOfficers')}</a>
                     <a className="btn btn-secondary" href="/district/reports">{t('reports')}</a>
                     <a className="btn btn-secondary" href="/district/change-password">{t('changePassword')}</a>
