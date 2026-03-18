@@ -836,135 +836,138 @@ async function main() {
 
         try {
             const workbook = xlsx.readFile(filepath);
-            for (const sheetName of workbook.SheetNames) {
+            // ONLY process the first sheet to avoid duplicates from backup/old sheets
+            const sheetName = workbook.SheetNames[0];
+            if (sheetName) {
+                console.log(`  📊 Processing Sheet: ${sheetName}`);
                 let rawRows = xlsx.utils.sheet_to_json(workbook.Sheets[sheetName], { defval: null });
-                if (rawRows.length === 0) continue;
+                if (rawRows.length > 0) {
+                    const rawKeys = Object.keys(rawRows[0]);
+                    const findKey = (keywords) => rawKeys.find(k => {
+                        const nk = normalize(k);
+                        return keywords.some(keyword => nk.includes(normalize(keyword)));
+                    });
 
-                const rawKeys = Object.keys(rawRows[0]);
-                const findKey = (keywords) => rawKeys.find(k => {
-                    const nk = normalize(k);
-                    return keywords.some(keyword => nk.includes(normalize(keyword)));
-                });
-
-                const keyMap = {
-                    district: findKey(['district']),
-                    cisNumber: findKey(['cis number', 'court number', 'cis']),
-                    judgeName: findKey(['magistrate name', 'judge name', 'magistarte name', 'judge/magistarte name']),
-                    judgeDesignation: findKey(['designation', 'desig']),
-                    naibRank: (findKey(['naib']) && findKey(['rank'])) || findKey(['rank']),
-                    naibName: findKey(['naib court name', 'naib name']),
-                    naibPhone: findKey(['phone', 'phone no', 'phone number', 'phoneno'])
-                };
-
-                for (let i = 0; i < rawRows.length; i++) {
-                    const rawRow = rawRows[i];
-                    const normalizeVal = (val, maxLen) => {
-                        if (val === null || val === undefined) return null;
-                        return val.toString().replace(/\s+/g, ' ').trim().substring(0, maxLen);
+                    const keyMap = {
+                        district: findKey(['district']),
+                        cisNumber: findKey(['cis number', 'court number', 'cis']),
+                        judgeName: findKey(['magistrate name', 'judge name', 'magistarte name', 'judge/magistarte name']),
+                        judgeDesignation: findKey(['designation', 'desig']),
+                        naibRank: (findKey(['naib']) && findKey(['rank'])) || findKey(['rank']),
+                        naibName: findKey(['naib court name', 'naib name']),
+                        naibPhone: findKey(['phone', 'phone no', 'phone number', 'phoneno'])
                     };
 
-                    let districtName = normalizeVal(rawRow[keyMap.district], 100);
-                    if (districtName) {
-                        districtName = districtName.toLowerCase().replace(/\b\w/g, s => s.toUpperCase());
-                    }
-                    
-                    const districtCode = generateDistrictCode(districtName);
-                    if (!districtName) continue;
+                    for (let i = 0; i < rawRows.length; i++) {
+                        const rawRow = rawRows[i];
+                        const normalizeVal = (val, maxLen) => {
+                            if (val === null || val === undefined) return null;
+                            return val.toString().replace(/\s+/g, ' ').trim().substring(0, maxLen);
+                        };
 
-                    let district = await prisma.district.upsert({
-                        where: { code: districtCode },
-                        update: { deletedAt: null }, // Ensure it's not marked deleted
-                        create: { name: districtName, code: districtCode }
-                    });
-                    districtsHandledByExcel.add(district.id);
-                    districtsCreated++;
+                        let districtName = normalizeVal(rawRow[keyMap.district], 100);
+                        if (districtName) {
+                            districtName = districtName.toLowerCase().replace(/\b\w/g, s => s.toUpperCase());
+                        }
+                        
+                        const districtCode = generateDistrictCode(districtName);
+                        if (!districtName) continue;
 
-                    const cisNumberStr = normalizeVal(rawRow[keyMap.cisNumber], 50);
-                    const judgeNameStr = normalizeVal(rawRow[keyMap.judgeName], 150);
-                    const judgeDesig = normalizeVal(rawRow[keyMap.judgeDesignation], 100);
-                    const naibNameStr = normalizeVal(rawRow[keyMap.naibName], 150);
-                    const naibRankStr = normalizeVal(rawRow[keyMap.naibRank], 50);
-                    const naibPhoneStr = rawRow[keyMap.naibPhone] ? rawRow[keyMap.naibPhone].toString().replace(/\D/g, '').substring(0, 15) : null;
-
-                    if (!judgeDesig) continue;
-
-                    if (!districtUserCounters[districtCode]) districtUserCounters[districtCode] = 1;
-
-                    // ─── Clean designation & name
-                    let cleanDesig = judgeDesig
-                        .replace(/^\s*L\.?D\.?\s*/i, '')
-                        .replace(/^\s*Ld\.?\s*/i, '')
-                        .replace(/^,\s*/, '')
-                        .trim();
-                    if (cleanDesig.length > 0) cleanDesig = cleanDesig.charAt(0).toUpperCase() + cleanDesig.slice(1);
-
-                    let cleanName = judgeNameStr;
-                    if (judgeNameStr) {
-                        cleanName = judgeNameStr
-                            .replace(/^(Ms\.?|Mrs\.?|Smt\.?|Sh\.?|Shri\.?|Mr\.?|Dr\.?|Er\.?)\s*/i, '')
-                            .replace(/^,\s*/, '').replace(/,\s*$/, '').trim();
-                    }
-
-                    // 2. Process Judicial Officer
-                    let magistrate = null;
-                    if (cleanName) {
-                        magistrate = await prisma.magistrate.findFirst({
-                            where: { name: cleanName, districtId: district.id }
+                        let district = await prisma.district.upsert({
+                            where: { code: districtCode },
+                            update: { deletedAt: null },
+                            create: { name: districtName, code: districtCode }
                         });
+                        districtsHandledByExcel.add(district.id);
+                        districtsCreated++;
 
-                        if (!magistrate) {
-                            magistrate = await prisma.magistrate.create({
-                                data: { name: cleanName, designation: cleanDesig, districtId: district.id }
+                        const cisNumberStr = normalizeVal(rawRow[keyMap.cisNumber], 50);
+                        const judgeNameStr = normalizeVal(rawRow[keyMap.judgeName], 150);
+                        const judgeDesig = normalizeVal(rawRow[keyMap.judgeDesignation], 100);
+                        const naibNameStr = normalizeVal(rawRow[keyMap.naibName], 150);
+                        const naibRankStr = normalizeVal(rawRow[keyMap.naibRank], 50);
+                        const naibPhoneStr = rawRow[keyMap.naibPhone] ? rawRow[keyMap.naibPhone].toString().replace(/\D/g, '').substring(0, 15) : null;
+
+                        if (!judgeDesig) continue;
+
+                        if (!districtUserCounters[districtCode]) districtUserCounters[districtCode] = 1;
+
+                        // ─── Clean designation & name
+                        let cleanDesig = judgeDesig
+                            .replace(/^\s*L\.?D\.?\s*/i, '')
+                            .replace(/^\s*Ld\.?\s*/i, '')
+                            .replace(/^,\s*/, '')
+                            .trim();
+                        if (cleanDesig.length > 0) cleanDesig = cleanDesig.charAt(0).toUpperCase() + cleanDesig.slice(1);
+
+                        let cleanName = judgeNameStr;
+                        if (judgeNameStr) {
+                            cleanName = judgeNameStr
+                                .replace(/^(Ms\.?|Mrs\.?|Smt\.?|Sh\.?|Shri\.?|Mr\.?|Dr\.?|Er\.?)\s*/i, '')
+                                .replace(/^,\s*/, '').replace(/,\s*$/, '').trim();
+                        }
+
+                        // 2. Process Judicial Officer
+                        let magistrate = null;
+                        if (cleanName) {
+                            magistrate = await prisma.magistrate.findFirst({
+                                where: { name: cleanName, districtId: district.id }
                             });
-                            magistratesCreated++;
+
+                            if (!magistrate) {
+                                magistrate = await prisma.magistrate.create({
+                                    data: { name: cleanName, designation: cleanDesig, districtId: district.id }
+                                });
+                                magistratesCreated++;
+                            }
+                            magistratesSeenInExcel.add(magistrate.id);
                         }
-                        magistratesSeenInExcel.add(magistrate.id);
-                    }
 
-                    // 3. Process Court
-                    const courtName = normalizeVal(cleanDesig, 150);
-                    if (!districtCourtNos[districtCode]) districtCourtNos[districtCode] = 1;
-                    const seqStr = String(districtCourtNos[districtCode]).padStart(2, '0');
-                    const courtNoStr = `${districtCode}-CRT-${seqStr}`;
-                    districtCourtNos[districtCode]++;
+                        // 3. Process Court
+                        const courtName = normalizeVal(cleanDesig, 150);
+                        if (!districtCourtNos[districtCode]) districtCourtNos[districtCode] = 1;
+                        const seqStr = String(districtCourtNos[districtCode]).padStart(2, '0');
+                        const courtNoStr = `${districtCode}-CRT-${seqStr}`;
+                        districtCourtNos[districtCode]++;
 
-                    let court = await prisma.court.upsert({
-                        where: { districtId_courtNo: { districtId: district.id, courtNo: courtNoStr } },
-                        update: {
-                            name: courtName,
-                            cisNumber: cisNumberStr,
-                            magistrateId: magistrate ? magistrate.id : null,
-                            deletedAt: null // Ensure it's not marked deleted
-                        },
-                        create: {
-                            districtId: district.id,
-                            name: courtName,
-                            courtNo: courtNoStr,
-                            cisNumber: cisNumberStr,
-                            magistrateId: magistrate ? magistrate.id : null
-                        }
-                    });
-                    courtsSeenInExcel.add(court.id);
-                    courtsCreated++;
-
-                    // 4. Process Naib Court User
-                    if (naibNameStr) {
-                        const username = generateUsername('naib_court', districtCode, districtUserCounters[districtCode]++);
-                        await prisma.user.upsert({
-                            where: { username: username },
-                            update: { name: naibNameStr, phone: naibPhoneStr, rank: naibRankStr, lastSelectedCourtId: court.id, deletedAt: null },
+                        let court = await prisma.court.upsert({
+                            where: { districtId_courtNo: { districtId: district.id, courtNo: courtNoStr } },
+                            update: {
+                                name: courtName,
+                                cisNumber: cisNumberStr,
+                                magistrateId: magistrate ? magistrate.id : null,
+                                deletedAt: null
+                            },
                             create: {
-                                username: username,
-                                password: 'Welcome@123',
-                                name: naibNameStr,
-                                role: 'naib_court',
                                 districtId: district.id,
-                                phone: naibPhoneStr,
-                                rank: naibRankStr,
-                                lastSelectedCourtId: court.id
+                                name: courtName,
+                                courtNo: courtNoStr,
+                                cisNumber: cisNumberStr,
+                                magistrateId: magistrate ? magistrate.id : null
                             }
                         });
-                        usersCreated++;
+                        courtsSeenInExcel.add(court.id);
+                        courtsCreated++;
+
+                        // 4. Process Naib Court User
+                        if (naibNameStr) {
+                            const username = generateUsername('naib_court', districtCode, districtUserCounters[districtCode]++);
+                            await prisma.user.upsert({
+                                where: { username: username },
+                                update: { name: naibNameStr, phone: naibPhoneStr, rank: naibRankStr, lastSelectedCourtId: court.id, deletedAt: null },
+                                create: {
+                                    username: username,
+                                    password: 'Welcome@123',
+                                    name: naibNameStr,
+                                    role: 'naib_court',
+                                    districtId: district.id,
+                                    phone: naibPhoneStr,
+                                    rank: naibRankStr,
+                                    lastSelectedCourtId: court.id
+                                }
+                            });
+                            usersCreated++;
+                        }
                     }
                 }
             }
@@ -976,7 +979,6 @@ async function main() {
     // ─── Phase: Cleanup (Delete records not in Excel) ─────────
     console.log('\n🗑️ Checking for removed records (cleanup)...');
     
-    // 1. Delete Courts not in Excel (only for districts we processed)
     const allCourtsInHandledDistricts = await prisma.court.findMany({
         where: { districtId: { in: Array.from(districtsHandledByExcel) } }
     });
@@ -986,11 +988,10 @@ async function main() {
         if (!courtsSeenInExcel.has(c.id)) {
             console.log(`  🗑️ Deleting Court: ${c.courtNo} - ${c.name}`);
             try {
-                // Check if it has data entries first to avoid foreign key errors, or just try delete
                 await prisma.court.delete({ where: { id: c.id } });
                 courtsDeleted++;
             } catch (e) {
-                console.warn(`    ⚠️ Could not delete court ${c.courtNo}. It likely has existing case entries.`);
+                console.warn(`    ⚠️ Could not delete court ${c.courtNo}. It likely has active case entries.`);
             }
         }
     }
@@ -999,8 +1000,6 @@ async function main() {
     // ─── Create District Admins & Viewers ──────────────────
     const allKnownDistricts = await prisma.district.findMany({ where: { deletedAt: null } });
     console.log(`👤 Syncing accounts for ${allKnownDistricts.length} districts...`);
-    const adminPassword = 'district123';
-    const viewerPassword = 'viewer123';
 
     for (const district of allKnownDistricts) {
         const adminUsername = `admin_${district.code.toLowerCase()}`;
@@ -1008,7 +1007,7 @@ async function main() {
             where: { username: adminUsername },
             update: { deletedAt: null },
             create: {
-                username: adminUsername, password: adminPassword,
+                username: adminUsername, password: 'district123',
                 name: `District Admin ${district.name}`,
                 role: 'district_admin', districtId: district.id,
             },
@@ -1019,7 +1018,7 @@ async function main() {
             where: { username: viewerUsername },
             update: { deletedAt: null },
             create: {
-                username: viewerUsername, password: viewerPassword,
+                username: viewerUsername, password: 'viewer123',
                 name: `District Viewer ${district.name}`,
                 role: 'viewer_district', districtId: district.id,
             },
@@ -1032,7 +1031,7 @@ async function main() {
         update: { deletedAt: null },
         create: {
             username: 'viewer_state',
-            password: viewerPassword,
+            password: 'viewer123',
             name: 'State Viewer',
             role: 'viewer_state',
         },
