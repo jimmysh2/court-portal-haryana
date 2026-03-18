@@ -812,6 +812,10 @@ async function main() {
     let magistratesCreated = 0;
     let usersCreated = 0;
 
+    // Use to track unique counters across all sheets/files
+    let districtUserCounters = {};
+    let districtCourtNos = {};
+
     for (const file of files) {
         // Skip OLD Kaithal file only (we now load from the new updated file)
         if (file.toLowerCase().includes('kaithal') && !file.toLowerCase().includes('new data updated')) {
@@ -875,8 +879,8 @@ async function main() {
 
                     // 1. Process District
                     const districtCode = generateDistrictCode(districtName);
-                    if (!districtUserCouters[districtCode]) {
-                        districtUserCouters[districtCode] = 1;
+                    if (!districtUserCounters[districtCode]) {
+                        districtUserCounters[districtCode] = 1;
                     }
 
                     let district = await prisma.district.upsert({
@@ -971,7 +975,7 @@ async function main() {
 
                     // 4. Process Naib Court User (if exists)
                     if (naibNameStr) {
-                        const username = generateUsername('naib_court', districtCode, districtUserCouters[districtCode]++);
+                        const username = generateUsername('naib_court', districtCode, districtUserCounters[districtCode]++);
 
                         let user = await prisma.user.upsert({
                             // Hard to upsert on real name since multiple 'Ramesh' could exist, so we use generated username
@@ -1004,7 +1008,7 @@ async function main() {
     }
 
     // ─── Create District Admins & Viewers ──────────────────
-    const processedDistricts = Object.keys(districtUserCouters);
+    const processedDistricts = Object.keys(districtUserCounters);
     console.log(`👤 Creating accounts for ${processedDistricts.length} districts...`);
     const adminPassword = 'district123';
     const viewerPassword = 'viewer123';
