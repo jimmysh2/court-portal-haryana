@@ -87,7 +87,27 @@ async function sync() {
         fs.writeFileSync(csvPath, csvLines.join('\n') + '\n');
         console.log('   ✅ Disrtrict_PS.csv updated.');
 
-        console.log('\n✨ Sync Complete. All UI changes are now backed up to code files.');
+        // 3. Sync Districts, Courts, and Magistrates to master_structure.json
+        console.log('   - Exporting Master Structure (Districts/Courts/Judges)...');
+        const fullStructure = await prisma.district.findMany({
+            include: {
+                courts: {
+                    include: {
+                        magistrate: true,
+                        usersLastSelected: {
+                            where: { role: 'naib_court' }
+                        }
+                    }
+                }
+            },
+            orderBy: { name: 'asc' }
+        });
+
+        const structurePath = path.join(rootDir, 'prisma/master_structure.json');
+        fs.writeFileSync(structurePath, JSON.stringify(fullStructure, null, 2));
+        console.log('   ✅ prisma/master_structure.json updated.');
+
+        console.log('\n✨ Sync Complete. All UI changes including Court/District modifications are now backed up.');
 
     } catch (err) {
         console.error('   ❌ Sync failed:', err);

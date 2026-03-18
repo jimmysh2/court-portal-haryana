@@ -816,8 +816,116 @@ async function main() {
     let districtUserCounters = {};
     let districtCourtNos = {};
 
+    // ─── Phase 1: Master Structure Sync (UI Deletions/Updates) ─────────
+    const masterPath = path.join(__dirname, 'master_structure.json');
+    const existingDistrictCodes = new Set();
+    const existingCourtNos = new Set();
+
+    if (fs.existsSync(masterPath)) {
+        console.log('\n🏗️ Found Master Structure JSON. Syncing UI-managed configuration...');
+        const masterData = JSON.parse(fs.readFileSync(masterPath, 'utf8'));
+
+        for (const d of masterData) {
+            existingDistrictCodes.add(d.code);
+
+            // 1. Upsert District
+            const district = await prisma.district.upsert({
+                where: { code: d.code },
+                update: { name: d.name },
+                create: { name: d.name, code: d.code }
+            });
+            districtsCreated++;
+
+            for (const c of d.courts) {
+                existingCourtNos.add(c.courtNo);
+
+                // 2. Upsert Magistrate
+                let magistrate = null;
+                if (c.magistrate) {
+                    magistrate = await prisma.magistrate.upsert({
+                        where: { id: c.magistrate.id },
+                        update: {
+                            name: c.magistrate.name,
+                            designation: c.magistrate.designation,
+                            gender: c.magistrate.gender,
+                            districtId: district.id
+                        },
+                        create: {
+                            name: c.magistrate.name,
+                            designation: c.magistrate.designation,
+                            gender: c.magistrate.gender,
+                            districtId: district.id
+                        }
+                    });
+                    magistratesCreated++;
+                }
+
+                // 3. Upsert Court
+                const court = await prisma.court.upsert({
+                    where: { courtNo: c.courtNo },
+                    update: {
+                        name: c.name,
+                        cisNumber: c.cisNumber,
+                        magistrateId: magistrate ? magistrate.id : null,
+                        districtId: district.id
+                    },
+                    create: {
+                        courtNo: c.courtNo,
+                        name: c.name,
+                        cisNumber: c.cisNumber,
+                        magistrateId: magistrate ? magistrate.id : null,
+                        districtId: district.id
+                    }
+                });
+                courtsCreated++;
+
+                // 4. Sync Naib Court Users
+                if (c.usersLastSelected) {
+                    for (const u of c.usersLastSelected) {
+                        await prisma.user.upsert({
+                            where: { username: u.username },
+                            update: {
+                                name: u.name,
+                                phone: u.phone,
+                                rank: u.rank,
+                                lastSelectedCourtId: court.id
+                            },
+                            create: {
+                                username: u.username,
+                                password: 'Welcome@123',
+                                name: u.name,
+                                role: 'naib_court',
+                                districtId: district.id,
+                                phone: u.phone,
+                                rank: u.rank,
+                                lastSelectedCourtId: court.id
+                            }
+                        });
+                        usersCreated++;
+                    }
+                }
+            }
+        }
+        
+        // --- CLEANUP: Handle Deletions ---
+        const dbDistricts = await prisma.district.findMany({ where: { code: { in: Array.from(existingDistrictCodes) } }, select: { id: true } });
+        const districtIds = dbDistricts.map(dx => dx.id);
+        const dbCourts = await prisma.court.findMany({ where: { districtId: { in: districtIds } } });
+
+        for (const dbC of dbCourts) {
+            if (!existingCourtNos.has(dbC.courtNo)) {
+                console.log(`🗑️ Deleting Court ${dbC.courtNo} (removed from UI/JSON)`);
+                try {
+                    await prisma.court.delete({ where: { id: dbC.id } });
+                } catch (e) {
+                    console.warn(`  ⚠️ Could not delete court ${dbC.courtNo} - likely has active data entries.`);
+                }
+            }
+        }
+    }
+
+    // ─── Phase 2: Excel Import (Fallback / New Districts) ─────────
     for (const file of files) {
-        // Skip OLD Kaithal file only (we now load from the new updated file)
         if (file.toLowerCase().includes('kaithal') && !file.toLowerCase().includes('new data updated')) {
             console.log(`\n⏭️ Skipping old Kaithal file: ${file}`);
             continue;
@@ -828,12 +936,10 @@ async function main() {
 
         try {
             const workbook = xlsx.readFile(filepath);
-
             for (const sheetName of workbook.SheetNames) {
                 let rawRows = xlsx.utils.sheet_to_json(workbook.Sheets[sheetName], { defval: null });
                 if (rawRows.length === 0) continue;
 
-                // Map columns
                 const rawKeys = Object.keys(rawRows[0]);
                 const findKey = (keywords) => rawKeys.find(k => {
                     const nk = normalize(k);
@@ -850,12 +956,8 @@ async function main() {
                     naibPhone: findKey(['phone', 'phone no', 'phone number', 'phoneno'])
                 };
 
-                console.log(`   🔍 Column mapping for sheet "${sheetName}":`,
-                    Object.entries(keyMap).filter(([_, v]) => v).map(([k, v]) => `${k}->${v}`).join(', ') || 'None found');
-
                 for (let i = 0; i < rawRows.length; i++) {
                     const rawRow = rawRows[i];
-
                     const normalizeVal = (val, maxLen) => {
                         if (val === null || val === undefined) return null;
                         return val.toString().replace(/\s+/g, ' ').trim().substring(0, maxLen);
@@ -865,6 +967,11 @@ async function main() {
                     if (districtName) {
                         districtName = districtName.toLowerCase().replace(/\b\w/g, s => s.toUpperCase());
                     }
+                    
+                    const districtCode = generateDistrictCode(districtName);
+                    // CRITICAL: Skip if this district is already managed by Master JSON
+                    if (existingDistrictCodes.has(districtCode)) continue;
+
                     const cisNumberStr = normalizeVal(rawRow[keyMap.cisNumber], 50);
                     const judgeNameStr = normalizeVal(rawRow[keyMap.judgeName], 150);
                     const judgeDesig = normalizeVal(rawRow[keyMap.judgeDesignation], 100);
@@ -872,24 +979,14 @@ async function main() {
                     const naibRankStr = normalizeVal(rawRow[keyMap.naibRank], 50);
                     const naibPhoneStr = rawRow[keyMap.naibPhone] ? rawRow[keyMap.naibPhone].toString().replace(/\D/g, '').substring(0, 15) : null;
 
-                    // Skip rows heavily incomplete or explicitly requested to drop
-                    if (!districtName || !judgeDesig) {
-                        continue;
-                    }
+                    if (!districtName || !judgeDesig) continue;
 
-                    // 1. Process District
-                    const districtCode = generateDistrictCode(districtName);
-                    if (!districtUserCounters[districtCode]) {
-                        districtUserCounters[districtCode] = 1;
-                    }
+                    if (!districtUserCounters[districtCode]) districtUserCounters[districtCode] = 1;
 
                     let district = await prisma.district.upsert({
                         where: { code: districtCode },
                         update: {},
-                        create: {
-                            name: districtName,
-                            code: districtCode
-                        }
+                        create: { name: districtName, code: districtCode }
                     });
                     districtsCreated++;
 
@@ -917,14 +1014,11 @@ async function main() {
                             .replace(/^,\s*/, '')
                             .replace(/,\s*$/, '') // Remove trailing commas
                             .trim();
-                        // Reset gender
-                        gender = null;
                     }
 
                     // 2. Process Judicial Officer (if exists)
                     let magistrate = null;
                     if (cleanName) {
-                        // First see if a magistrate with this exact name exists in this district
                         magistrate = await prisma.magistrate.findFirst({
                             where: { name: cleanName, districtId: district.id }
                         });
@@ -943,9 +1037,7 @@ async function main() {
                     }
 
                     // 3. Process Court
-                    // Use the cleaned designation as the Court Name
                     const courtName = normalizeVal(cleanDesig, 150);
-                    // Generate unique court ID (e.g., AMB-CRT-01)
                     if (!districtCourtNos[districtCode]) districtCourtNos[districtCode] = 1;
                     const seqStr = String(districtCourtNos[districtCode]).padStart(2, '0');
                     const courtNoStr = `${districtCode}-CRT-${seqStr}`;
@@ -977,15 +1069,13 @@ async function main() {
                     if (naibNameStr) {
                         const username = generateUsername('naib_court', districtCode, districtUserCounters[districtCode]++);
 
-                        let user = await prisma.user.upsert({
-                            // Hard to upsert on real name since multiple 'Ramesh' could exist, so we use generated username
+                        await prisma.user.upsert({
                             where: { username: username },
                             update: {
-                                // If running this multiple times, just update their details
                                 name: naibNameStr,
                                 phone: naibPhoneStr,
                                 rank: naibRankStr,
-                                lastSelectedCourtId: court.id // Default them to this court
+                                lastSelectedCourtId: court.id
                             },
                             create: {
                                 username: username,
@@ -1009,6 +1099,11 @@ async function main() {
 
     // ─── Create District Admins & Viewers ──────────────────
     const processedDistricts = Object.keys(districtUserCounters);
+    // Add districts from Phase 1 too
+    existingDistrictCodes.forEach(code => {
+        if (!processedDistricts.includes(code)) processedDistricts.push(code);
+    });
+
     console.log(`👤 Creating accounts for ${processedDistricts.length} districts...`);
     const adminPassword = 'district123';
     const viewerPassword = 'viewer123';
@@ -1045,8 +1140,6 @@ async function main() {
             },
         });
     }
-    console.log(`\n✅ Created ${processedDistricts.length} District Admins (password: district123)`);
-    console.log(`✅ Created ${processedDistricts.length} District Viewers (password: viewer123)`);
 
     // State Viewer
     await prisma.user.upsert({
@@ -1059,14 +1152,12 @@ async function main() {
             role: 'viewer_state',
         },
     });
-    console.log('✅ Created State Viewer (viewer_state / viewer123)');
 
     // ─── Update Police Stations from CSV ──────────────────
     console.log('\n🔄 Updating Police Stations from CSV...');
     const csvPath = path.join(__dirname, '../Disrtrict_PS.csv');
     if (fs.existsSync(csvPath)) {
         const fileContent = fs.readFileSync(csvPath, 'utf-8');
-        // Handle UTF-8 BOM if present
         const cleanContent = fileContent.charCodeAt(0) === 0xFEFF ? fileContent.slice(1) : fileContent;
         
         const records = require('csv-parse/sync').parse(cleanContent, {
@@ -1075,54 +1166,42 @@ async function main() {
             trim: true
         });
 
-        console.log(`📋 Found ${records.length} records in CSV.`);
-
-        const districtGroups = {};
         for (const record of records) {
-            const dName = record.District ? record.District.trim() : null;
-            const psName = record.PS ? record.PS.trim() : null;
-            if (dName && psName) {
-                if (!districtGroups[dName.toLowerCase()]) districtGroups[dName.toLowerCase()] = { name: dName, stations: new Set() };
-                districtGroups[dName.toLowerCase()].stations.add(psName);
-            }
-        }
+            const districtName = record.District;
+            const psName = record.PS;
+            if (!psName || !districtName) continue;
 
-        const dbDistricts = await prisma.district.findMany();
-        for (const [lowerName, group] of Object.entries(districtGroups)) {
-            const district = dbDistricts.find(d => d.name.toLowerCase() === lowerName);
-            if (district) {
-                // Non-destructive: only add missing stations
-                const existingStations = await prisma.policeStation.findMany({
-                    where: { districtId: district.id },
-                    select: { name: true }
-                });
-                const existingNames = new Set(existingStations.map(ps => ps.name.toLowerCase().trim()));
-                
-                const newStationsData = Array.from(group.stations)
-                    .filter(name => !existingNames.has(name.toLowerCase().trim()))
-                    .map(name => ({ name, districtId: district.id }));
+            const districtCode = generateDistrictCode(districtName);
+            const district = await prisma.district.findUnique({ where: { code: districtCode } });
+            if (!district) continue;
 
-                if (newStationsData.length > 0) {
-                    console.log(`📍 Adding ${newStationsData.length} new stations for ${district.name}...`);
-                    await prisma.policeStation.createMany({ data: newStationsData });
-                } else {
-                    console.log(`📍 No new stations to add for ${district.name}.`);
+            await prisma.policeStation.upsert({
+                where: { 
+                    // Note: Schema doesn't have a unique constraint on districtId/name yet, 
+                    // but we'll use findFirst/create for now to avoid duplicates
+                    id: -1 // Dummy to force create or we search first
+                },
+                update: {},
+                create: {
+                    name: psName,
+                    districtId: district.id
                 }
-            }
+            }).catch(async () => {
+                // Better fallback for PS upsert without unique set
+                const existing = await prisma.policeStation.findFirst({
+                    where: { name: psName, districtId: district.id }
+                });
+                if (!existing) {
+                    await prisma.policeStation.create({
+                        data: { name: psName, districtId: district.id }
+                    });
+                }
+            });
         }
-    } else {
-        console.warn('⚠️ Disrtrict_PS.csv not found, skipping Police Station seed.');
+        console.log(`✅ Synced ${records.length} Police Stations.`);
     }
 
-    console.log('\n✅ Data Import Complete!');
-    console.log(`- Districts: ${processedDistricts.length}`);
-    console.log(`- Courts: ${courtsCreated}`);
-    console.log(`- Magistrates: ${magistratesCreated}`);
-    console.log(`- Naib Court Users: ${usersCreated}`);
-    console.log(`- District Admins: ${processedDistricts.length}`);
-    console.log(`- District Viewers: ${processedDistricts.length}`);
-    console.log(`- State Viewer: 1`);
-    console.log(`\nPasswords: Naib=Welcome@123, Admin=district123, Viewer=viewer123`);
+    console.log('\n🚀 Seeding completed successfully!');
 }
 
 main()
