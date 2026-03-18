@@ -2,11 +2,18 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../../utils/api';
 import { useLanguage } from '../../context/LanguageContext';
+import { useAuth } from '../../context/AuthContext';
 
 export default function ManagePoliceStations() {
     const { t } = useLanguage();
-    const { districtId } = useParams();
+    const { user } = useAuth();
+    const { districtId: paramDistrictId } = useParams();
     const navigate = useNavigate();
+    
+    // Determine which district we are managing
+    const districtId = paramDistrictId || user?.districtId;
+    const isReadOnly = user?.role === 'district_admin';
+
     const [district, setDistrict] = useState(null);
     const [policeStations, setPoliceStations] = useState([]);
     const [showForm, setShowForm] = useState(false);
@@ -16,6 +23,7 @@ export default function ManagePoliceStations() {
     const [loading, setLoading] = useState(true);
 
     const loadDistrict = async () => {
+        if (!districtId) return;
         try {
             const d = await api.get(`/districts/${districtId}`);
             setDistrict(d.district);
@@ -26,6 +34,7 @@ export default function ManagePoliceStations() {
     };
 
     const loadStations = async () => {
+        if (!districtId) return;
         try {
             const res = await api.get(`/districts/${districtId}/police-stations`);
             setPoliceStations(res.policeStations);
@@ -84,20 +93,24 @@ export default function ManagePoliceStations() {
         <div>
             <div className="page-header">
                 <div>
-                    <button className="btn btn-secondary btn-sm mb-sm" onClick={() => navigate('/dev/districts')}>
-                        ← Back to Districts
-                    </button>
-                    <h2>👮 Manage Police Stations: {district?.name}</h2>
+                    {!isReadOnly && (
+                        <button className="btn btn-secondary btn-sm mb-sm" onClick={() => navigate(`/${user?.role === 'developer' ? 'dev' : 'state'}/districts`)}>
+                            ← Back to Districts
+                        </button>
+                    )}
+                    <h2>🚔 {isReadOnly ? t('policeStations') : 'Manage Police Stations'}: {district?.name}</h2>
                 </div>
-                <button 
-                    className="btn btn-primary" 
-                    onClick={() => { setShowForm(true); setEditItem(null); setForm({ name: '' }); }}
-                >
-                    + Add Police Station
-                </button>
+                {!isReadOnly && (
+                    <button 
+                        className="btn btn-primary" 
+                        onClick={() => { setShowForm(true); setEditItem(null); setForm({ name: '' }); }}
+                    >
+                        + Add Police Station
+                    </button>
+                )}
             </div>
 
-            {showForm && (
+            {showForm && !isReadOnly && (
                 <div className="card mb-xl">
                     <h3 className="card-title mb-lg">{editItem ? 'Edit Police Station' : 'Add Police Station'}</h3>
                     {error && <div className="form-error mb-lg">{error}</div>}
@@ -129,7 +142,7 @@ export default function ManagePoliceStations() {
                             <tr>
                                 <th style={{ width: '80px' }}>S.No</th>
                                 <th>Police Station Name</th>
-                                <th style={{ width: '200px' }}>Actions</th>
+                                {!isReadOnly && <th style={{ width: '200px' }}>Actions</th>}
                             </tr>
                         </thead>
                         <tbody>
@@ -137,17 +150,19 @@ export default function ManagePoliceStations() {
                                 <tr key={ps.id}>
                                     <td data-label="S.No">{idx + 1}</td>
                                     <td data-label="Name">{ps.name}</td>
-                                    <td data-label="Actions">
-                                        <div className="flex gap-sm">
-                                            <button className="btn btn-secondary btn-sm" onClick={() => handleEdit(ps)}>Edit</button>
-                                            <button className="btn btn-danger btn-sm" onClick={() => handleDelete(ps.id)}>Delete</button>
-                                        </div>
-                                    </td>
+                                    {!isReadOnly && (
+                                        <td data-label="Actions">
+                                            <div className="flex gap-sm">
+                                                <button className="btn btn-secondary btn-sm" onClick={() => handleEdit(ps)}>Edit</button>
+                                                <button className="btn btn-danger btn-sm" onClick={() => handleDelete(ps.id)}>Delete</button>
+                                            </div>
+                                        </td>
+                                    )}
                                 </tr>
                             ))}
                             {policeStations.length === 0 && !loading && (
                                 <tr>
-                                    <td colSpan="3" className="text-center text-muted">No police stations found for this district.</td>
+                                    <td colSpan={isReadOnly ? 2 : 3} className="text-center text-muted">No police stations found for this district.</td>
                                 </tr>
                             )}
                         </tbody>
@@ -156,4 +171,6 @@ export default function ManagePoliceStations() {
             </div>
         </div>
     );
+}
+);
 }

@@ -93,6 +93,7 @@ function App() {
           {/* District Admin Routes */}
           <Route element={<PrivateRoute roles={['district_admin']}><Layout /></PrivateRoute>}>
             <Route path="/district" element={<DistrictDashboard />} />
+            <Route path="/district/police-stations" element={<ManagePoliceStations />} />
             <Route path="/district/courts" element={<ManageCourts />} />
             <Route path="/district/magistrates" element={<ManageMagistrates />} />
             <Route path="/district/naib-courts" element={<ManageNaibCourts />} />
