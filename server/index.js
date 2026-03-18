@@ -60,6 +60,16 @@ if (process.env.NODE_ENV === 'production') {
 // ─── Error Handler ───────────────────────────────────
 app.use(errorHandler);
 
+// ─── Background Jobs ──────────────────────────────────
+const cron = require('node-cron');
+const runBackup = require('../scripts/db-backup');
+
+// Schedule daily DB backup at 2:00 AM
+cron.schedule('0 2 * * *', () => {
+  console.log('⏰ Scheduled Task: Running daily DB backup...');
+  runBackup();
+});
+
 // ─── Start Server ────────────────────────────────────
 app.listen(PORT, () => {
   console.log(`🚀 Court Portal API running on port ${PORT}`);
