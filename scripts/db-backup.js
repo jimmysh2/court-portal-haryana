@@ -2,7 +2,50 @@ const { exec, spawn } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 const zlib = require('zlib');
+const { google } = require('googleapis');
 const { promisify } = require('util');
+
+/**
+ * Uploads a file to Google Drive
+ */
+async function uploadToDrive(filePath, fileName) {
+    if (!process.env.GD_SERVICE_ACCOUNT_JSON || !process.env.GD_FOLDER_ID) {
+        console.warn('⚠️  Cloud Backup skipped: Google Drive credentials or folder ID missing in .env');
+        return;
+    }
+
+    try {
+        console.log(`☁️  Uploading ${fileName} to Google Drive...`);
+        const credentials = JSON.parse(process.env.GD_SERVICE_ACCOUNT_JSON);
+        
+        const auth = new google.auth.GoogleAuth({
+            credentials,
+            scopes: ['https://www.googleapis.com/auth/drive.file'],
+        });
+
+        const drive = google.drive({ version: 'v3', auth });
+
+        const fileMetadata = {
+            name: fileName,
+            parents: [process.env.GD_FOLDER_ID],
+        };
+
+        const media = {
+            mimeType: 'application/gzip',
+            body: fs.createReadStream(filePath),
+        };
+
+        const response = await drive.files.create({
+            resource: fileMetadata,
+            media: media,
+            fields: 'id',
+        });
+
+        console.log(`✅ Cloud Backup Successful! Drive File ID: ${response.data.id}`);
+    } catch (err) {
+        console.error('❌ Google Drive Upload Failed:', err.message);
+    }
+}
 
 async function runBackup() {
     console.log('📦 Starting Docker-to-Host Compressed Backup...');
@@ -24,7 +67,6 @@ async function runBackup() {
         console.log(`📡 Extracting and compressing from container ${containerName}...`);
         
         // Execute pg_dump INSIDE the docker container
-        // Added --clean --if-exists to include DROP TABLE commands for a cleaner restore.
         const dumpStream = spawn('docker', [
             'exec', 
             '-i', 
@@ -38,7 +80,7 @@ async function runBackup() {
 
         await new Promise((resolve, reject) => {
             output.on('finish', () => {
-                console.log(`✅ Backup saved to host: ${backupPath}`);
+                console.log(`✅ Local backup saved: ${backupPath}`);
                 resolve();
             });
             dumpStream.on('error', (err) => {
@@ -49,8 +91,11 @@ async function runBackup() {
             output.on('error', reject);
         });
 
-        // ─── 3. Rotation (Keep only last 30 days) ───────────────────────────
-        console.log('🔄 Checking for old backups...');
+        // ─── 3. Google Drive Sync ──────────────────────────────────────────
+        await uploadToDrive(backupPath, filename);
+
+        // ─── 4. Rotation (Keep only last 30 days) ───────────────────────────
+        console.log('🔄 Checking for old local backups...');
         const files = fs.readdirSync(backupDir)
             .filter(f => f.startsWith('court-portal-backup-') && f.endsWith('.sql.gz'))
             .map(f => ({ name: f, time: fs.statSync(path.join(backupDir, f)).mtime.getTime() }))
