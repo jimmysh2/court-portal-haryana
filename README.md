@@ -9,10 +9,18 @@ This is the easiest and most recommended method. It sets up the database, backen
 
 **Prerequisites:** [Docker Desktop](https://www.docker.com/products/docker-desktop/) must be installed and running.
 
-1.  **Clone and Start**:
+1.  **Clone and Configure**:
     ```bash
     git clone https://github.com/jimmysh2/court-portal-haryana.git
     cd court-portal-haryana
+    
+    # Create configuration file from template
+    cp .env.example .env
+    ```
+    *Open `.env` and fill in your Google Drive credentials (if desired).*
+
+2.  **Start Services**:
+    ```bash
     docker-compose up --build -d
     ```
 2.  **Initialize Database (First time only)**:
