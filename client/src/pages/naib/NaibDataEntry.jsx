@@ -141,6 +141,10 @@ export default function NaibDashboard() {
         if (col.slug === 'police_station' && policeStations.length > 0) {
             const homeDistrictId = user?.districtId;
             const homeDistrictPS = policeStations.filter(ps => ps.districtId === homeDistrictId);
+            
+            // If the currently selected PS is from another district, we need to keep it in the list so it's visible
+            const currentSelectedPS = policeStations.find(ps => ps.name === value);
+            const isExternalSelected = currentSelectedPS && currentSelectedPS.districtId !== homeDistrictId;
 
             // Group by District (for the expanded view)
             const grouped = policeStations.reduce((acc, ps) => {
@@ -166,8 +170,8 @@ export default function NaibDashboard() {
                         value={value}
                         onChange={handlePSChange}
                         onBlur={() => {
-                            // Delay slightly so it doesn't flip before the selection is registered if coming from an option
-                            setTimeout(() => setShowOtherDistricts(false), 200);
+                            // Delay slightly so it doesn't flip before the selection is registered
+                            setTimeout(() => setShowOtherDistricts(false), 250);
                         }}
                     >
                         <option value="">Select Police Station...</option>
@@ -177,6 +181,11 @@ export default function NaibDashboard() {
                                 {homeDistrictPS.map(ps => (
                                     <option key={ps.id} value={ps.name}>{ps.name}</option>
                                 ))}
+                                {isExternalSelected && (
+                                    <option key={currentSelectedPS.id} value={currentSelectedPS.name}>
+                                        📍 {currentSelectedPS.name} ({currentSelectedPS.district?.name})
+                                    </option>
+                                )}
                                 <option value="__SHOW_ALL__" style={{ color: 'var(--color-primary)', fontWeight: 600 }}>
                                     ➕ Other District PS
                                 </option>
@@ -185,7 +194,9 @@ export default function NaibDashboard() {
                             Object.entries(grouped).map(([district, pss]) => (
                                 <optgroup key={district} label={district}>
                                     {pss.map(ps => (
-                                        <option key={ps.id} value={ps.name}>{ps.name}</option>
+                                        <option key={ps.id} value={ps.name}>
+                                            {ps.name} {ps.districtId !== homeDistrictId ? `(${ps.district?.name})` : ''}
+                                        </option>
                                     ))}
                                 </optgroup>
                             ))
