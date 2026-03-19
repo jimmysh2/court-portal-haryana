@@ -23,6 +23,7 @@ export default function NaibDashboard() {
     const [showSummary, setShowSummary] = useState(false);
     const [summaryData, setSummaryData] = useState([]);
     const [finalSubmitted, setFinalSubmitted] = useState(false);
+    const [showOtherDistricts, setShowOtherDistricts] = useState(false);
 
     const today = new Date().toISOString().split('T')[0];
     const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
@@ -136,8 +137,12 @@ export default function NaibDashboard() {
     const renderField = (col) => {
         const value = (formValues[col.slug] !== undefined && formValues[col.slug] !== null) ? formValues[col.slug] : '';
 
-        // Special handling for Police Station field - Group by District
+        // Special handling for Police Station field - Context Aware (Home District first)
         if (col.slug === 'police_station' && policeStations.length > 0) {
+            const homeDistrictId = user?.districtId;
+            const homeDistrictPS = policeStations.filter(ps => ps.districtId === homeDistrictId);
+
+            // Group by District (for the expanded view)
             const grouped = policeStations.reduce((acc, ps) => {
                 const distName = ps.district?.name || 'Other';
                 if (!acc[distName]) acc[distName] = [];
@@ -145,21 +150,48 @@ export default function NaibDashboard() {
                 return acc;
             }, {});
 
+            const handlePSChange = (e) => {
+                const val = e.target.value;
+                if (val === '__SHOW_ALL__') {
+                    setShowOtherDistricts(true);
+                } else {
+                    setFormValues({ ...formValues, [col.slug]: val });
+                }
+            };
+
             return (
-                <select
-                    className="form-select"
-                    value={value}
-                    onChange={e => setFormValues({ ...formValues, [col.slug]: e.target.value })}
-                >
-                    <option value="">Select Police Station...</option>
-                    {Object.entries(grouped).map(([district, pss]) => (
-                        <optgroup key={district} label={district}>
-                            {pss.map(ps => (
-                                <option key={ps.id} value={ps.name}>{ps.name}</option>
-                            ))}
-                        </optgroup>
-                    ))}
-                </select>
+                <div key={col.slug}>
+                    <select
+                        className="form-select"
+                        value={value}
+                        onChange={handlePSChange}
+                        onBlur={() => {
+                            // Delay slightly so it doesn't flip before the selection is registered if coming from an option
+                            setTimeout(() => setShowOtherDistricts(false), 200);
+                        }}
+                    >
+                        <option value="">Select Police Station...</option>
+                        
+                        {!showOtherDistricts ? (
+                            <>
+                                {homeDistrictPS.map(ps => (
+                                    <option key={ps.id} value={ps.name}>{ps.name}</option>
+                                ))}
+                                <option value="__SHOW_ALL__" style={{ color: 'var(--color-primary)', fontWeight: 600 }}>
+                                    ➕ Other District PS
+                                </option>
+                            </>
+                        ) : (
+                            Object.entries(grouped).map(([district, pss]) => (
+                                <optgroup key={district} label={district}>
+                                    {pss.map(ps => (
+                                        <option key={ps.id} value={ps.name}>{ps.name}</option>
+                                    ))}
+                                </optgroup>
+                            ))
+                        )}
+                    </select>
+                </div>
             );
         }
 
