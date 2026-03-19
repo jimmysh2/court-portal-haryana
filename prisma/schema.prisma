@@ -213,11 +213,12 @@ model Alert {
 }
 
 model PoliceStation {
-  id         Int      @id @default(autoincrement())
-  districtId Int      @map("district_id")
-  name       String   @db.VarChar(150)
-  createdAt  DateTime @default(now()) @map("created_at")
-  district   District @relation(fields: [districtId], references: [id])
+  id         Int       @id @default(autoincrement())
+  districtId Int       @map("district_id")
+  name       String    @db.VarChar(150)
+  createdAt  DateTime  @default(now()) @map("created_at")
+  deletedAt  DateTime? @map("deleted_at")
+  district   District  @relation(fields: [districtId], references: [id])
 
   @@unique([districtId, name])
   @@map("police_stations")

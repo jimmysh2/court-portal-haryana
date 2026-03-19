@@ -8,6 +8,7 @@ const router = express.Router();
 router.get('/all-police-stations', authenticate, async (req, res, next) => {
     try {
         const policeStations = await prisma.policeStation.findMany({
+            where: { deletedAt: null },
             include: { district: { select: { name: true } } },
             orderBy: [{ district: { name: 'asc' } }, { name: 'asc' }],
         });
@@ -42,7 +43,7 @@ router.get('/:id', authenticate, async (req, res, next) => {
 router.get('/:id/police-stations', authenticate, async (req, res, next) => {
     try {
         const policeStations = await prisma.policeStation.findMany({
-            where: { districtId: parseInt(req.params.id) },
+            where: { districtId: parseInt(req.params.id), deletedAt: null },
             orderBy: { name: 'asc' },
         });
         res.json({ policeStations });

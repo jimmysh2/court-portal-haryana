@@ -801,6 +801,18 @@ async function main() {
                 },
             });
         }
+
+        // --- CLEANUP COLS NO LONGER IN CONFIG ---
+        const activeSlugs = t.columns.map(c => c.slug);
+        await prisma.dataEntryColumn.updateMany({
+            where: {
+                tableId: table.id,
+                slug: { notIn: activeSlugs },
+                deletedAt: null
+            },
+            data: { deletedAt: new Date() }
+        });
+
         console.log(`  ✅ Sync Complete: ${t.name}`);
     }
           const files = fs.readdirSync(dir).filter(f => f.endsWith('.xlsx') && !f.startsWith('~$'));
@@ -1035,20 +1047,44 @@ async function main() {
         );
 
         let psUpserted = 0;
+        const csvDistrictsHandled = new Set();
+        const csvStationsPerDistrict = {}; // districtId -> Set of names
+
         for (const record of records) {
             if (!record.PS || !record.District) continue;
             const districtCode = generateDistrictCode(record.District);
             const district = await prisma.district.findUnique({ where: { code: districtCode } });
             if (!district) continue;
-            // Upsert on unique (districtId, name) — idempotent and safe to run repeatedly
+
+            const psName = record.PS.trim();
             await prisma.policeStation.upsert({
-                where: { districtId_name: { districtId: district.id, name: record.PS.trim() } },
-                update: {},  // nothing to update, name+districtId is the key
-                create: { name: record.PS.trim(), districtId: district.id },
+                where: { districtId_name: { districtId: district.id, name: psName } },
+                update: { deletedAt: null },
+                create: { name: psName, districtId: district.id },
             });
+            
+            csvDistrictsHandled.add(district.id);
+            if (!csvStationsPerDistrict[district.id]) csvStationsPerDistrict[district.id] = new Set();
+            csvStationsPerDistrict[district.id].add(psName);
             psUpserted++;
         }
-        console.log(`  ✅ Merged ${psUpserted} Police Stations from CSV (UI additions preserved).`);
+
+        // --- CLEANUP PS NO LONGER IN CSV ---
+        let psDeleted = 0;
+        for (const dId of csvDistrictsHandled) {
+            const activeNames = Array.from(csvStationsPerDistrict[dId]);
+            const removed = await prisma.policeStation.updateMany({
+                where: {
+                    districtId: dId,
+                    name: { notIn: activeNames },
+                    deletedAt: null
+                },
+                data: { deletedAt: new Date() }
+            });
+            psDeleted += removed.count;
+        }
+
+        console.log(`  ✅ Merged ${psUpserted} Police Stations from CSV (${psDeleted} removed).`);
     } else {
         console.log('  ⚠️  Disrtrict_PS.csv not found — skipping police stations.');
     }
