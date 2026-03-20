@@ -907,21 +907,43 @@ async function main() {
                 }
 
                 const naibName = normalizeVal(rawRow[keyMap.naibName], 150);
-                const naibCounterCurrent = districtUserCounters[districtCode] || 1;
+                let naibUser = null;
+
+                if (naibName) {
+                    const naibPhone = rawRow[keyMap.naibPhone]
+                        ? rawRow[keyMap.naibPhone].toString().replace(/\D/g, '').substring(0, 15)
+                        : '';
+                    
+                    // Deduplication key: normalized name + phone
+                    const naibKey = (normalize(naibName) + naibPhone).toLowerCase();
+                    
+                    if (!districtUserCounters[districtCode + '_naibs']) {
+                        districtUserCounters[districtCode + '_naibs'] = new Map();
+                    }
+
+                    const naibMap = districtUserCounters[districtCode + '_naibs'];
+                    
+                    if (naibMap.has(naibKey)) {
+                        naibUser = naibMap.get(naibKey);
+                    } else {
+                        const naibCounterCurrent = districtUserCounters[districtCode] || 1;
+                        naibUser = {
+                            username: generateUsername('naib_court', districtCode, naibCounterCurrent),
+                            name: naibName,
+                            rank: normalizeVal(rawRow[keyMap.naibRank], 50),
+                            phone: naibPhone || null,
+                        };
+                        naibMap.set(naibKey, naibUser);
+                        districtUserCounters[districtCode] = naibCounterCurrent + 1;
+                    }
+                }
+
                 dState.courts.set(courtNoStr, {
                     name: cleanDesig,
                     cisNumber: normalizeVal(rawRow[keyMap.cisNumber], 50),
                     magistrate: cleanName ? { name: cleanName, designation: cleanDesig } : null,
-                    naibUser: naibName ? {
-                        username: generateUsername('naib_court', districtCode, naibCounterCurrent),
-                        name: naibName,
-                        rank: normalizeVal(rawRow[keyMap.naibRank], 50),
-                        phone: rawRow[keyMap.naibPhone]
-                            ? rawRow[keyMap.naibPhone].toString().replace(/\D/g, '').substring(0, 15)
-                            : null,
-                    } : null,
+                    naibUser: naibUser,
                 });
-                if (naibName) districtUserCounters[districtCode] = naibCounterCurrent + 1;
             }
         } catch (e) {
             console.error(`  ❌ Error reading ${file}:`, e.message);
@@ -930,9 +952,20 @@ async function main() {
 
     // ─── Phase 2: Sync districts and courts to database ───────────────────────
     console.log('\n🚀 Phase 2: Syncing districts & courts to database...');
+    
+    // --- CLEANUP ALL EXISTING NAIB USERS BEFORE SYNC ---
+    // This handles duplicates from previous buggy runs: any naib not refreshed by 
+    // the new deduplicated logic will stay marked as deleted.
+    console.log('🧹 Cleaning up old Naib Court users for sync...');
+    await prisma.user.updateMany({
+        where: { role: 'naib_court', deletedAt: null },
+        data: { deletedAt: new Date() }
+    });
+
     const allSeenCourtIds = new Set();
     const districtsHandled = new Set();
 
+    const usersHandled = new Set();
     for (const [code, dData] of desiredState) {
         const district = await prisma.district.upsert({
             where: { code },
@@ -943,10 +976,8 @@ async function main() {
         districtsCreated++;
 
         for (const [courtNo, cData] of dData.courts) {
-            // Handle magistrate
             let magistrateId = null;
             if (cData.magistrate) {
-                // Upsert on unique (districtId, name) — eliminates duplicate judicial officers
                 const mag = await prisma.magistrate.upsert({
                     where: { districtId_name: { districtId: district.id, name: cData.magistrate.name } },
                     update: { designation: cData.magistrate.designation, deletedAt: null },
@@ -956,7 +987,6 @@ async function main() {
                 magistratesCreated++;
             }
 
-            // Upsert court by unique key (districtId + courtNo) — prevents duplicates
             const court = await prisma.court.upsert({
                 where: { districtId_courtNo: { districtId: district.id, courtNo } },
                 update: { name: cData.name, cisNumber: cData.cisNumber, magistrateId, deletedAt: null },
@@ -967,19 +997,25 @@ async function main() {
 
             // Handle naib court user
             if (cData.naibUser) {
+                const isNewUser = !usersHandled.has(cData.naibUser.username);
                 await prisma.user.upsert({
                     where: { username: cData.naibUser.username },
                     update: {
                         name: cData.naibUser.name, phone: cData.naibUser.phone,
-                        rank: cData.naibUser.rank, lastSelectedCourtId: court.id, deletedAt: null,
+                        rank: cData.naibUser.rank, lastSelectedCourtId: court.id, 
+                        districtId: district.id, deletedAt: null,
                     },
                     create: {
                         username: cData.naibUser.username, password: 'Welcome@123',
                         name: cData.naibUser.name, role: 'naib_court', districtId: district.id,
                         phone: cData.naibUser.phone, rank: cData.naibUser.rank, lastSelectedCourtId: court.id,
+                        deletedAt: null,
                     },
                 });
-                usersCreated++;
+                if (isNewUser) {
+                    usersHandled.add(cData.naibUser.username);
+                    usersCreated++;
+                }
             }
         }
     }
