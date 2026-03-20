@@ -5,13 +5,11 @@ const fs = require('fs');
 const { promisify } = require('util');
 const prisma = require('../lib/prisma');
 const { authenticate, requireRole } = require('../middleware/auth');
-const { runBackup } = require('../../scripts/db-backup');
+const { runBackup, BACKUP_DIR } = require('../../scripts/db-backup');
 
 const execAsync = promisify(exec);
 const { refreshBackupJob } = require('../services/cronService');
 const router = express.Router();
-
-const BACKUP_DIR = path.join(__dirname, '../../backups');
 
 // ─── 0. SETTINGS ENDPOINTS ───────────────────────────────────────
 // Get backup time setting
@@ -39,7 +37,23 @@ router.get('/settings/backup-time', authenticate, requireRole('developer'), asyn
 router.post('/settings/backup-time', authenticate, requireRole('developer'), async (req, res) => {
     try {
         const { value } = req.body;
-        if (!value || !/^\d{2}:\d{2}$/.test(value)) return res.status(400).json({ error: 'Invalid time' });
+        // Permissive regex for HH:mm or HH:mm:ss
+        if (!/^\d{1,2}:\d{2}(:\d{2})?$/.test(value)) {
+             // Second attempt: strip seconds if present
+             const parts = value?.split(':');
+             if (parts?.length >= 2) {
+                 const hhmm = `${parts[0]}:${parts[1]}`;
+                 if (/^\d{2}:\d{2}$/.test(hhmm)) {
+                      req.body.value = hhmm; // Overwrite for cleaner DB storage
+                 }
+             }
+        }
+        
+        // Final strict check for DB consistency
+        const cleanValue = req.body.value;
+        if (!cleanValue || !/^\d{2}:\d{2}$/.test(cleanValue)) {
+            return res.status(400).json({ error: 'Invalid time format (HH:mm required)' });
+        }
 
         // Raw SQL for absolute persistence guarantee
         await prisma.$executeRaw`INSERT INTO system_settings (key, value) VALUES ('backup_time', ${value}) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value`;
@@ -89,19 +103,25 @@ router.get('/backups-list', authenticate, requireRole('developer'), async (req, 
     } catch (err) { next(err); }
 });
 
-// ─── 2. POST /api/v1/system/backup ─────────────────────────────────────────
 // Trigger a manual on-demand backup
 router.post('/backup', authenticate, requireRole('developer'), async (req, res, next) => {
     try {
+        console.log('📡 [SYSTEM] Triggering manual backup...');
         const result = await runBackup();
+        
         if (result.success) {
+            console.log('✅ [SYSTEM] Manual backup process completed.');
             res.json({ 
-                message: `Backup created successfully! ${result.cloudSync ? '☁️ Pushed to Google Drive.' : '⚠️ Local copy only (Cloud sync skipped/failed).'}` 
+                message: `Backup created successfully! ${result.cloudSync ? '☁️ Pushed to Google Drive.' : '⚠️ Local copy only.'}` 
             });
         } else {
+            console.error('❌ [SYSTEM] Manual backup process failed:', result.error);
             res.status(500).json({ error: result.error || 'Backup failed' });
         }
-    } catch (err) { next(err); }
+    } catch (err) { 
+        console.error('❌ [SYSTEM] INTERNAL ERROR in /backup route:', err);
+        res.status(500).json({ error: 'Internal server error during backup' });
+    }
 });
 
 const zlib = require('zlib');

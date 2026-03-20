@@ -20,21 +20,17 @@ async function refreshBackupJob() {
 
         // Note: cron format is 'min hour dom mon dow'
         const cronSchedule = `${minutes} ${hours} * * *`;
+        const now = new Date();
+        console.log(`📡 [CRON] Refreshing backup job for ${hours}:${minutes} (Server Time: ${now.toLocaleTimeString()})`);
         
         backupJob = cron.schedule(cronSchedule, () => {
-            console.log(`⏰ [CRON] ${new Date().toLocaleTimeString()}: Triggering Scheduled DB Backup...`);
+            console.log(`⏰ [CRON] Triggering Scheduled DB Backup...`);
             runBackup().catch(err => console.error('⏰ [CRON] Scheduled backup failed:', err));
         });
 
-        const now = new Date();
-        console.log(`--------------------------------------------------`);
-        console.log(`✅ BACKUP SCHEDULED: ${hours}:${minutes} daily`);
-        console.log(`🎯 Cron Pattern: ${cronSchedule}`);
-        console.log(`⏱️  Current Server Time: ${now.toLocaleTimeString()}`);
-        console.log(`🌐 UTC Time: ${now.toUTCString()}`);
-        console.log(`--------------------------------------------------`);
+        console.log(`✅ [CRON] Scheduler Reset SUCCESS! Pattern: ${cronSchedule}`);
     } catch (error) {
-        console.error('❌ Failed to refresh backup job:', error);
+        console.error('❌ [CRON] CRITICAL Failure in refreshBackupJob:', error.message);
     }
 }
 
