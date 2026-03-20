@@ -36,32 +36,37 @@ router.get('/settings/backup-time', authenticate, requireRole('developer'), asyn
 // Update backup time setting
 router.post('/settings/backup-time', authenticate, requireRole('developer'), async (req, res) => {
     try {
-        const { value } = req.body;
-        // Permissive regex for HH:mm or HH:mm:ss
-        if (!/^\d{1,2}:\d{2}(:\d{2})?$/.test(value)) {
-             // Second attempt: strip seconds if present
-             const parts = value?.split(':');
-             if (parts?.length >= 2) {
-                 const hhmm = `${parts[0]}:${parts[1]}`;
-                 if (/^\d{2}:\d{2}$/.test(hhmm)) {
-                      req.body.value = hhmm; // Overwrite for cleaner DB storage
-                 }
+        let value = req.body.value;
+        
+        // Auto-sanitize HH:mm:ss -> HH:mm
+        if (value && typeof value === 'string' && value.includes(':')) {
+             const parts = value.split(':');
+             if (parts.length >= 2) {
+                 // Format as HH:mm with padding if needed
+                 const hh = parts[0].trim().padStart(2, '0');
+                 const mm = parts[1].trim().padStart(2, '0');
+                 value = `${hh}:${mm}`;
              }
         }
         
         // Final strict check for DB consistency
-        const cleanValue = req.body.value;
-        if (!cleanValue || !/^\d{2}:\d{2}$/.test(cleanValue)) {
+        // Final strict check for DB consistency
+        if (!value || !/^\d{2}:\d{2}$/.test(value)) {
             return res.status(400).json({ error: 'Invalid time format (HH:mm required)' });
         }
+        
+        const cleanValue = value;
 
         // Raw SQL for absolute persistence guarantee
-        await prisma.$executeRaw`INSERT INTO system_settings (key, value) VALUES ('backup_time', ${value}) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value`;
+        await prisma.$executeRaw`INSERT INTO system_settings (key, value) VALUES ('backup_time', ${cleanValue}) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value`;
 
-        console.log(`📡 [SETTINGS] Updated backup schedule in DB to: ${value}`);
+        console.log(`📡 [SETTINGS] Updated backup schedule in DB to: ${cleanValue}`);
         await refreshBackupJob();
         res.json({ message: 'Saved' });
-    } catch (err) { res.status(500).json({ error: 'Failed' }); }
+    } catch (err) { 
+        console.error('❌ [SETTINGS] Failed to save backup schedule:', err);
+        res.status(500).json({ error: `Server error: ${err.message}` }); 
+    }
 });
 
 // Delete a backup file
