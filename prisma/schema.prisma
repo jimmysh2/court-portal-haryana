@@ -40,6 +40,7 @@ model Court {
   transfersFromCourt TransferLog[] @relation("TransferFromCourt")
   transfersToCourt   TransferLog[] @relation("TransferToCourt")
   usersLastSelected  User[]        @relation("LastSelectedCourt")
+  dailySubmissions   DailySubmission[]
 
   @@unique([districtId, courtNo])
   @@map("courts")
@@ -85,6 +86,7 @@ model User {
   alerts              Alert[]            @relation("UserAlerts")
   district            District?          @relation(fields: [districtId], references: [id])
   lastSelectedCourt   Court?             @relation("LastSelectedCourt", fields: [lastSelectedCourtId], references: [id])
+  dailySubmissions    DailySubmission[]  @relation("SubmissionCreatedBy")
 
   @@map("users")
 }
@@ -115,6 +117,7 @@ model DataEntryTable {
   slug        String            @unique @db.VarChar(100)
   description String?
   singleRow   Boolean           @default(false) @map("single_row")
+  sortOrder   Int               @default(0) @map("sort_order")
   createdBy   Int               @map("created_by")
   createdAt   DateTime          @default(now()) @map("created_at")
   deletedAt   DateTime?         @map("deleted_at")
@@ -284,4 +287,18 @@ model SystemSetting {
   value String
   
   @@map("system_settings")
+}
+
+model DailySubmission {
+  id          Int      @id @default(autoincrement())
+  courtId     Int      @map("court_id")
+  entryDate   DateTime @map("entry_date") @db.Date
+  submittedAt DateTime @default(now()) @map("submitted_at")
+  submittedBy Int      @map("submitted_by")
+
+  court       Court    @relation(fields: [courtId], references: [id])
+  user        User     @relation("SubmissionCreatedBy", fields: [submittedBy], references: [id])
+
+  @@unique([courtId, entryDate])
+  @@map("daily_submissions")
 }

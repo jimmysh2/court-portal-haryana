@@ -64,8 +64,9 @@ app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 app.use(errorHandler);
 
 // ─── Background Jobs ──────────────────────────────────
-const { refreshBackupJob } = require('./services/cronService');
+const { refreshBackupJob, initDailyJobs } = require('./services/cronService');
 refreshBackupJob();
+initDailyJobs();
 
 // ─── Start Server ────────────────────────────────────
 app.listen(PORT, () => {

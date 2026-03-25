@@ -1,8 +1,17 @@
 const express = require('express');
 const prisma = require('../lib/prisma');
 const { authenticate, requireRole } = require('../middleware/auth');
+const { checkPendingDataEntries } = require('../services/cronService');
 
 const router = express.Router();
+
+// POST /api/v1/alerts/manual-check
+router.post('/manual-check', authenticate, requireRole('district_admin', 'state_admin', 'developer'), async (req, res, next) => {
+    try {
+        await checkPendingDataEntries();
+        res.json({ success: true, message: 'Auditor successfully swept pending daily calendars and fired alerts locally.' });
+    } catch (err) { next(err); }
+});
 
 // GET /api/v1/alerts
 router.get('/', authenticate, async (req, res, next) => {

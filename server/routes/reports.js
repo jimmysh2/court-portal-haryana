@@ -1,175 +1,344 @@
 const express = require('express');
 const prisma = require('../lib/prisma');
 const { authenticate } = require('../middleware/auth');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+const axios = require('axios');
+const FormData = require('form-data');
 
 const router = express.Router();
 
-// GET /api/v1/reports/court?courtId=&dateFrom=&dateTo=&tableId=
-router.get('/court', authenticate, async (req, res, next) => {
+// Multer for Audio transcription (Whisper)
+const uploadDir = path.join(__dirname, '..', '..', 'uploads', 'temp_audio');
+if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => cb(null, uploadDir),
+    filename: (req, file, cb) => cb(null, Date.now() + path.extname(file.originalname))
+});
+const upload = multer({ storage });
+
+// POST /api/v1/reports/ai-assistant/transcript
+router.post('/ai-assistant/transcript', authenticate, upload.single('file'), async (req, res, next) => {
+    const groqKey = process.env.GROQ_API_KEY;
+    if (!groqKey) return res.status(500).json({ error: 'Groq API Key not configured' });
+    if (!req.file) return res.status(400).json({ error: 'No audio file provided' });
+
     try {
-        const { courtId, dateFrom, dateTo, tableId } = req.query;
-        if (!courtId) return res.status(400).json({ error: 'courtId is required' });
+        const formData = new FormData();
+        formData.append('file', fs.createReadStream(req.file.path));
+        formData.append('model', 'whisper-large-v3');
+        formData.append('response_format', 'text');
 
-        const where = { courtId: parseInt(courtId) };
-        if (tableId) where.tableId = parseInt(tableId);
-        if (dateFrom || dateTo) {
-            where.entryDate = {};
-            if (dateFrom) where.entryDate.gte = new Date(dateFrom);
-            if (dateTo) where.entryDate.lte = new Date(dateTo);
-        }
-
-        const entries = await prisma.dataEntry.findMany({
-            where,
-            include: {
-                table: { select: { id: true, name: true, slug: true } },
-                magistrate: { select: { id: true, name: true } },
-                createdByUser: { select: { id: true, name: true } },
-            },
-            orderBy: [{ entryDate: 'desc' }, { tableId: 'asc' }],
+        const response = await axios.post('https://api.groq.com/openai/v1/audio/transcriptions', formData, {
+            headers: {
+                ...formData.getHeaders(),
+                'Authorization': `Bearer ${groqKey}`
+            }
         });
 
-        const court = await prisma.court.findUnique({
-            where: { id: parseInt(courtId) },
-            include: {
-                district: { select: { name: true } },
-                magistrate: { select: { name: true, designation: true } },
-            },
-        });
+        // Cleanup temp file
+        fs.unlinkSync(req.file.path);
 
-        res.json({ court, entries, count: entries.length });
-    } catch (err) { next(err); }
+        res.json({ text: response.data });
+    } catch (err) {
+        console.error('Groq Transcript Error:', err.response?.data || err.message);
+        if (req.file) fs.unlinkSync(req.file.path);
+        next(err);
+    }
 });
 
-// GET /api/v1/reports/magistrate?magistrateId=&dateFrom=&dateTo=
-router.get('/magistrate', authenticate, async (req, res, next) => {
+// ── Dynamic Schema Extraction ──
+async function getDbSchema() {
+    let schema = '';
     try {
-        const { magistrateId, dateFrom, dateTo } = req.query;
-        if (!magistrateId) return res.status(400).json({ error: 'magistrateId is required' });
+        const tables = await prisma.$queryRaw`
+            SELECT table_name FROM information_schema.tables
+            WHERE table_schema = 'public' AND table_type = 'BASE TABLE'
+        `;
+        for (const t of tables) {
+            const name = t.table_name;
+            const cols = await prisma.$queryRawUnsafe(
+                `SELECT column_name, data_type, is_nullable FROM information_schema.columns WHERE table_name = $1 AND table_schema = 'public'`,
+                name
+            );
+            schema += `\nTable: ${name}\nColumns:\n`;
+            cols.forEach(c => {
+                schema += `  - ${c.column_name} (${c.data_type}${c.is_nullable === 'NO' ? ', NOT NULL' : ''})\n`;
+            });
+            try {
+                const sample = await prisma.$queryRawUnsafe(`SELECT * FROM "${name}" LIMIT 3`);
+                if (sample.length > 0) schema += `Sample data: ${JSON.stringify(sample, (k, v) => typeof v === 'bigint' ? v.toString() : v, 2)}\n`;
+            } catch (_) {}
+        }
+    } catch (err) {
+        console.error('Schema extraction failed:', err);
+    }
+    return schema;
+}
 
-        const where = { magistrateId: parseInt(magistrateId) };
-        if (dateFrom || dateTo) {
-            where.entryDate = {};
-            if (dateFrom) where.entryDate.gte = new Date(dateFrom);
-            if (dateTo) where.entryDate.lte = new Date(dateTo);
+// ── Conversation history (in-memory, per session) ──
+const conversations = new Map();
+
+// ── Build system prompt once at startup ──
+let SYSTEM_PROMPT = '';
+(async () => {
+    try {
+        const dbSchema = await getDbSchema();
+        SYSTEM_PROMPT = `You are an intelligent database assistant for the Haryana Court Data Portal.
+You help users query and analyze court data using natural language.
+Today's date is ${new Date().toISOString().split('T')[0]}.
+
+Here is the database schema:
+${dbSchema}
+
+IMPORTANT RULES:
+1. When the user asks about data, generate a valid PostgreSQL query.
+2. Return ONLY this JSON format (no markdown, no code blocks):
+{
+  "sql": "YOUR SQL QUERY HERE",
+  "explanation": "Brief friendly explanation of what the data shows",
+  "visualization": "table" | "bar_chart" | "pie_chart" | "line_chart" | "stat_card" | "map" | "none",
+  "chart_config": {
+    "title": "Chart Title",
+    "x_label": "X axis label",
+    "y_label": "Y axis label",
+    "label_column": "column_name for labels",
+    "value_column": "column_name for values"
+  }
+}
+3. ONLY use SELECT statements. Never INSERT, UPDATE, DELETE, DROP, ALTER, TRUNCATE.
+4. Choose the best visualization:
+   - "stat_card" for single values (counts, averages, sums)
+   - "table" for multi-row, multi-column results
+   - "bar_chart" for category comparisons
+   - "pie_chart" for proportions/percentages
+   - "line_chart" for time-series trends
+   - "map" if user asks for geographic view (query MUST return latitude, longitude columns)
+   - "none" for conversational responses (greetings, help, export questions, etc.)
+5. For non-data questions (greetings, help, export, actions), respond with:
+   { "sql": null, "explanation": "your helpful conversational response", "visualization": "none", "chart_config": null }
+6. Limit results to max 100 rows. For maps max 500.
+7. Use PostgreSQL syntax: ILIKE for case-insensitive search, TO_CHAR/EXTRACT for dates.
+8. Use JOINs when data from multiple tables is needed.
+9. For data_entries, remember the 'values' column is JSONB. Use ->> operator to extract fields.
+   Example: SELECT COUNT(*) as total FROM data_entries e JOIN data_entry_tables t ON e.table_id = t.id WHERE t.name ILIKE '%FIR%';
+10. Always alias aggregate columns (COUNT(*) as count, SUM(...) as total, etc.).`;
+        console.log('✅ AI schema context loaded');
+    } catch (err) {
+        console.error('Failed to load AI schema:', err);
+    }
+})();
+
+// POST /api/v1/reports/ai-assistant/query  (matches replication plan contract)
+router.post('/ai-assistant/query', authenticate, async (req, res, next) => {
+    const groqKey = process.env.GROQ_API_KEY;
+    if (!groqKey) return res.status(500).json({ error: 'GROQ_API_KEY not configured' });
+
+    const { prompt, conversationId } = req.body;
+    if (!prompt) return res.status(400).json({ error: 'Message is required' });
+
+    try {
+        // ── Conversation history ──
+        const convId = conversationId || 'default';
+        if (!conversations.has(convId)) conversations.set(convId, []);
+        const history = conversations.get(convId);
+
+        let contextPrompt = SYSTEM_PROMPT + '\n\n';
+        const recent = history.slice(-6);
+        if (recent.length > 0) {
+            contextPrompt += 'Recent conversation:\n';
+            recent.forEach(h => { contextPrompt += `User: ${h.user}\nAssistant: ${h.assistant}\n\n`; });
+        }
+        contextPrompt += `\nUser's new question: ${prompt}\n\nRespond with valid JSON only:`;
+
+        const response = await axios.post('https://api.groq.com/openai/v1/chat/completions', {
+            model: 'llama-3.3-70b-versatile',
+            messages: [{ role: 'user', content: contextPrompt }],
+            temperature: 0.1,
+            response_format: { type: 'json_object' }
+        }, {
+            headers: { 'Authorization': `Bearer ${groqKey}`, 'Content-Type': 'application/json' }
+        });
+
+        // ── Parse AI response ──
+        let parsed;
+        try {
+            const text = response.data.choices[0]?.message?.content || '';
+            const match = text.match(/\{[\s\S]*\}/);
+            parsed = match ? JSON.parse(match[0]) : null;
+            if (!parsed) throw new Error('No JSON');
+        } catch (_) {
+            parsed = { sql: null, explanation: 'Could you rephrase that? I didn\'t quite understand.', visualization: 'none', chart_config: null };
         }
 
-        const entries = await prisma.dataEntry.findMany({
-            where,
-            include: {
-                table: { select: { id: true, name: true, slug: true } },
-                court: { select: { id: true, name: true, courtNo: true } },
-                createdByUser: { select: { id: true, name: true } },
-            },
-            orderBy: [{ entryDate: 'desc' }, { tableId: 'asc' }],
+        // ── Execute SQL safely ──
+        let queryResult = null, error = null;
+        if (parsed.sql) {
+            try {
+                const sanitized = parsed.sql.trim().toUpperCase();
+                if (!sanitized.startsWith('SELECT') && !sanitized.startsWith('WITH')) {
+                    throw new Error('Only SELECT queries are allowed');
+                }
+                const result = await prisma.$queryRawUnsafe(parsed.sql);
+                queryResult = JSON.parse(JSON.stringify(result, (k, v) => typeof v === 'bigint' ? v.toString() : v));
+            } catch (dbErr) {
+                error = dbErr.message;
+                parsed.explanation += `\n\n⚠️ SQL Error: ${dbErr.message}`;
+                parsed.visualization = 'none';
+            }
+        }
+
+        // ── Save to conversation history ──
+        history.push({ user: prompt, assistant: parsed.explanation });
+        if (history.length > 20) history.splice(0, history.length - 20);
+
+        // ── Return in replication plan contract format ──
+        res.json({
+            explanation: parsed.explanation,
+            sql: parsed.sql,
+            data: queryResult,
+            visualization: parsed.visualization,
+            chart_config: parsed.chart_config || null,
+            error
         });
 
-        const magistrate = await prisma.magistrate.findUnique({
-            where: { id: parseInt(magistrateId) },
-            include: { district: { select: { name: true } } },
+    } catch (err) {
+        console.error('AI Error:', err.response?.data || err.message);
+        res.status(500).json({
+            error: 'Failed to process request',
+            explanation: 'Something went wrong on my end. Please try again.',
+            visualization: 'none'
         });
-
-        res.json({ magistrate, entries, count: entries.length });
-    } catch (err) { next(err); }
+    }
 });
 
-// GET /api/v1/reports/district?districtId=&dateFrom=&dateTo=&tableId=
-router.get('/district', authenticate, async (req, res, next) => {
+// POST /api/v1/reports/generate
+router.post('/generate', authenticate, async (req, res, next) => {
     try {
-        let districtId = req.query.districtId ? parseInt(req.query.districtId) : null;
+        const { mode, districtId, dateFrom, dateTo, tableIds } = req.body;
 
-        // District-level users can only see their own district
+        // Common validations
+        if (!mode || !dateFrom || !dateTo) {
+            return res.status(400).json({ error: 'mode, dateFrom, and dateTo are required' });
+        }
+
+        const dFrom = new Date(dateFrom);
+        const dTo = new Date(dateTo);
+
+        // Security role checks for districts
+        let targetDistrict = districtId;
         if (['district_admin', 'naib_court', 'viewer_district'].includes(req.user.role)) {
-            districtId = req.user.districtId;
+            // Cannot select 'all' or other districts
+            targetDistrict = req.user.districtId;
         }
 
-        if (!districtId) return res.status(400).json({ error: 'districtId is required' });
+        // PENDING ENTRIES MODE
+        if (mode === 'pending-entries') {
+            const courtsWhere = { deletedAt: null };
+            if (targetDistrict !== 'all') courtsWhere.districtId = parseInt(targetDistrict);
+            
+            const courts = await prisma.court.findMany({
+                where: courtsWhere,
+                include: { district: { select: { name: true } } }
+            });
 
-        const where = { districtId };
-        if (req.query.tableId) where.tableId = parseInt(req.query.tableId);
-        if (req.query.dateFrom || req.query.dateTo) {
-            where.entryDate = {};
-            if (req.query.dateFrom) where.entryDate.gte = new Date(req.query.dateFrom);
-            if (req.query.dateTo) where.entryDate.lte = new Date(req.query.dateTo);
+            const submissions = await prisma.dailySubmission.findMany({
+                where: {
+                    entryDate: { gte: dFrom, lte: dTo },
+                    ...(targetDistrict !== 'all' && { court: { districtId: parseInt(targetDistrict) } })
+                }
+            });
+
+            const subSet = new Set(submissions.map(s => `${s.courtId}_${s.entryDate.toISOString().split('T')[0]}`));
+
+            // Generate array of dates
+            const dateArray = [];
+            let curr = new Date(dFrom);
+            while (curr <= dTo) {
+                dateArray.push(curr.toISOString().split('T')[0]);
+                curr.setDate(curr.getDate() + 1);
+            }
+
+            const pendingData = [];
+            for (const court of courts) {
+                const missingDates = [];
+                for (const d of dateArray) {
+                    if (!subSet.has(`${court.id}_${d}`)) {
+                        missingDates.push(d);
+                    }
+                }
+                if (missingDates.length > 0) {
+                    pendingData.push({
+                        courtId: court.id,
+                        courtName: court.name,
+                        courtNo: court.courtNo,
+                        districtName: court.district.name,
+                        missingDates,
+                        missingCount: missingDates.length
+                    });
+                }
+            }
+            return res.json({ pendingData });
+        }
+
+        // DISTRICT-WISE / DATE-WISE MODES
+        if (!tableIds || !Array.isArray(tableIds) || tableIds.length === 0) {
+            return res.status(400).json({ error: 'tableIds must be a non-empty array' });
+        }
+
+        const smWhere = { entryDate: { gte: dFrom, lte: dTo } };
+        if (targetDistrict !== 'all') {
+            smWhere.court = { districtId: parseInt(targetDistrict) };
+        }
+        
+        // Fetch valid submissions to enforce the lock constraint
+        const submissions = await prisma.dailySubmission.findMany({
+            where: smWhere,
+            select: { courtId: true, entryDate: true }
+        });
+        const validSet = new Set(submissions.map(s => `${s.courtId}_${s.entryDate.toISOString().split('T')[0]}`));
+
+        const entryWhere = {
+            tableId: { in: tableIds },
+            entryDate: { gte: dFrom, lte: dTo }
+        };
+        if (targetDistrict !== 'all') {
+            entryWhere.districtId = parseInt(targetDistrict);
         }
 
         const entries = await prisma.dataEntry.findMany({
-            where,
+            where: entryWhere,
             include: {
-                table: { select: { id: true, name: true, slug: true } },
+                table: { select: { id: true, name: true, slug: true, columns: true, singleRow: true } },
                 court: { select: { id: true, name: true, courtNo: true } },
-                magistrate: { select: { id: true, name: true } },
-                createdByUser: { select: { id: true, name: true } },
+                district: { select: { id: true, name: true } },
+                createdByUser: { select: { id: true, name: true } }
             },
-            orderBy: [{ entryDate: 'desc' }, { tableId: 'asc' }],
+            orderBy: [{ entryDate: 'asc' }]
         });
 
-        const district = await prisma.district.findUnique({
-            where: { id: districtId },
-        });
+        // Filter out entries whose (courtId, date) are not in validSet
+        const filteredEntries = entries.filter(e => validSet.has(`${e.courtId}_${e.entryDate.toISOString().split('T')[0]}`));
 
-        // Summary stats
-        const uniqueDates = [...new Set(entries.map(e => e.entryDate.toISOString().split('T')[0]))];
-        const uniqueCourts = [...new Set(entries.map(e => e.courtId))];
-
-        res.json({
-            district,
-            entries,
-            count: entries.length,
-            summary: {
-                totalEntries: entries.length,
-                datesWithData: uniqueDates.length,
-                courtsWithData: uniqueCourts.length,
-            },
-        });
-    } catch (err) { next(err); }
-});
-
-// GET /api/v1/reports/state?dateFrom=&dateTo=&tableId=
-router.get('/state', authenticate, async (req, res, next) => {
-    try {
-        // Only state-level users
-        if (['naib_court', 'district_admin', 'viewer_district'].includes(req.user.role)) {
-            return res.status(403).json({ error: 'State-level reports require state-level access' });
-        }
-
-        const where = {};
-        if (req.query.tableId) where.tableId = parseInt(req.query.tableId);
-        if (req.query.dateFrom || req.query.dateTo) {
-            where.entryDate = {};
-            if (req.query.dateFrom) where.entryDate.gte = new Date(req.query.dateFrom);
-            if (req.query.dateTo) where.entryDate.lte = new Date(req.query.dateTo);
-        }
-
-        // Aggregate by district
-        const districts = await prisma.district.findMany({
-            where: { deletedAt: null },
-            select: { id: true, name: true },
-        });
-
-        const summaries = await Promise.all(
-            districts.map(async (district) => {
-                const count = await prisma.dataEntry.count({
-                    where: { ...where, districtId: district.id },
-                });
-                const courts = await prisma.court.count({
-                    where: { districtId: district.id, deletedAt: null },
-                });
-                return {
-                    district,
-                    totalEntries: count,
-                    totalCourts: courts,
+        // Group the valid entries by table so the frontend can easily iterate over each table checked
+        const reportByTable = {};
+        for (const e of filteredEntries) {
+            if (!reportByTable[e.tableId]) {
+                reportByTable[e.tableId] = {
+                    tableId: e.table.id,
+                    tableName: e.table.name,
+                    tableSlug: e.table.slug,
+                    singleRow: e.table.singleRow,
+                    columns: e.table.columns,
+                    entries: []
                 };
-            })
-        );
+            }
+            reportByTable[e.tableId].entries.push(e);
+        }
 
-        const totalEntries = summaries.reduce((sum, s) => sum + s.totalEntries, 0);
-
-        res.json({
-            state: 'Haryana',
-            summaries,
-            totalEntries,
-            totalDistricts: districts.length,
-        });
+        res.json({ tables: Object.values(reportByTable) });
     } catch (err) { next(err); }
 });
 

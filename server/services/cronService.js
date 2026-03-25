@@ -33,4 +33,92 @@ async function refreshBackupJob() {
     }
 }
 
-module.exports = { refreshBackupJob };
+// Generates an alert for District Admins containing a list of courts
+// that failed to finalize their entries yesterday.
+async function checkPendingDataEntries() {
+    console.log('⏰ [CRON] Executing checkPendingDataEntries job...');
+    try {
+        const yesterday = new Date(Date.now() - 86400000);
+        yesterday.setHours(0, 0, 0, 0);
+
+        // Fetch active courts with missing submissions for yesterday
+        const courts = await prisma.court.findMany({
+            where: { deletedAt: null },
+            include: { district: true }
+        });
+
+        const missingCourtsByDistrict = {};
+
+        for (const court of courts) {
+            const hasSubmission = await prisma.dailySubmission.findFirst({
+                where: {
+                    courtId: court.id,
+                    entryDate: yesterday
+                }
+            });
+
+            if (!hasSubmission) {
+                if (!missingCourtsByDistrict[court.districtId]) {
+                    missingCourtsByDistrict[court.districtId] = [];
+                }
+                missingCourtsByDistrict[court.districtId].push(court.courtNo);
+            }
+        }
+
+        // Generate alerts per district
+        for (const districtId in missingCourtsByDistrict) {
+            const adminDistrictId = parseInt(districtId);
+            const missingNos = missingCourtsByDistrict[districtId];
+            
+            // Generate standard date string for yesterday
+            const timestampStr = yesterday.toISOString().split('T')[0];
+            const message = `Data entry pending for yesterday (${timestampStr}) for ${missingNos.length} courts. Courts: ${missingNos.join(', ')}`;
+
+            // Find District Admins for this district
+            const districtAdmins = await prisma.user.findMany({
+                where: { role: 'district_admin', districtId: adminDistrictId, deletedAt: null }
+            });
+
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            for (const admin of districtAdmins) {
+                // Avoid duplicating the alert if cron runs twice accidentally
+                const existingAlert = await prisma.alert.findFirst({
+                    where: {
+                        userId: admin.id,
+                        alertType: 'pending_data_entry',
+                        alertDate: today
+                    }
+                });
+
+                if (!existingAlert) {
+                    await prisma.alert.create({
+                        data: {
+                            districtId: adminDistrictId,
+                            userId: admin.id,
+                            alertType: 'pending_data_entry',
+                            message: message,
+                            alertDate: today,
+                        }
+                    });
+                }
+            }
+        }
+        
+        console.log('✅ [CRON] Completed checkPendingDataEntries job successfully.');
+    } catch (err) {
+        console.error('❌ [CRON] Failed generating pending data entry alerts:', err);
+    }
+}
+
+// Initializes standard daily system chron jobs not dependent on variable config
+function initDailyJobs() {
+    // Run at 08:00 AM every single day
+    cron.schedule('0 8 * * *', () => {
+        checkPendingDataEntries();
+    });
+    console.log('✅ [CRON] Registered Daily Pending Entry Auditor (08:00 AM)');
+}
+
+module.exports = { refreshBackupJob, initDailyJobs, checkPendingDataEntries };

@@ -2,279 +2,528 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../utils/api';
 import * as XLSX from 'xlsx';
+import { getTableColumns } from '../../utils/reportConfigs';
 
 export default function ReportsPage() {
     const { user } = useAuth();
-    const [reportType, setReportType] = useState('district');
+    const [mode, setMode] = useState('district-court-wise'); // "district-court-wise", "date-wise", "pending-entries"
+    
+    // District / Court
+    const [districts, setDistricts] = useState([]);
+    const [selectedDistrict, setSelectedDistrict] = useState('all'); // "all" or districtId
+    
+    // Date presets
+    const [datePreset, setDatePreset] = useState('range'); 
+    // presets for district-court-wise: "range", "month", "year"
+    // presets for date-wise: "day-wise", "month-wise", "year-wise"
+    // "pending-entries": only uses "range"
+    
     const [dateFrom, setDateFrom] = useState('');
     const [dateTo, setDateTo] = useState('');
-    const [courts, setCourts] = useState([]);
-    const [magistrates, setMagistrates] = useState([]);
-    const [districts, setDistricts] = useState([]);
+
+    // Tables selection
     const [tables, setTables] = useState([]);
-    const [selectedCourt, setSelectedCourt] = useState('');
-    const [selectedMagistrate, setSelectedMagistrate] = useState('');
-    const [selectedDistrict, setSelectedDistrict] = useState('');
-    const [selectedTable, setSelectedTable] = useState('');
+    const [selectedTables, setSelectedTables] = useState([]); 
+
     const [reportData, setReportData] = useState(null);
+    const [pendingData, setPendingData] = useState(null);
     const [loading, setLoading] = useState(false);
+
+    // Modal state for clickable aggregates
+    const [modalData, setModalData] = useState(null);
 
     const isStateLevel = ['developer', 'state_admin', 'viewer_state'].includes(user.role);
 
     useEffect(() => {
-        api.get('/courts').then(d => setCourts(d.courts)).catch(console.error);
-        api.get('/magistrates').then(d => setMagistrates(d.magistrates)).catch(console.error);
         api.get('/districts').then(d => setDistricts(d.districts)).catch(console.error);
-        api.get('/data-tables').then(d => setTables(d.tables)).catch(console.error);
+        api.get('/data-tables').then(d => {
+            setTables(d.tables);
+            // Default select all
+            setSelectedTables(d.tables.map(t => t.id));
+        }).catch(console.error);
+        
+        // Default to yesterday
+        const yest = new Date(Date.now() - 86400000);
+        const localFormat = (d) => {
+            const y = d.getFullYear();
+            const m = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${y}-${m}-${day}`;
+        };
+        const yestStr = localFormat(yest);
+        setDateFrom(yestStr);
+        setDateTo(yestStr);
     }, []);
+
+    const handleSelectAllTables = () => {
+        if (selectedTables.length === tables.length) {
+            setSelectedTables([]);
+        } else {
+            setSelectedTables(tables.map(t => t.id));
+        }
+    };
+
+    const handleTableToggle = (id) => {
+        if (selectedTables.includes(id)) {
+            setSelectedTables(selectedTables.filter(t => t !== id));
+        } else {
+            setSelectedTables([...selectedTables, id]);
+        }
+    };
+
+    const localFormat = (d) => {
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${y}-${m}-${day}`;
+    };
+
+    const handlePresetChange = (preset) => {
+        setDatePreset(preset);
+        const today = new Date();
+        const yest = new Date(Date.now() - 86400000);
+        
+        if (preset === 'range' || preset === 'day-wise') {
+            if (preset === 'day-wise') {
+                // For the current month, upto previous day
+                const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+                setDateFrom(localFormat(firstDay));
+                setDateTo(localFormat(yest));
+            } else {
+                setDateFrom(localFormat(yest));
+                setDateTo(localFormat(yest));
+            }
+        } else if (preset === 'month' || preset === 'month-wise') {
+            if (preset === 'month-wise') {
+                // For the current year, upto previous month
+                const firstDay = new Date(today.getFullYear(), 0, 1);
+                const lastDay = new Date(today.getFullYear(), today.getMonth(), 0);
+                setDateFrom(localFormat(firstDay));
+                setDateTo(localFormat(lastDay));
+            } else {
+                // Default to previous month
+                const firstDay = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+                const lastDay = new Date(today.getFullYear(), today.getMonth(), 0);
+                setDateFrom(localFormat(firstDay));
+                setDateTo(localFormat(lastDay));
+            }
+        } else if (preset === 'year' || preset === 'year-wise') {
+            if (preset === 'year-wise') {
+                // Upto previous year (default view last 5 years)
+                const firstDay = new Date(today.getFullYear() - 5, 0, 1);
+                const lastDay = new Date(today.getFullYear() - 1, 11, 31);
+                setDateFrom(localFormat(firstDay));
+                setDateTo(localFormat(lastDay));
+            } else {
+                // Default to previous year
+                const firstDay = new Date(today.getFullYear() - 1, 0, 1);
+                const lastDay = new Date(today.getFullYear() - 1, 11, 31);
+                setDateFrom(localFormat(firstDay));
+                setDateTo(localFormat(lastDay));
+            }
+        }
+    };
 
     const generateReport = async () => {
         setLoading(true);
         setReportData(null);
+        setPendingData(null);
+        
         try {
-            let params = '';
-            if (dateFrom) params += `&dateFrom=${dateFrom}`;
-            if (dateTo) params += `&dateTo=${dateTo}`;
-            if (selectedTable) params += `&tableId=${selectedTable}`;
-
-            let data;
-            switch (reportType) {
-                case 'court':
-                    data = await api.get(`/reports/court?courtId=${selectedCourt}${params}`);
-                    break;
-                case 'magistrate':
-                    data = await api.get(`/reports/magistrate?magistrateId=${selectedMagistrate}${params}`);
-                    break;
-                case 'district':
-                    data = await api.get(`/reports/district?districtId=${selectedDistrict || user.districtId}${params}`);
-                    break;
-                case 'state':
-                    data = await api.get(`/reports/state?${params.replace('&', '')}`);
-                    break;
+            if (mode !== 'pending-entries' && selectedTables.length === 0) {
+                throw new Error("Please select at least one table.");
             }
-            setReportData(data);
+
+            const payload = {
+                mode,
+                districtId: isStateLevel ? selectedDistrict : user.districtId,
+                dateFrom,
+                dateTo,
+                tableIds: selectedTables
+            };
+
+            const data = await api.post('/reports/generate', payload);
+
+            if (mode === 'pending-entries') {
+                setPendingData(data.pendingData);
+            } else {
+                // Ensure data is sorted by table order or just keep backend order
+                setReportData(data.tables || []);
+            }
         } catch (err) {
-            alert(err.message);
+            alert(err.error || err.message || 'Error generating report');
         } finally {
             setLoading(false);
         }
     };
 
-    const exportToExcel = () => {
-        if (!reportData || !reportData.entries || reportData.entries.length === 0) return;
+    const openAggregateModal = (title, entries) => {
+        setModalData({ title, entries });
+    };
 
-        const table = tables.find(t => t.id === parseInt(selectedTable));
-        const columns = table ? table.columns : [];
+    const exportToExcel = (tableId, tableName, entries) => {
+        if (!entries || entries.length === 0) return;
+        const targetTableDef = tables.find(t => t.id === tableId);
+        if (!targetTableDef) return;
 
-        const exportData = reportData.entries.map(entry => {
+        const exportData = entries.map(entry => {
             const row = {
                 'Date': new Date(entry.entryDate).toLocaleDateString('en-IN'),
-                'Table Name': entry.table?.name || '—',
-                'Court Name': entry.court?.name || '—',
-                'Entered By': entry.createdByUser?.name || '—',
+                'District': entry.district?.name || '—',
+                'Court': entry.court?.name || '—',
             };
-
-            // Add dynamic columns if a specific table is selected
-            if (columns.length > 0) {
-                columns.forEach(col => {
-                    const val = entry.values?.[col.slug];
-                    row[col.name] = (val !== undefined && val !== null) ? val : '—';
-                });
-            } else {
-                // Fallback: list all values in one column if no specific table selected
-                row['Values'] = Object.entries(entry.values || {}).map(([k, v]) => `${k}: ${v !== null && v !== undefined ? v : '—'}`).join(' | ');
-            }
-
+            targetTableDef.columns.forEach(col => {
+                const val = entry.values?.[col.slug];
+                row[col.name] = (val !== undefined && val !== null) ? val : '—';
+            });
             return row;
         });
 
         const worksheet = XLSX.utils.json_to_sheet(exportData);
         const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, "Report");
-
-        const fileName = `Report_${reportType}_${new Date().toISOString().split('T')[0]}.xlsx`;
-        XLSX.writeFile(workbook, fileName);
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Report Data");
+        XLSX.writeFile(workbook, `${tableName}_Report.xlsx`);
     };
 
     return (
         <div>
-            <div className="page-header">
-                <h2>📈 Reports</h2>
+            <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <h2 style={{ margin: 0 }}>📈 Reports Hub</h2>
+                <button 
+                    className="btn btn-primary" 
+                    onClick={() => {
+                        const pathPrefix = user.role === 'developer' ? 'dev' : 
+                                         user.role === 'state_admin' ? 'state' : 
+                                         user.role === 'district_admin' ? 'district' : 'viewer';
+                        window.location.href = `/${pathPrefix}/reports/ai-assistant`;
+                    }}
+                    style={{ background: 'var(--gradient-primary)', border: 'none', display: 'flex', alignItems: 'center', gap: '8px' }}
+                >
+                    ✨ Ask AI Assistant
+                </button>
             </div>
 
             <div className="card mb-xl">
                 <h3 className="card-title mb-lg">Generate Report</h3>
-                <div className="form-row">
-                    <div className="form-group">
-                        <label className="form-label">Report Type</label>
-                        <select className="form-select" value={reportType} onChange={e => setReportType(e.target.value)}>
-                            <option value="court">By Court</option>
-                            <option value="magistrate">By Judicial Officer</option>
-                            <option value="district">By District</option>
-                            {isStateLevel && <option value="state">State Overview</option>}
-                        </select>
-                    </div>
-
-                    {reportType === 'court' && (
-                        <div className="form-group">
-                            <label className="form-label">Court</label>
-                            <select className="form-select" value={selectedCourt} onChange={e => setSelectedCourt(e.target.value)}>
-                                <option value="">Select Court</option>
-                                {courts.map(c => <option key={c.id} value={c.id}>{c.courtNo} — {c.name}</option>)}
-                            </select>
-                        </div>
-                    )}
-
-                    {reportType === 'magistrate' && (
-                        <div className="form-group">
-                            <label className="form-label">Judicial Officer</label>
-                            <select className="form-select" value={selectedMagistrate} onChange={e => setSelectedMagistrate(e.target.value)}>
-                                <option value="">Select Judicial Officer</option>
-                                {magistrates.map(m => <option key={m.id} value={m.id}>{m.name} ({m.designation})</option>)}
-                            </select>
-                        </div>
-                    )}
-
-                    {reportType === 'district' && isStateLevel && (
-                        <div className="form-group">
-                            <label className="form-label">District</label>
-                            <select className="form-select" value={selectedDistrict} onChange={e => setSelectedDistrict(e.target.value)}>
-                                <option value="">Select District</option>
-                                {districts.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
-                            </select>
-                        </div>
-                    )}
-
-                    <div className="form-group">
-                        <label className="form-label">Table</label>
-                        <select className="form-select" value={selectedTable} onChange={e => setSelectedTable(e.target.value)}>
-                            <option value="">All Tables</option>
-                            {tables.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
-                        </select>
-                    </div>
-
-                    <div className="form-group">
-                        <label className="form-label">From</label>
-                        <input className="form-input" type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} />
-                    </div>
-                    <div className="form-group">
-                        <label className="form-label">To</label>
-                        <input className="form-input" type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} />
-                    </div>
+                
+                <div className="tabs mb-lg" style={{ display: 'flex', gap: '8px', borderBottom: '1px solid var(--color-border)', paddingBottom: '8px' }}>
+                    <button className={`btn ${mode === 'district-court-wise' ? 'btn-primary' : 'btn-secondary'}`} onClick={() => { setMode('district-court-wise'); setDatePreset('range'); }}>District/Court Wise</button>
+                    <button className={`btn ${mode === 'date-wise' ? 'btn-primary' : 'btn-secondary'}`} onClick={() => { setMode('date-wise'); setDatePreset('day-wise'); }}>Date Wise</button>
+                    <button className={`btn ${mode === 'pending-entries' ? 'btn-primary' : 'btn-secondary'}`} onClick={() => { setMode('pending-entries'); setDatePreset('range'); }}>Pending Entries Alerts</button>
                 </div>
 
-                <button className="btn btn-primary" onClick={generateReport} disabled={loading}>
-                    {loading ? 'Generating...' : '📊 Generate Report'}
+                <div className="form-row">
+                    {/* District Dropdown (Unified) */}
+                    {isStateLevel && (
+                        <div className="form-group">
+                            <label className="form-label">District Selection</label>
+                            <select className="form-select" value={selectedDistrict} onChange={e => setSelectedDistrict(e.target.value)}>
+                                <option value="all">🌐 All Districts (District Wise View)</option>
+                                {districts.map(d => <option key={d.id} value={d.id}>📍 {d.name} (Court Wise View)</option>)}
+                            </select>
+                        </div>
+                    )}
+
+                    {/* Date Presets based on Mode */}
+                    {mode === 'district-court-wise' && (
+                        <div className="form-group">
+                            <label className="form-label">Date Preset</label>
+                            <select className="form-select" value={datePreset} onChange={e => handlePresetChange(e.target.value)}>
+                                <option value="range">Any Date Range</option>
+                                <option value="month">Particular Month</option>
+                                <option value="year">Particular Year</option>
+                            </select>
+                        </div>
+                    )}
+
+                    {mode === 'date-wise' && (
+                        <div className="form-group">
+                            <label className="form-label">Date Preset</label>
+                            <select className="form-select" value={datePreset} onChange={e => handlePresetChange(e.target.value)}>
+                                <option value="day-wise">Day Wise</option>
+                                <option value="month-wise">Month Wise</option>
+                                <option value="year-wise">Year Wise</option>
+                            </select>
+                        </div>
+                    )}
+
+                    {/* Dynamic Date Inputs based on preset and mode */}
+                    {(mode === 'pending-entries' || (mode === 'district-court-wise' && datePreset === 'range')) && (
+                        <>
+                            <div className="form-group">
+                                <label className="form-label">From</label>
+                                <input className="form-input" type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} />
+                            </div>
+                            <div className="form-group">
+                                <label className="form-label">To</label>
+                                <input className="form-input" type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} />
+                            </div>
+                        </>
+                    )}
+
+                    {mode === 'district-court-wise' && datePreset === 'month' && (
+                        <div className="form-group">
+                            <label className="form-label">Select Month</label>
+                            <input 
+                                className="form-input" 
+                                type="month" 
+                                value={dateFrom ? dateFrom.substring(0, 7) : ''} 
+                                onChange={e => {
+                                    const yyyyMm = e.target.value; 
+                                    if(yyyyMm) {
+                                        const [y, m] = yyyyMm.split('-');
+                                        const firstDay = new Date(y, parseInt(m)-1, 1);
+                                        const lastDay = new Date(y, parseInt(m), 0);
+                                        setDateFrom(localFormat(firstDay));
+                                        setDateTo(localFormat(lastDay));
+                                    }
+                                }}
+                            />
+                        </div>
+                    )}
+
+                    {mode === 'district-court-wise' && datePreset === 'year' && (
+                        <div className="form-group">
+                            <label className="form-label">Select Year</label>
+                            <select 
+                                className="form-select" 
+                                value={dateFrom ? dateFrom.substring(0, 4) : ''} 
+                                onChange={e => {
+                                    const y = parseInt(e.target.value);
+                                    if(y) {
+                                        const firstDay = new Date(y, 0, 1);
+                                        const lastDay = new Date(y, 11, 31);
+                                        setDateFrom(localFormat(firstDay));
+                                        setDateTo(localFormat(lastDay));
+                                    }
+                                }}
+                            >
+                                <option value="">-- Choose Year --</option>
+                                <option value={new Date().getFullYear()}>{new Date().getFullYear()}</option>
+                                <option value={new Date().getFullYear() - 1}>{new Date().getFullYear() - 1}</option>
+                                <option value={new Date().getFullYear() - 2}>{new Date().getFullYear() - 2}</option>
+                                <option value={new Date().getFullYear() - 3}>{new Date().getFullYear() - 3}</option>
+                            </select>
+                        </div>
+                    )}
+
+                    {mode === 'date-wise' && (
+                        <div className="form-group" style={{ 
+                            gridColumn: '1 / -1', 
+                            padding: '12px', 
+                            background: 'var(--color-surface-hover)', 
+                            borderLeft: '4px solid var(--color-primary)',
+                            borderRadius: '4px'
+                        }}>
+                            <p style={{ margin: 0, fontWeight: 500, color: 'var(--color-text)' }}>
+                                {datePreset === 'day-wise' && '📅 For the current month, upto previous day'}
+                                {datePreset === 'month-wise' && '📅 For the current year, upto previous month'}
+                                {datePreset === 'year-wise' && '📅 Upto previous year'}
+                            </p>
+                        </div>
+                    )}
+                </div>
+
+                {/* Table Checkboxes (Excluded for pending-entries) */}
+                {mode !== 'pending-entries' && (
+                    <div className="form-group mt-md">
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                            <label className="form-label" style={{ margin: 0 }}>Select Tables to Include</label>
+                            <button className="btn btn-secondary btn-sm" onClick={handleSelectAllTables}>
+                                {selectedTables.length === tables.length ? 'Deselect All' : 'Select All'}
+                            </button>
+                        </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '8px', maxHeight: '200px', overflowY: 'auto', padding: '10px', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', background: 'var(--color-surface-hover)' }}>
+                            {tables.map(t => (
+                                <label key={t.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', cursor: 'pointer' }}>
+                                    <input 
+                                        type="checkbox" 
+                                        checked={selectedTables.includes(t.id)} 
+                                        onChange={() => handleTableToggle(t.id)} 
+                                        style={{ width: '16px', height: '16px' }}
+                                    />
+                                    {t.name}
+                                </label>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                <button className="btn btn-primary mt-lg" onClick={generateReport} disabled={loading} style={{ width: '100%', padding: '12px', fontSize: '1.1rem' }}>
+                    {loading ? 'Generating...' : '📊 Generate Detailed Report'}
                 </button>
             </div>
 
-            {/* Report Results */}
-            {reportData && (
-                <div className="mt-xl">
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-lg)' }}>
-                        <h3 style={{ margin: 0 }}>Results</h3>
-                        {reportData.entries && reportData.entries.length > 0 && (
-                            <button className="btn btn-secondary" onClick={exportToExcel}>
-                                📥 Export to Excel
-                            </button>
-                        )}
-                    </div>
-
-                    {/* State Overview */}
-                    {reportType === 'state' && reportData.summaries && (
-                        <div>
-                            <div className="stat-cards">
-                                <div className="stat-card">
-                                    <div className="stat-icon">🏛️</div>
-                                    <div className="stat-value">{reportData.totalDistricts}</div>
-                                    <div className="stat-label">Districts</div>
-                                </div>
-                                <div className="stat-card">
-                                    <div className="stat-icon">📋</div>
-                                    <div className="stat-value">{reportData.totalEntries}</div>
-                                    <div className="stat-label">Total Entries</div>
-                                </div>
-                            </div>
-
-                            <div className="data-table-wrapper">
-                                <table className="data-table">
-                                    <thead>
-                                        <tr><th>District</th><th>Courts</th><th>Total Entries</th></tr>
-                                    </thead>
-                                    <tbody>
-                                        {reportData.summaries.map(s => (
-                                            <tr key={s.district.id}>
-                                                <td data-label="District">{s.district.name}</td>
-                                                <td data-label="Courts">{s.totalCourts}</td>
-                                                <td data-label="Total Entries">{s.totalEntries}</td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* District Summary */}
-                    {reportType === 'district' && reportData.summary && (
-                        <div>
-                            <div className="stat-cards">
-                                <div className="stat-card">
-                                    <div className="stat-icon">📋</div>
-                                    <div className="stat-value">{reportData.summary.totalEntries}</div>
-                                    <div className="stat-label">Total Entries</div>
-                                </div>
-                                <div className="stat-card">
-                                    <div className="stat-icon">📅</div>
-                                    <div className="stat-value">{reportData.summary.datesWithData}</div>
-                                    <div className="stat-label">Days with Data</div>
-                                </div>
-                                <div className="stat-card">
-                                    <div className="stat-icon">⚖️</div>
-                                    <div className="stat-value">{reportData.summary.courtsWithData}</div>
-                                    <div className="stat-label">Courts with Data</div>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Entries Table */}
-                    {reportData.entries && reportData.entries.length > 0 && (
-                        <div className="data-table-wrapper mt-xl">
+            {/* Results Rendering */}
+            {mode === 'pending-entries' && pendingData && (
+                <div className="card">
+                    <h3 className="card-title text-danger">⚠️ Pending Data Entries</h3>
+                    {pendingData.length === 0 ? (
+                        <p style={{ color: 'var(--color-success)', fontWeight: 'bold' }}>All courts have submitted their data for the selected dates!</p>
+                    ) : (
+                        <div className="data-table-wrapper mt-md">
                             <table className="data-table">
                                 <thead>
                                     <tr>
-                                        <th>Date</th>
-                                        <th>Table</th>
-                                        <th>Court</th>
-                                        <th>Created By</th>
-                                        <th>Values</th>
+                                        <th>District</th>
+                                        <th>Court Name</th>
+                                        <th>Missing Days Count</th>
+                                        <th>Specific Dates Missing</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {reportData.entries.slice(0, 100).map(e => (
-                                        <tr key={e.id}>
-                                            <td data-label="Date">{new Date(e.entryDate).toLocaleDateString('en-IN')}</td>
-                                            <td data-label="Table"><span className="badge badge-primary">{e.table?.name}</span></td>
-                                            <td data-label="Court">{e.court?.name || '—'}</td>
-                                            <td data-label="Created By">{e.createdByUser?.name || '—'}</td>
-                                            <td data-label="Values" style={{ maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                                {Object.entries(e.values || {}).map(([k, v]) => `${k}: ${v !== null && v !== undefined ? v : '—'}`).join(' | ')}
-                                            </td>
+                                    {pendingData.map((pd, idx) => (
+                                        <tr key={idx}>
+                                            <td data-label="District">{pd.districtName}</td>
+                                            <td data-label="Court Name">Court {pd.courtNo} - {pd.courtName}</td>
+                                            <td data-label="Count" style={{ fontWeight: 'bold', color: 'var(--color-danger)' }}>{pd.missingCount}</td>
+                                            <td data-label="Dates">{pd.missingDates.join(', ')}</td>
                                         </tr>
                                     ))}
                                 </tbody>
                             </table>
                         </div>
                     )}
+                </div>
+            )}
 
-                    {reportData.entries?.length === 0 && (
-                        <div className="empty-state mt-xl">
-                            <div className="icon">📊</div>
-                            <h3>No data found</h3>
-                            <p>Try adjusting the date range or filters</p>
-                        </div>
+            {mode !== 'pending-entries' && reportData && (
+                <div className="report-results">
+                    {reportData.length === 0 ? (
+                        <div className="card"><p>No data found for the selected criteria. (Ensure Naib courts have clicked "Final Submit" for the requested dates).</p></div>
+                    ) : (
+                        reportData.map((tableBlock) => {
+                            const rawEntries = tableBlock.entries || [];
+                            if (rawEntries.length === 0) return null;
+
+                            // Grouping Logic
+                            const grouped = {};
+                            rawEntries.forEach(entry => {
+                                let groupKey = '';
+                                let groupLabel = '';
+                                if (mode === 'district-court-wise') {
+                                    if (isStateLevel && selectedDistrict === 'all') {
+                                        groupKey = entry.districtId;
+                                        groupLabel = entry.district?.name;
+                                    } else {
+                                        groupKey = entry.courtId;
+                                        groupLabel = `Court ${entry.court?.courtNo} - ${entry.court?.name}`;
+                                    }
+                                } else if (mode === 'date-wise') {
+                                    const dateStr = new Date(entry.entryDate).toLocaleDateString('en-CA');
+                                    groupKey = dateStr;
+                                    groupLabel = new Date(entry.entryDate).toLocaleDateString('en-IN');
+                                }
+                                if (!groupKey) return;
+                                if (!grouped[groupKey]) {
+                                    grouped[groupKey] = { label: groupLabel, entries: [] };
+                                }
+                                grouped[groupKey].entries.push(entry);
+                            });
+                            const groupedData = Object.values(grouped).sort((a,b) => a.label.localeCompare(b.label));
+
+                            // Get column definitions
+                            const tableColumns = getTableColumns(tableBlock.tableSlug);
+
+                            let rowHeaderLabel = 'Scope';
+                            if (mode === 'date-wise') {
+                                rowHeaderLabel = 'Date';
+                            } else if (isStateLevel && selectedDistrict === 'all') {
+                                rowHeaderLabel = 'District';
+                            } else {
+                                rowHeaderLabel = 'Court Name & No.';
+                            }
+
+                            return (
+                                <div key={tableBlock.tableId} className="card mb-xl">
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                                        <h3 className="card-title" style={{ margin: 0, color: 'var(--color-primary)' }}>{tableBlock.tableName}</h3>
+                                        <button className="btn btn-secondary btn-sm" onClick={() => exportToExcel(tableBlock.tableId, tableBlock.tableName, rawEntries)}>
+                                            📥 Export CSV
+                                        </button>
+                                    </div>
+
+                                    <div className="data-table-wrapper">
+                                        <table className="data-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Sr. No.</th>
+                                                    <th>{rowHeaderLabel}</th>
+                                                    {tableColumns.map((col, idx) => (
+                                                        <th key={idx}>{col.header}</th>
+                                                    ))}
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {groupedData.map((row, idx) => (
+                                                    <tr key={idx}>
+                                                        <td>{idx + 1}</td>
+                                                        <td style={{ fontWeight: 'bold' }}>{row.label}</td>
+                                                        {tableColumns.map((col, cIdx) => (
+                                                            <td key={cIdx}>
+                                                                {col.renderCell(row.entries, (modalEntries) => openAggregateModal(`Details for ${row.label} - ${col.header}`, modalEntries))}
+                                                            </td>
+                                                        ))}
+                                                    </tr>
+                                                ))}
+                                                {/* Total Row */}
+                                                {groupedData.length > 0 && (
+                                                    <tr style={{ background: 'var(--color-surface-hover)', fontWeight: 'bold' }}>
+                                                        <td colSpan="2" style={{ textAlign: 'right' }}>OVERALL TOTAL:</td>
+                                                        {tableColumns.map((col, cIdx) => (
+                                                            <td key={cIdx}>
+                                                                {col.renderCell(rawEntries, (modalEntries) => openAggregateModal(`Overall Total - ${col.header}`, modalEntries))}
+                                                            </td>
+                                                        ))}
+                                                    </tr>
+                                                )}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            );
+                        })
                     )}
+                </div>
+            )}
+
+            {/* Modal for Clickable Aggregates */}
+            {modalData && (
+                <div className="modal-overlay" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }}>
+                    <div className="modal-content" style={{ background: 'var(--color-surface)', width: '90%', maxWidth: '1000px', maxHeight: '80vh', borderRadius: 'var(--radius-lg)', padding: '24px', display: 'flex', flexDirection: 'column', boxShadow: '0 10px 25px rgba(0,0,0,0.2)' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', paddingBottom: '16px', borderBottom: '1px solid var(--color-border)' }}>
+                            <h2 style={{ margin: 0, color: 'var(--color-text)' }}>{modalData.title}</h2>
+                            <button className="btn btn-secondary" onClick={() => setModalData(null)}>✖ Close</button>
+                        </div>
+                        <div style={{ flex: 1, overflowY: 'auto' }}>
+                            <div className="data-table-wrapper">
+                                <table className="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>District</th>
+                                            <th>Court</th>
+                                            {Object.keys(modalData.entries[0]?.values || {}).map(k => (
+                                                <th key={k}>{k.replace(/_/g, ' ').toUpperCase()}</th>
+                                            ))}
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {modalData.entries.map(entry => (
+                                            <tr key={entry.id}>
+                                                <td>{new Date(entry.entryDate).toLocaleDateString('en-IN')}</td>
+                                                <td>{entry.district?.name}</td>
+                                                <td>Court {entry.court?.courtNo} - {entry.court?.name}</td>
+                                                {Object.values(entry.values || {}).map((val, i) => (
+                                                    <td key={i}>{val !== null && val !== undefined ? val : '—'}</td>
+                                                ))}
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             )}
         </div>

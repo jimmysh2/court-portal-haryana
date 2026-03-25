@@ -44,6 +44,17 @@ function validateValues(values, columns) {
     return errors;
 }
 
+// Check if a specific court+date is locked
+async function checkCourtDateLocked(courtId, dateString) {
+    const locked = await prisma.dailySubmission.findFirst({
+        where: {
+            courtId: parseInt(courtId),
+            entryDate: new Date(dateString)
+        }
+    });
+    return !!locked;
+}
+
 // POST /api/v1/data-entries/select-court
 router.post('/select-court', authenticate, requireRole('naib_court'), async (req, res, next) => {
     try {
@@ -97,7 +108,9 @@ router.get('/summary', authenticate, requireRole('naib_court'), async (req, res,
             };
         }));
 
-        res.json({ counts });
+        const isLocked = await checkCourtDateLocked(courtId, entryDateObj.toISOString().split('T')[0]);
+
+        res.json({ counts, isLocked });
     } catch (err) { next(err); }
 });
 
@@ -135,7 +148,34 @@ router.get('/', authenticate, async (req, res, next) => {
             },
             orderBy: [{ entryDate: 'desc' }, { createdAt: 'desc' }],
         });
-        res.json({ entries });
+
+        let isLocked = false;
+        if (req.query.courtId && req.query.entryDate) {
+            isLocked = await checkCourtDateLocked(req.query.courtId, req.query.entryDate);
+        }
+
+        res.json({ entries, isLocked });
+    } catch (err) { next(err); }
+});
+
+// POST /api/v1/data-entries/submit-day
+router.post('/submit-day', authenticate, requireRole('naib_court'), async (req, res, next) => {
+    try {
+        const { courtId, entryDate } = req.body;
+        if (!courtId || !entryDate) return res.status(400).json({ error: 'courtId and entryDate are required' });
+
+        const isLocked = await checkCourtDateLocked(courtId, entryDate);
+        if (isLocked) return res.status(400).json({ error: 'This date has already been finalized.' });
+
+        await prisma.dailySubmission.create({
+            data: {
+                courtId: parseInt(courtId),
+                entryDate: new Date(entryDate),
+                submittedBy: req.user.id
+            }
+        });
+
+        res.json({ success: true, message: 'Data for the day finalized successfully.' });
     } catch (err) { next(err); }
 });
 
@@ -158,6 +198,10 @@ router.post('/', authenticate, requireRole('naib_court'), async (req, res, next)
 
         if (reqDateStr !== todayStr && reqDateStr !== yesterdayStr) {
             return res.status(400).json({ error: 'Entry date must be today or yesterday' });
+        }
+
+        if (await checkCourtDateLocked(courtId, reqDateStr)) {
+            return res.status(403).json({ error: 'Data entry for this date has been finalized and cannot be modified.' });
         }
 
         const entryDateObj = new Date(reqDateStr); // Will be UTC midnight
@@ -251,6 +295,11 @@ router.put('/:id', authenticate, requireRole('naib_court', 'district_admin', 'de
             return res.status(403).json({ error: 'Cannot edit entries outside your district' });
         }
 
+        const entryDateStr = entry.entryDate.toISOString().split('T')[0];
+        if (await checkCourtDateLocked(entry.courtId, entryDateStr)) {
+            return res.status(403).json({ error: 'Data entry for this date has been finalized and cannot be modified.' });
+        }
+
         // Validate
         if (values) {
             const validationErrors = validateValues(values, entry.table.columns);
@@ -297,6 +346,11 @@ router.delete('/:id', authenticate, requireRole('naib_court', 'district_admin', 
         // District scoping
         if (['naib_court', 'district_admin'].includes(req.user.role) && entry.districtId !== req.user.districtId) {
             return res.status(403).json({ error: 'Cannot delete entries outside your district' });
+        }
+
+        const entryDateStr = entry.entryDate.toISOString().split('T')[0];
+        if (await checkCourtDateLocked(entry.courtId, entryDateStr)) {
+            return res.status(403).json({ error: 'Data entry for this date has been finalized and cannot be deleted.' });
         }
 
         await prisma.dataEntry.delete({
