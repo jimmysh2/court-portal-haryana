@@ -23,13 +23,14 @@ async function main() {
     // Districts are created by the production seed script (seed-production.js)
     // which reads them from the Excel files.
 
-    // ─── 16 Predefined Data Entry Tables ───────────────
+    // ─── 17 Predefined Data Entry Tables ───────────────
     const tables = [
         {
             name: '1. Trials Disposed/Completed Today',
             slug: 'trials-disposed',
             description: 'List of trials disposed/completed today',
             singleRow: false,
+            sortOrder: 1,
             columns: [
                 { name: 'FIR Number', slug: 'fir_no', dataType: 'text', sortOrder: 0 },
                 { name: 'FIR Year', slug: 'fir_year', dataType: 'year', sortOrder: 1 },
@@ -43,12 +44,13 @@ async function main() {
             slug: 'cancellation-decisions',
             description: 'Decision on Cancellation/Untraced Files',
             singleRow: false,
+            sortOrder: 2,
             columns: [
                 { name: 'FIR Number', slug: 'fir_no', dataType: 'text', sortOrder: 0 },
                 { name: 'FIR Year', slug: 'fir_year', dataType: 'year', sortOrder: 1 },
                 { name: 'Sections (U/s)', slug: 'sections', dataType: 'text', sortOrder: 2 },
                 { name: 'Police Station', slug: 'police_station', dataType: 'text', sortOrder: 3 },
-                { name: 'Decision', slug: 'decision', dataType: 'enum', enumOptions: ['Accepted', 'Further Investigation', 'Trial in court against protest petition'], sortOrder: 4 },
+                { name: 'Decision', slug: 'decision', dataType: 'enum', enumOptions: ['Accept', 'Further investigation', 'Take cognizance', 'Take protest petition and proceed as complaint'], sortOrder: 4 },
             ],
         },
         {
@@ -56,6 +58,7 @@ async function main() {
             slug: 'police-applications',
             description: 'Decision on any application filed by police officials',
             singleRow: false,
+            sortOrder: 10,
             columns: [
                 { name: 'Application Type', slug: 'application_type', dataType: 'enum', enumOptions: ['Case Property Disposal', 'Bail Cancellation', 'Other'], sortOrder: 0 },
                 { name: 'Date of Application', slug: 'application_date', dataType: 'date', sortOrder: 1 },
@@ -69,6 +72,7 @@ async function main() {
             slug: 'bail-granted',
             description: 'List of accused granted bail (along with surety/identifier, photos etc.)',
             singleRow: false,
+            sortOrder: 3,
             columns: [
                 { name: 'Name of Accused', slug: 'accused_name', dataType: 'text', sortOrder: 0 },
                 { name: 'FIR Number', slug: 'fir_no', dataType: 'text', sortOrder: 1 },
@@ -86,6 +90,7 @@ async function main() {
             slug: 'po-pp-bj',
             description: 'List of declared POs/PPs/BJs',
             singleRow: false,
+            sortOrder: 4,
             columns: [
                 { name: 'Name of Accused', slug: 'accused_name', dataType: 'text', sortOrder: 0 },
                 { name: 'FIR Number', slug: 'fir_no', dataType: 'text', sortOrder: 1 },
@@ -96,10 +101,11 @@ async function main() {
             ],
         },
         {
-            name: '6. Property Attached (85 BNSS & 107 BNSS)',
+            name: '6. Value of Property attached (85 BNSS & 107 BNSS)',
             slug: 'property-attached',
             description: 'Detail of Property attached (85 BNSS & 107 BNSS)',
             singleRow: false,
+            sortOrder: 9,
             columns: [
                 { name: 'Name of Accused', slug: 'accused_name', dataType: 'text', sortOrder: 0 },
                 { name: 'FIR Number', slug: 'fir_no', dataType: 'text', sortOrder: 1 },
@@ -116,6 +122,7 @@ async function main() {
             slug: 'complaints-against-police',
             description: 'Applications/Complaints/Istgasa filed against Police Officials',
             singleRow: false,
+            sortOrder: 11,
             columns: [
                 { name: 'Details of Applicant', slug: 'applicant_details', dataType: 'text', sortOrder: 0 },
                 { name: 'Brief Facts', slug: 'brief_facts', dataType: 'text', sortOrder: 1 },
@@ -127,6 +134,7 @@ async function main() {
             slug: 'fir-156-3',
             description: 'FIR Registration under 156(3) CrPC',
             singleRow: false,
+            sortOrder: 12,
             columns: [
                 { name: 'Details of Applicant', slug: 'applicant_details', dataType: 'text', sortOrder: 0 },
                 { name: 'Sections in Complaint', slug: 'complaint_sections', dataType: 'text', sortOrder: 1 },
@@ -139,11 +147,13 @@ async function main() {
             slug: 'sho-dsp-appeared',
             description: 'List of SHOs and DSPs who appeared in court today',
             singleRow: false,
+            sortOrder: 13,
             columns: [
-                { name: 'Name of SHO/DSP', slug: 'officer_name', dataType: 'text', sortOrder: 0 },
-                { name: 'Place of Posting', slug: 'posting_place', dataType: 'text', sortOrder: 1 },
-                { name: 'Reason', slug: 'reason', dataType: 'text', sortOrder: 2 },
-                { name: 'Remarks', slug: 'remarks', dataType: 'text', isRequired: false, sortOrder: 3 },
+                { name: 'Name of SHO/ DSP', slug: 'officer_name', dataType: 'text', sortOrder: 0 },
+                { name: 'Rank', slug: 'rank', dataType: 'enum', enumOptions: ['SHO', 'DSP/ASP/Addl SP'], sortOrder: 1 },
+                { name: 'Place of Posting', slug: 'posting_place', dataType: 'text', sortOrder: 2 },
+                { name: 'Reason', slug: 'reason', dataType: 'text', sortOrder: 3 },
+                { name: 'Remarks', slug: 'remarks', dataType: 'text', isRequired: false, sortOrder: 4 },
             ],
         },
         {
@@ -151,6 +161,7 @@ async function main() {
             slug: 'police-deposition',
             description: 'Deposition of police officials — aggregate counts per court per day',
             singleRow: true,
+            sortOrder: 15,
             columns: [
                 { name: 'Supposed to Appear', slug: 'supposed_to_appear', dataType: 'number', sortOrder: 0 },
                 { name: 'Appeared Physically', slug: 'appeared_physically', dataType: 'number', sortOrder: 1 },
@@ -164,6 +175,7 @@ async function main() {
             slug: 'vc-prisoners',
             description: 'VC of prisoners — aggregate counts per court per day',
             singleRow: true,
+            sortOrder: 16,
             columns: [
                 { name: 'Produced Physically', slug: 'produced_physically', dataType: 'number', sortOrder: 0 },
                 { name: 'Produced via VC', slug: 'produced_via_vc', dataType: 'number', sortOrder: 1 },
@@ -174,6 +186,7 @@ async function main() {
             slug: 'tips-conducted',
             description: 'TIPs conducted today',
             singleRow: false,
+            sortOrder: 14,
             columns: [
                 { name: 'FIR Number', slug: 'fir_no', dataType: 'text', sortOrder: 0 },
                 { name: 'FIR Year', slug: 'fir_year', dataType: 'year', sortOrder: 1 },
@@ -186,6 +199,7 @@ async function main() {
             slug: 'pairvi-witness',
             description: 'Pairvi for private witness — aggregate counts per court per day',
             singleRow: true,
+            sortOrder: 17,
             columns: [
                 { name: 'Witnesses Examined', slug: 'witnesses_examined', dataType: 'number', sortOrder: 0 },
                 { name: 'Witnesses Prepared to Testify', slug: 'witnesses_prepared', dataType: 'number', sortOrder: 1 },
@@ -196,6 +210,7 @@ async function main() {
             slug: 'gangster-next-day',
             description: 'Any Gangster/Notorious Criminal appearing in Court the next day',
             singleRow: false,
+            sortOrder: 5,
             columns: [
                 { name: 'Gangster & Gang Details', slug: 'gangster_details', dataType: 'text', sortOrder: 0 },
                 { name: 'FIR Number', slug: 'fir_no', dataType: 'text', sortOrder: 1 },
@@ -211,21 +226,23 @@ async function main() {
             slug: 'property-offender-next-day',
             description: 'Any Crime against Property offender appearing in court the next day',
             singleRow: false,
+            sortOrder: 6,
             columns: [
                 { name: 'Details of Accused', slug: 'accused_details', dataType: 'text', sortOrder: 0 },
                 { name: 'FIR Number', slug: 'fir_no', dataType: 'text', sortOrder: 1 },
                 { name: 'FIR Year', slug: 'fir_year', dataType: 'year', sortOrder: 2 },
                 { name: 'Sections (U/s)', slug: 'sections', dataType: 'text', sortOrder: 3 },
                 { name: 'Police Station', slug: 'police_station', dataType: 'text', sortOrder: 4 },
-                { name: 'Escort Guard Name', slug: 'escort_guard_name', dataType: 'text', sortOrder: 5 },
-                { name: 'Escort Guard Mobile', slug: 'escort_guard_mobile', dataType: 'text', sortOrder: 6 },
+                { name: 'Accused Status', slug: 'accused_status', dataType: 'enum', enumOptions: ['Bail', 'Judicial Custody'], sortOrder: 5 },
+                { name: 'Name of Jail', slug: 'jail_name', dataType: 'text', isRequired: false, sortOrder: 6 },
             ],
         },
         {
-            name: '16. Bail Applications Listed for Tomorrow',
+            name: '16. Fresh Bail Applications listed for tomorrow',
             slug: 'bail-applications-tomorrow',
             description: 'Bail Applications listed for tomorrow',
             singleRow: false,
+            sortOrder: 7,
             columns: [
                 { name: 'Name of Accused', slug: 'accused_name', dataType: 'text', sortOrder: 0 },
                 { name: 'FIR Number', slug: 'fir_no', dataType: 'text', sortOrder: 1 },
@@ -233,6 +250,21 @@ async function main() {
                 { name: 'Sections (U/s)', slug: 'sections', dataType: 'text', sortOrder: 3 },
                 { name: 'Police Station', slug: 'police_station', dataType: 'text', sortOrder: 4 },
                 { name: 'Bail Type', slug: 'bail_type', dataType: 'enum', enumOptions: ['Regular Bail', 'Anticipatory Bail'], sortOrder: 5 },
+            ],
+        },
+        {
+            name: '17. NBW Arrest Warrants issued today',
+            slug: 'nbw-arrest-warrants',
+            description: 'NBW Arrest Warrants issued today',
+            singleRow: false,
+            sortOrder: 8,
+            columns: [
+                { name: 'Name of Accused', slug: 'accused_name', dataType: 'text', sortOrder: 0 },
+                { name: 'FIR Number', slug: 'fir_no', dataType: 'text', sortOrder: 1 },
+                { name: 'FIR Year', slug: 'fir_year', dataType: 'year', sortOrder: 2 },
+                { name: 'Sections (U/s)', slug: 'sections', dataType: 'text', sortOrder: 3 },
+                { name: 'Police Station', slug: 'police_station', dataType: 'text', sortOrder: 4 },
+                { name: 'Next Date', slug: 'next_date', dataType: 'date', sortOrder: 5 },
             ],
         },
     ];
@@ -246,6 +278,7 @@ async function main() {
                     slug: t.slug,
                     description: t.description,
                     singleRow: t.singleRow,
+                    sortOrder: t.sortOrder,
                     createdBy: developer.id,
                     columns: {
                         create: t.columns.map((col) => ({
@@ -262,6 +295,7 @@ async function main() {
             console.log(`  ✅ Table: ${t.name}`);
         } else {
             console.log(`  ⏭️  Table exists: ${t.name}`);
+            // Update sortOrder on existing tables if needed using the migration script we already ran
         }
     }
 

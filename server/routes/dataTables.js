@@ -10,7 +10,7 @@ router.get('/', authenticate, async (req, res, next) => {
         const tables = await prisma.dataEntryTable.findMany({
             where: { deletedAt: null },
             include: { columns: { where: { deletedAt: null }, orderBy: { sortOrder: 'asc' } } },
-            orderBy: { id: 'asc' },
+            orderBy: [{ sortOrder: 'asc' }, { id: 'asc' }],
         });
         res.json({ tables });
     } catch (err) { next(err); }

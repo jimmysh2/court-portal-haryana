@@ -13,6 +13,7 @@ import GrievancesPage from './pages/shared/GrievancesPage';
 import ReportsPage from './pages/shared/ReportsPage';
 import AlertsPage from './pages/shared/AlertsPage';
 import ChangePassword from './pages/shared/ChangePassword';
+import AiAssistant from './pages/shared/AiAssistant';
 
 // Role dashboards
 import DevDashboard from './pages/dev/DevDashboard';
@@ -74,6 +75,7 @@ function App() {
             <Route path="/dev/alerts" element={<AlertsPage />} />
             <Route path="/dev/grievances" element={<GrievancesPage />} />
             <Route path="/dev/reports" element={<ReportsPage />} />
+            <Route path="/dev/reports/ai-assistant" element={<AiAssistant />} />
             <Route path="/dev/reset-passwords" element={<ResetPasswords />} />
             <Route path="/dev/system" element={<SystemManagement />} />
             <Route path="/dev/change-password" element={<ChangePassword />} />
@@ -90,6 +92,7 @@ function App() {
             <Route path="/state/alerts" element={<AlertsPage />} />
             <Route path="/state/grievances" element={<GrievancesPage />} />
             <Route path="/state/reports" element={<ReportsPage />} />
+            <Route path="/state/reports/ai-assistant" element={<AiAssistant />} />
             <Route path="/state/change-password" element={<ChangePassword />} />
           </Route>
 
@@ -104,6 +107,7 @@ function App() {
             <Route path="/district/alerts" element={<AlertsPage />} />
             <Route path="/district/grievances" element={<GrievancesPage />} />
             <Route path="/district/reports" element={<ReportsPage />} />
+            <Route path="/district/reports/ai-assistant" element={<AiAssistant />} />
             <Route path="/district/change-password" element={<ChangePassword />} />
           </Route>
 

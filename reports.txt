@@ -1,0 +1,25 @@
+ 
+Format of Report (Based on Rows) 
+1. For given Range of Dates-District wise/Court wise data 
+2. For given District/Court- Day/Month/year wise 
+District Wise/Court Wise Data 
+1. Give an option to choose dates 
+a. Any Date Range (upto previous day)-  
+b. Particular month (upto previous month)- of that year 
+c. Particular Year (upto previous year) 
+2. Give an option to choose District wise/Court wise 
+a. If court wise chosen- give an option to choose District 
+b. If District wise chosen- No further action required 
+Date wise Data 
+1. Give an option to choose District wise/Court wise 
+a. If court wise chosen- give an option to choose District 
+b. If District wise chosen- No further action required 
+2. Choose Daywise/Monthwise/Year wise 
+a. Day wise- For the current month, upto previous day 
+b. Month wise-For the current year, upto previous month 
+c. Year wise-upto previous year 
+Alerts 
+1. Pending data entry for yesterday 
+2. Unfilled Data 
+Submit Button Flag- Do not fetch the data in Report if final submit not done by naib court 
+----------------Page (0) Break----------------

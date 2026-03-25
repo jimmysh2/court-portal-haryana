@@ -11,7 +11,16 @@ export default function NaibDashboard() {
 
     const [courts, setCourts] = useState([]);
     const [selectedCourt, setSelectedCourt] = useState(user?.lastSelectedCourtId || '');
-    const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+    const [selectedDate, setSelectedDate] = useState(() => {
+        const saved = sessionStorage.getItem('naibSelectedDate');
+        const _today = new Date().toISOString().split('T')[0];
+        const _yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+        return (saved === _today || saved === _yesterday) ? saved : _today;
+    });
+
+    useEffect(() => {
+        sessionStorage.setItem('naibSelectedDate', selectedDate);
+    }, [selectedDate]);
     const [tables, setTables] = useState([]);
     const [activeTable, setActiveTable] = useState(null);
     const [entries, setEntries] = useState([]);
@@ -34,11 +43,24 @@ export default function NaibDashboard() {
         api.get('/districts/all-police-stations').then(d => setPoliceStations(d.policeStations)).catch(console.error);
     }, []);
 
-    // Load entries when court/date/table changes
+    // Check lock status globally whenever court or date changes
+    useEffect(() => {
+        if (selectedCourt && selectedDate) {
+            const params = `?courtId=${selectedCourt}&entryDate=${selectedDate}`;
+            api.get(`/data-entries/summary${params}`)
+               .then(d => setFinalSubmitted(d.isLocked || false))
+               .catch(console.error);
+        }
+    }, [selectedCourt, selectedDate]);
+
+    // Load entries when court/table/date changes
     useEffect(() => {
         if (selectedCourt && activeTable) {
             const params = `?courtId=${selectedCourt}&tableId=${activeTable.id}&entryDate=${selectedDate}`;
-            api.get(`/data-entries${params}`).then(d => setEntries(d.entries)).catch(console.error);
+            api.get(`/data-entries${params}`).then(d => {
+                setEntries(d.entries);
+                setFinalSubmitted(d.isLocked || false);
+            }).catch(console.error);
         }
     }, [selectedCourt, selectedDate, activeTable]);
 
@@ -128,10 +150,17 @@ export default function NaibDashboard() {
         }
     };
 
-    const handleFinalSubmit = () => {
-        setFinalSubmitted(true);
-        setSuccess('All data for today has been submitted successfully!');
-        window.scrollTo(0, 0);
+    const handleFinalSubmit = async () => {
+        setError('');
+        try {
+            await api.post('/data-entries/submit-day', { courtId: selectedCourt, entryDate: selectedDate });
+            setFinalSubmitted(true);
+            navigate('/naib/dashboard', { 
+                state: { successMessage: `All data for ${selectedDate} has been submitted successfully! The calendar is now locked.` } 
+            });
+        } catch(err) {
+            setError(err.error || err.message || 'Error occurred');
+        }
     };
 
     const renderField = (col) => {
@@ -275,7 +304,11 @@ export default function NaibDashboard() {
                         <div className="form-row">
                             <div className="form-group">
                                 <label className="form-label">Select Court</label>
-                                <select className="form-select" value={selectedCourt} onChange={e => handleCourtSelect(e.target.value)}>
+                                <select className="form-select" value={selectedCourt} onChange={e => {
+                                    handleCourtSelect(e.target.value);
+                                    setSuccess('');
+                                    setError('');
+                                }}>
                                     <option value="">Choose court...</option>
                                     {courts.map(c => (
                                         <option key={c.id} value={c.id}>{c.courtNo} — {c.name}</option>
@@ -284,7 +317,11 @@ export default function NaibDashboard() {
                             </div>
                             <div className="form-group">
                                 <label className="form-label">Entry Date</label>
-                                <select className="form-select" value={selectedDate} onChange={e => setSelectedDate(e.target.value)}>
+                                <select className="form-select" value={selectedDate} onChange={e => {
+                                    setSelectedDate(e.target.value);
+                                    setSuccess('');
+                                    setError('');
+                                }}>
                                     <option value={today}>Today ({today})</option>
                                     <option value={yesterday}>Yesterday ({yesterday})</option>
                                 </select>
@@ -316,7 +353,7 @@ export default function NaibDashboard() {
                         <div className="page-header" style={{ display: 'flex', gap: 'var(--space-md)', alignItems: 'center' }}>
                             <button
                                 className="btn btn-secondary btn-sm"
-                                onClick={() => { setShowSummary(false); setFinalSubmitted(false); setError(''); setSuccess(''); }}
+                                onClick={() => { setShowSummary(false); setError(''); setSuccess(''); }}
                             >
                                 ← Back to Tables
                             </button>
@@ -404,6 +441,28 @@ export default function NaibDashboard() {
                                 <span style={{ color: 'var(--color-success)' }}>📅 {selectedDate}</span>
                             </div>
                         </div>
+
+                        {finalSubmitted && (
+                            <div style={{
+                                marginBottom: 'var(--space-lg)',
+                                width: '100%',
+                                background: 'rgba(34,197,94,0.1)',
+                                color: 'var(--color-success)',
+                                border: '1px solid var(--color-success)',
+                                padding: 'var(--space-md)',
+                                borderRadius: 'var(--radius-md)',
+                                fontWeight: 700,
+                                textAlign: 'center'
+                            }}>
+                                🔒 Data finalized and locked for {selectedDate}.
+                            </div>
+                        )}
+
+                        {success && <div style={{ background: 'rgba(34,197,94,0.15)', color: 'var(--color-success)', padding: 'var(--space-md) var(--space-lg)', borderRadius: 'var(--radius-md)', marginBottom: 'var(--space-lg)', fontSize: 'var(--font-size-sm)', textAlign: 'center' }}>
+                            <div style={{ fontSize: '1.5rem', marginBottom: 'var(--space-xs)' }}>🎉</div>
+                            <strong style={{ fontSize: '1.1rem' }}>{success}</strong>
+                        </div>}
+
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-xs)', marginBottom: 'var(--space-xl)' }}>
                             <div style={{ marginBottom: 'var(--space-sm)', fontWeight: 600, color: 'var(--color-text-secondary)' }}>
                                 Select a table below:
@@ -441,20 +500,23 @@ export default function NaibDashboard() {
                                     {t.name}
                                 </button>
                             ))}
-                            <button
-                                className="btn btn-primary"
-                                onClick={handleViewSummary}
-                                style={{
-                                    marginTop: 'var(--space-md)',
-                                    width: '100%',
-                                    background: 'var(--color-success)',
-                                    borderColor: 'var(--color-success)',
-                                    padding: 'var(--space-md)',
-                                    fontWeight: 700
-                                }}
-                            >
-                                ✅ Review & Final Submit Today's Data
-                            </button>
+                            
+                            {!finalSubmitted && (
+                                <button
+                                    className="btn btn-primary"
+                                    onClick={handleViewSummary}
+                                    style={{
+                                        marginTop: 'var(--space-md)',
+                                        width: '100%',
+                                        background: 'var(--color-success)',
+                                        borderColor: 'var(--color-success)',
+                                        padding: 'var(--space-md)',
+                                        fontWeight: 700
+                                    }}
+                                >
+                                    ✅ Review Before Final Submit
+                                </button>
+                            )}
                         </div>
                     </>
                 ) : (
@@ -505,11 +567,19 @@ export default function NaibDashboard() {
                         {/* Action Bar */}
                         {editingEntry === null && (
                             <div className="mb-lg">
-                                {!(activeTable.singleRow && entries.length > 0) && (
-                                    <button className="btn btn-primary" onClick={handleNewEntry}>+ Add Entry</button>
-                                )}
-                                {activeTable.singleRow && entries.length > 0 && (
-                                    <button className="btn btn-primary" onClick={() => handleEditEntry(entries[0])}>✏️ Edit Entry</button>
+                                {finalSubmitted ? (
+                                    <div className="alert alert-success" style={{ padding: 'var(--space-md)', borderRadius: 'var(--radius-md)', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                                        🔒 Data finalized and locked for {selectedDate}.
+                                    </div>
+                                ) : (
+                                    <>
+                                        {!(activeTable.singleRow && entries.length > 0) && (
+                                            <button className="btn btn-primary" onClick={handleNewEntry}>+ Add Entry</button>
+                                        )}
+                                        {activeTable.singleRow && entries.length > 0 && (
+                                            <button className="btn btn-primary" onClick={() => handleEditEntry(entries[0])}>✏️ Edit Entry</button>
+                                        )}
+                                    </>
                                 )}
                             </div>
                         )}
@@ -522,8 +592,12 @@ export default function NaibDashboard() {
                                         <div style={{ paddingBottom: 'var(--space-sm)', borderBottom: '1px solid var(--color-border)', marginBottom: 'var(--space-sm)', fontWeight: 600, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                             <span>Entry #{index + 1}</span>
                                             <div style={{ display: 'flex', gap: 'var(--space-xs)' }}>
-                                                <button className="btn btn-secondary" style={{ padding: '4px 10px', fontSize: '12px' }} onClick={() => handleEditEntry(entry)}>✏️ Edit</button>
-                                                <button className="btn btn-secondary" style={{ padding: '4px 10px', fontSize: '12px', color: 'var(--color-danger)', borderColor: 'var(--color-danger-soft)', background: 'var(--color-danger-soft)' }} onClick={() => handleDeleteEntry(entry.id)}>🗑️ Delete</button>
+                                                {!finalSubmitted && (
+                                                    <>
+                                                        <button className="btn btn-secondary" style={{ padding: '4px 10px', fontSize: '12px' }} onClick={() => handleEditEntry(entry)}>✏️ Edit</button>
+                                                        <button className="btn btn-secondary" style={{ padding: '4px 10px', fontSize: '12px', color: 'var(--color-danger)', borderColor: 'var(--color-danger-soft)', background: 'var(--color-danger-soft)' }} onClick={() => handleDeleteEntry(entry.id)}>🗑️ Delete</button>
+                                                    </>
+                                                )}
                                             </div>
                                         </div>
                                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 'var(--space-sm)', fontSize: 'var(--font-size-sm)' }}>

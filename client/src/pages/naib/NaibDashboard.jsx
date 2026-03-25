@@ -1,25 +1,32 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../utils/api';
 
 export default function NaibDashboard() {
     const { user } = useAuth();
+    const location = useLocation();
     const [stats, setStats] = useState(null);
     const [summary, setSummary] = useState([]);
+    const [isLocked, setIsLocked] = useState(false);
     const [loading, setLoading] = useState(true);
 
-    const todayDate = new Date().toISOString().split('T')[0];
+    const activeDate = (() => {
+        const saved = sessionStorage.getItem('naibSelectedDate');
+        const _today = new Date().toISOString().split('T')[0];
+        const _yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+        return (saved === _today || saved === _yesterday) ? saved : _today;
+    })();
 
     useEffect(() => {
         const fetchData = async () => {
             setLoading(true);
             try {
-                // Fetch stats and summary if court is selected
                 if (user?.lastSelectedCourtId) {
-                    const params = `?courtId=${user.lastSelectedCourtId}&entryDate=${todayDate}`;
+                    const params = `?courtId=${user.lastSelectedCourtId}&entryDate=${activeDate}`;
                     const d = await api.get(`/data-entries/summary${params}`);
                     setSummary(d.counts || []);
+                    setIsLocked(d.isLocked || false);
                 }
                 
                 const g = await api.get('/grievances');
@@ -43,10 +50,21 @@ export default function NaibDashboard() {
     return (
         <div>
             <div className="page-header"><h2>Naib Court Dashboard</h2></div>
+
+            {location.state?.successMessage && (
+                <div style={{ background: 'rgba(34,197,94,0.15)', color: 'var(--color-success)', padding: 'var(--space-md) var(--space-lg)', borderRadius: 'var(--radius-md)', marginBottom: 'var(--space-lg)', fontSize: 'var(--font-size-sm)', textAlign: 'center' }}>
+                    <div style={{ fontSize: '1.5rem', marginBottom: 'var(--space-xs)' }}>🎉</div>
+                    <strong style={{ fontSize: '1.1rem' }}>{location.state.successMessage}</strong>
+                </div>
+            )}
+
             <div style={{ background: 'var(--color-bg-secondary)', padding: 'var(--space-lg)', borderRadius: 'var(--radius-lg)', marginBottom: 'var(--space-xl)', border: '1px solid var(--color-border)' }}>
                 <p style={{ margin: 0, color: 'var(--color-text-secondary)' }}>Welcome, <strong>{user?.name}</strong> • {user?.district?.name} District</p>
                 {user?.lastSelectedCourtId ? (
-                    <div style={{ marginTop: 'var(--space-sm)', color: 'var(--color-success)', fontWeight: 600 }}>📍 Reporting for: {stats?.selectedCourt || 'Selected Court'}</div>
+                    <div style={{ marginTop: 'var(--space-sm)', color: 'var(--color-success)', fontWeight: 600 }}>
+                        📍 Reporting for: {stats?.selectedCourt || 'Selected Court'}
+                        {isLocked && <span style={{ marginLeft: 'var(--space-sm)', background: 'var(--color-success-soft)', padding: '2px 8px', borderRadius: '12px', fontSize: '11px', border: '1px solid var(--color-success)' }}>🔒 Locked for {activeDate}</span>}
+                    </div>
                 ) : (
                     <div style={{ marginTop: 'var(--space-sm)', color: 'var(--color-warning)', fontWeight: 600 }}>⚠️ No court selected. Please select a court to start reporting.</div>
                 )}
@@ -73,7 +91,7 @@ export default function NaibDashboard() {
 
             <div className="grid grid-2" style={{ alignItems: 'start' }}>
                 <div className="card">
-                    <div className="card-header"><div className="card-title">Today's Data Entry Summary ({todayDate})</div></div>
+                    <div className="card-header"><div className="card-title">Data Entry Summary ({activeDate})</div></div>
                     {loading ? (
                         <div style={{ padding: 'var(--space-xl)', textAlign: 'center', color: 'var(--color-text-muted)' }}>Loading summary...</div>
                     ) : summary.length > 0 ? (

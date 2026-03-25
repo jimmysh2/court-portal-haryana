@@ -11,16 +11,17 @@ class ApiError extends Error {
 async function request(endpoint, options = {}) {
     const token = localStorage.getItem('token');
 
+    const isFormData = options.body instanceof FormData;
     const config = {
         headers: {
-            'Content-Type': 'application/json',
+            ...(!isFormData && { 'Content-Type': 'application/json' }),
             ...(token && { Authorization: `Bearer ${token}` }),
             ...options.headers,
         },
         ...options,
     };
 
-    if (config.body && typeof config.body === 'object') {
+    if (config.body && typeof config.body === 'object' && !(config.body instanceof FormData)) {
         config.body = JSON.stringify(config.body);
     }
 
