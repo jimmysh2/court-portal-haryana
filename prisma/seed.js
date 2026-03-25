@@ -13,7 +13,7 @@ async function main() {
         update: {},
         create: {
             username: 'developer',
-            passwordHash: devPassword,
+            password: devPassword,
             name: 'System Developer',
             role: 'developer',
         },
@@ -271,12 +271,6 @@ async function main() {
         });
 
         // ── 2. SYNC THE COLUMNS ────────────────────────────────────
-        // We delete old columns and recreate to ensure exactly matching schema
-        // Warning: This is safe ONLY if you don't care about the data entries
-        // But wait, if we delete columns, the existing data_entries (JSONB)
-        // are still there, but the metadata links might break.
-        // BETTER: Use upsert for columns too by slug.
-        
         for (const col of t.columns) {
             await prisma.dataEntryColumn.upsert({
                 where: {
@@ -305,6 +299,19 @@ async function main() {
         }
         console.log(`✅ Table Synced: ${table.name}`);
     }
+
+    // State Admin
+    const stateAdminPassword = await bcrypt.hash('state123', 10);
+    await prisma.user.upsert({
+        where: { username: 'state_admin' },
+        update: {},
+        create: {
+            username: 'state_admin',
+            password: stateAdminPassword,
+            name: 'State Administrator',
+            role: 'state_admin',
+        },
+    });
 
     console.log('\n🎉 System synchronization complete!');
 }

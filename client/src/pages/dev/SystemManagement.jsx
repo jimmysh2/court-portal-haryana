@@ -226,6 +226,23 @@ export default function SystemManagement() {
                             >
                                 🚀 Sync Full Table Catalog (Schema Refresh)
                             </button>
+
+                            <button 
+                                className="btn btn-secondary btn-sm" 
+                                onClick={async () => {
+                                    if(!window.confirm('Round all existing decimal entries to the nearest integer? This cannot be undone.')) return;
+                                    setLoading(true);
+                                    try {
+                                        const res = await api.post('/system/cleanup-decimals');
+                                        setSuccess(res.message);
+                                    } catch(err) { setError(err.message || 'Cleanup failed'); }
+                                    finally { setLoading(false); }
+                                }} 
+                                disabled={loading}
+                                style={{ marginTop: 'var(--space-sm)', width: '100%' }}
+                            >
+                                🧹 Round Existing Decimals (Historical Cleanup)
+                            </button>
                         </div>
                     </div>
 
