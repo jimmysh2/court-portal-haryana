@@ -664,4 +664,66 @@ router.post('/tables/reorder', authenticate, requireRole('developer'), async (re
     } catch (err) { next(err); }
 });
 
+// ─── 9. POST /api/v1/system/round-decimals ──────────────────────────────────
+// Round all decimal values in 'number' type columns to integers
+router.post('/round-decimals', authenticate, requireRole('developer'), async (req, res, next) => {
+    try {
+        // Get all columns of dataType 'number' grouped by tableId
+        const numberColumns = await prisma.dataEntryColumn.findMany({
+            where: { dataType: 'number', deletedAt: null },
+            select: { slug: true, tableId: true },
+        });
+
+        if (numberColumns.length === 0) {
+            return res.json({ message: 'No number columns found.', updated: 0 });
+        }
+
+        // Build a map: tableId -> [slugs...]
+        const tableSlugMap = {};
+        numberColumns.forEach(({ tableId, slug }) => {
+            if (!tableSlugMap[tableId]) tableSlugMap[tableId] = [];
+            tableSlugMap[tableId].push(slug);
+        });
+
+        let updatedCount = 0;
+
+        for (const [tableId, slugs] of Object.entries(tableSlugMap)) {
+            // Fetch all non-deleted entries for this table
+            const entries = await prisma.dataEntry.findMany({
+                where: { tableId: parseInt(tableId), deletedAt: null },
+                select: { id: true, values: true },
+            });
+
+            for (const entry of entries) {
+                const values = entry.values || {};
+                let changed = false;
+                const newValues = { ...values };
+
+                for (const slug of slugs) {
+                    const raw = values[slug];
+                    if (raw === null || raw === undefined || raw === '') continue;
+                    const num = parseFloat(raw);
+                    if (!isNaN(num) && !Number.isInteger(num)) {
+                        newValues[slug] = Math.round(num);
+                        changed = true;
+                    }
+                }
+
+                if (changed) {
+                    await prisma.dataEntry.update({
+                        where: { id: entry.id },
+                        data: { values: newValues },
+                    });
+                    updatedCount++;
+                }
+            }
+        }
+
+        res.json({
+            message: `Done! Rounded decimals in ${updatedCount} data entr${updatedCount === 1 ? 'y' : 'ies'}.`,
+            updated: updatedCount,
+        });
+    } catch (err) { next(err); }
+});
+
 module.exports = router;
