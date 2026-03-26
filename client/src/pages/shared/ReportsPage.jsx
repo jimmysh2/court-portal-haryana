@@ -459,7 +459,7 @@ export default function ReportsPage() {
             )}
 
             {mode !== 'pending-entries' && reportData && (
-                <div className="report-results">
+                <div className="report-results" style={{ overflowX: 'auto', width: '100%' }}>
                     {reportData.length === 0 ? (
                         <div className="card"><p>No data found for the selected criteria. (Ensure Naib courts have clicked "Final Submit" for the requested dates).</p></div>
                     ) : (
