@@ -670,7 +670,7 @@ router.post('/round-decimals', authenticate, requireRole('developer'), async (re
     try {
         // Get all columns of dataType 'number' grouped by tableId
         const numberColumns = await prisma.dataEntryColumn.findMany({
-            where: { dataType: 'number', deletedAt: null },
+            where: { dataType: 'number' },
             select: { slug: true, tableId: true },
         });
 
@@ -690,7 +690,7 @@ router.post('/round-decimals', authenticate, requireRole('developer'), async (re
         for (const [tableId, slugs] of Object.entries(tableSlugMap)) {
             // Fetch all non-deleted entries for this table
             const entries = await prisma.dataEntry.findMany({
-                where: { tableId: parseInt(tableId), deletedAt: null },
+                where: { tableId: parseInt(tableId) },
                 select: { id: true, values: true },
             });
 
