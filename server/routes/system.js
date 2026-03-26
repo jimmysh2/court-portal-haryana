@@ -378,7 +378,7 @@ router.post('/fix-tables', authenticate, requireRole('developer'), async (req, r
                 { name: 'Property Details', slug: 'property_details', dataType: 'text', sortOrder: 6 },
                 { name: 'Property Value', slug: 'property_value', dataType: 'number', sortOrder: 7 },
             ]},
-            { name: '7. Applications/Complaints Against Police Officials', slug: 'complaints-against-police', singleRow: false, sortOrder: 7, columns: [
+            { name: '7. Applications/Complaints/Istgasa filed against Police Officials', slug: 'complaints-against-police', singleRow: false, sortOrder: 7, columns: [
                 { name: 'Details of Applicant', slug: 'applicant_details', dataType: 'text', sortOrder: 0 },
                 { name: 'Brief Facts', slug: 'brief_facts', dataType: 'text', sortOrder: 1 },
                 { name: 'Next Hearing Date', slug: 'next_hearing_date', dataType: 'date', sortOrder: 2 },
@@ -389,35 +389,35 @@ router.post('/fix-tables', authenticate, requireRole('developer'), async (req, r
                 { name: 'Police Station', slug: 'police_station', dataType: 'text', sortOrder: 2 },
                 { name: 'Details of Police Officials', slug: 'police_official_details', dataType: 'text', sortOrder: 3 },
             ]},
-            { name: '9. SHOs and DSPs Who Appeared in Court', slug: 'sho-dsp-appeared', singleRow: false, sortOrder: 9, columns: [
+            { name: '9. List of SHOs and DSPs who appeared in court today (for deposition or other matter)', slug: 'sho-dsp-appeared', singleRow: false, sortOrder: 9, columns: [
                 { name: 'Name of SHO/ DSP', slug: 'officer_name', dataType: 'text', sortOrder: 0 },
                 { name: 'Rank', slug: 'rank', dataType: 'enum', enumOptions: ['SHO', 'DSP/ASP/Addl SP'], sortOrder: 1 },
                 { name: 'Place of Posting', slug: 'posting_place', dataType: 'text', sortOrder: 2 },
                 { name: 'Reason', slug: 'reason', dataType: 'text', sortOrder: 3 },
                 { name: 'Remarks', slug: 'remarks', dataType: 'text', isRequired: false, sortOrder: 4 },
             ]},
-            { name: '10. Deposition of Police Officials', slug: 'police-deposition', singleRow: true, sortOrder: 10, columns: [
+            { name: '10. Deposition of police officials', slug: 'police-deposition', singleRow: true, sortOrder: 10, columns: [
                 { name: 'Supposed to Appear', slug: 'supposed_to_appear', dataType: 'number', sortOrder: 0 },
                 { name: 'Appeared Physically', slug: 'appeared_physically', dataType: 'number', sortOrder: 1 },
                 { name: 'Examined Physically', slug: 'examined_physically', dataType: 'number', sortOrder: 2 },
                 { name: 'Examined via VC', slug: 'examined_via_vc', dataType: 'number', sortOrder: 3 },
                 { name: 'Absent (Unauthorized/No Request)', slug: 'absent_unauthorized', dataType: 'number', sortOrder: 4 },
             ]},
-            { name: '11. VC of Prisoners', slug: 'vc-prisoners', singleRow: true, sortOrder: 11, columns: [
+            { name: '11. VC of prisoners', slug: 'vc-prisoners', singleRow: true, sortOrder: 11, columns: [
                 { name: 'Produced Physically', slug: 'produced_physically', dataType: 'number', sortOrder: 0 },
                 { name: 'Produced via VC', slug: 'produced_via_vc', dataType: 'number', sortOrder: 1 },
             ]},
-            { name: '12. TIPs Conducted Today', slug: 'tips-conducted', singleRow: false, sortOrder: 12, columns: [
+            { name: '12. TIPs conducted today', slug: 'tips-conducted', singleRow: false, sortOrder: 12, columns: [
                 { name: 'FIR Number', slug: 'fir_no', dataType: 'text', sortOrder: 0 },
                 { name: 'FIR Year', slug: 'fir_year', dataType: 'year', sortOrder: 1 },
                 { name: 'Sections (U/s)', slug: 'sections', dataType: 'text', sortOrder: 2 },
                 { name: 'Police Station', slug: 'police_station', dataType: 'text', sortOrder: 3 },
             ]},
-            { name: '13. Pairvi for Private Witness', slug: 'pairvi-witness', singleRow: true, sortOrder: 13, columns: [
+            { name: '13. Pairvi for private witness', slug: 'pairvi-witness', singleRow: true, sortOrder: 13, columns: [
                 { name: 'Witnesses Examined', slug: 'witnesses_examined', dataType: 'number', sortOrder: 0 },
                 { name: 'Witnesses Prepared to Testify', slug: 'witnesses_prepared', dataType: 'number', sortOrder: 1 },
             ]},
-            { name: '14. Gangster/Notorious Criminal Appearing Next Day', slug: 'gangster-next-day', singleRow: false, sortOrder: 14, columns: [
+            { name: '14. Any Gangster/Notorious Criminal appearing in Court the next day', slug: 'gangster-next-day', singleRow: false, sortOrder: 14, columns: [
                 { name: 'Gangster & Gang Details', slug: 'gangster_details', dataType: 'text', sortOrder: 0 },
                 { name: 'FIR Number', slug: 'fir_no', dataType: 'text', sortOrder: 1 },
                 { name: 'FIR Year', slug: 'fir_year', dataType: 'year', sortOrder: 2 },
@@ -426,7 +426,7 @@ router.post('/fix-tables', authenticate, requireRole('developer'), async (req, r
                 { name: 'Accused Status', slug: 'accused_status', dataType: 'enum', enumOptions: ['Bail', 'Judicial Custody'], sortOrder: 5 },
                 { name: 'Name of Jail', slug: 'jail_name', dataType: 'text', isRequired: false, sortOrder: 6 },
             ]},
-            { name: '15. Crime Against Property Offender Appearing Next Day', slug: 'property-offender-next-day', singleRow: false, sortOrder: 15, columns: [
+            { name: '15. Any Crime against Property offender appearing in court the next day', slug: 'property-offender-next-day', singleRow: false, sortOrder: 15, columns: [
                 { name: 'Details of Accused', slug: 'accused_details', dataType: 'text', sortOrder: 0 },
                 { name: 'FIR Number', slug: 'fir_no', dataType: 'text', sortOrder: 1 },
                 { name: 'FIR Year', slug: 'fir_year', dataType: 'year', sortOrder: 2 },
@@ -479,6 +479,29 @@ router.post('/fix-tables', authenticate, requireRole('developer'), async (req, r
         }
 
         res.json({ message: `Fix complete! Deleted ${deleted} rogue tables, created ${created} correct tables, fixed sort orders.` });
+    } catch (err) { next(err); }
+});
+
+// ─── 8. POST /api/v1/system/tables/reorder ──────────────────────────────────
+// Manually update the sortOrder of tables
+router.post('/tables/reorder', authenticate, requireRole('developer'), async (req, res, next) => {
+    try {
+        const { updates } = req.body; // Expects: [{ id: 1, sortOrder: 1 }, { id: 2, sortOrder: 2 }]
+        if (!Array.isArray(updates)) {
+            return res.status(400).json({ error: 'Expected array of updates' });
+        }
+
+        // Run updates in a transaction
+        await prisma.$transaction(
+            updates.map(u => 
+                prisma.dataEntryTable.update({
+                    where: { id: parseInt(u.id, 10) },
+                    data: { sortOrder: parseInt(u.sortOrder, 10) }
+                })
+            )
+        );
+
+        res.json({ message: `Successfully updated sort orders for ${updates.length} tables.` });
     } catch (err) { next(err); }
 });
 
