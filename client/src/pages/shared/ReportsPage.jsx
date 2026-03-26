@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../utils/api';
 
@@ -33,6 +33,38 @@ export default function ReportsPage() {
     const [modalData, setModalData] = useState(null);
 
     const isStateLevel = ['developer', 'state_admin', 'viewer_state'].includes(user.role);
+
+    // Resizable Generate Report card — null means 100% (no horizontal scroll by default)
+    const [cardWidth, setCardWidth] = useState(null);
+    const isResizing = useRef(false);
+    const startX = useRef(0);
+    const startWidth = useRef(0);
+    const cardRef = useRef(null);
+
+    const onResizeMouseDown = useCallback((e) => {
+        isResizing.current = true;
+        startX.current = e.clientX;
+        // Always read actual rendered width so first drag works correctly from 100%
+        startWidth.current = cardRef.current?.getBoundingClientRect().width || 800;
+        document.body.style.cursor = 'ew-resize';
+        document.body.style.userSelect = 'none';
+        const onMouseMove = (ev) => {
+            if (!isResizing.current) return;
+            const delta = ev.clientX - startX.current;
+            const newWidth = Math.max(400, Math.min(startWidth.current + delta, window.innerWidth - 60));
+            setCardWidth(newWidth);
+        };
+        const onMouseUp = () => {
+            isResizing.current = false;
+            document.body.style.cursor = '';
+            document.body.style.userSelect = '';
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mouseup', onMouseUp);
+        };
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+        e.preventDefault();
+    }, []);
 
     useEffect(() => {
         api.get('/districts').then(d => setDistricts(d.districts)).catch(console.error);
@@ -226,7 +258,23 @@ export default function ReportsPage() {
                 </button>
             </div>
 
-            <div className="card mb-xl">
+            <div
+                ref={cardRef}
+                className="card mb-xl"
+                style={{ width: cardWidth ? `${cardWidth}px` : '100%', maxWidth: '100%', position: 'relative', boxSizing: 'border-box' }}
+            >
+                {/* Drag-resize handle on right edge */}
+                <div
+                    onMouseDown={onResizeMouseDown}
+                    title="Drag to resize"
+                    style={{
+                        position: 'absolute', top: 0, right: 0, width: '6px', height: '100%',
+                        cursor: 'ew-resize', zIndex: 10, borderRadius: '0 var(--radius-lg) var(--radius-lg) 0',
+                        background: 'transparent', transition: 'background 0.2s',
+                    }}
+                    onMouseEnter={e => e.currentTarget.style.background = 'var(--color-primary-muted, rgba(99,102,241,0.25))'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                />
                 <h3 className="card-title mb-lg">Generate Report</h3>
                 
                 <div className="tabs mb-lg" style={{ display: 'flex', gap: '8px', borderBottom: '1px solid var(--color-border)', paddingBottom: '8px' }}>
@@ -415,7 +463,49 @@ export default function ReportsPage() {
                     {reportData.length === 0 ? (
                         <div className="card"><p>No data found for the selected criteria. (Ensure Naib courts have clicked "Final Submit" for the requested dates).</p></div>
                     ) : (
-                        reportData.map((tableBlock) => {
+                        <>
+                        {/* Export All button */}
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '12px' }}>
+                            <button
+                                className="btn btn-primary btn-sm"
+                                onClick={async () => {
+                                    const XLSX = await import('xlsx');
+                                    const workbook = XLSX.utils.book_new();
+
+                                    reportData.forEach(tableBlock => {
+                                        const raw = tableBlock.entries || [];
+                                        if (raw.length === 0) return;
+                                        const targetTableDef = tables.find(t => t.id === tableBlock.tableId);
+                                        if (!targetTableDef) return;
+
+                                        const rows = raw.map(entry => {
+                                            const row = {
+                                                'Date': new Date(entry.entryDate).toLocaleDateString('en-IN'),
+                                                'District': entry.district?.name || '—',
+                                                'Court': entry.court?.name || '—',
+                                            };
+                                            targetTableDef.columns.forEach(col => {
+                                                const val = entry.values?.[col.slug];
+                                                row[col.name] = (val !== undefined && val !== null) ? val : '—';
+                                            });
+                                            return row;
+                                        });
+
+                                        const worksheet = XLSX.utils.json_to_sheet(rows);
+                                        // Excel sheet names: max 31 chars, no special chars
+                                        const rawName = tableBlock.tableName || `Table`;
+                                        const sheetName = rawName.replace(/[:\\/?*\[\]]/g, '').substring(0, 31);
+                                        XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
+                                    });
+
+                                    const date = new Date().toLocaleDateString('en-IN').replace(/\//g, '-');
+                                    XLSX.writeFile(workbook, `Full_Report_${date}.xlsx`);
+                                }}
+                            >
+                                📦 Export All Tables (Excel)
+                            </button>
+                        </div>
+                        {reportData.map((tableBlock) => {
                             const rawEntries = tableBlock.entries || [];
                             if (rawEntries.length === 0) return null;
 
@@ -505,7 +595,8 @@ export default function ReportsPage() {
                                     </div>
                                 </div>
                             );
-                        })
+                        })}
+                        </>
                     )}
                 </div>
             )}
