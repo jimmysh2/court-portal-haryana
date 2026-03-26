@@ -309,21 +309,21 @@ router.post('/sync-table-sort-order', authenticate, requireRole('developer'), as
         const orderMap = {
             'trials-disposed': 1,
             'cancellation-decisions': 2,
-            'bail-granted': 3,
-            'po-pp-bj': 4,
-            'sentencing': 5,
-            'deposition-prosecution': 6,
-            'deposition-official': 7,
-            'deposition-medical': 8,
-            'deposition-forensic': 9,
-            'deposition-police': 10,
-            'witnesses-no-appearance': 11,
-            'summons-warrants-served': 12,
-            'summons-warrants-unserved': 13,
-            'nbw-served': 14,
-            'nbw-unserved': 15,
-            'police-applications': 16,
-            'judicial-misconduct': 17
+            'police-applications': 3,
+            'bail-granted': 4,
+            'po-pp-bj': 5,
+            'property-attached': 6,
+            'complaints-against-police': 7,
+            'fir-156-3': 8,
+            'sho-dsp-appeared': 9,
+            'police-deposition': 10,
+            'vc-prisoners': 11,
+            'tips-conducted': 12,
+            'pairvi-witness': 13,
+            'gangster-next-day': 14,
+            'property-offender-next-day': 15,
+            'bail-applications-tomorrow': 16,
+            'nbw-arrest-warrants': 17
         };
 
         let updated = 0;

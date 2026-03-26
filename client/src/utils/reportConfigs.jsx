@@ -140,12 +140,12 @@ export const getTableColumns = (tableSlug) => {
         case 'property-attached':
             return [
                 { header: 'u/s 85 BNSS', renderCell: (entries, openModal) => {
-                    const subset = filterByRegex(entries, 'section', /85/i);
+                    const subset = filterByRegex(entries, 'bnss_section', /85/i);
                     const val = subset.reduce((sum, e) => sum + parseVal(e.values?.property_value), 0);
                     return <ClickableNum num={val} entries={subset} onClick={openModal} />
                 }},
                 { header: 'u/s 107 BNSS', renderCell: (entries, openModal) => {
-                    const subset = filterByRegex(entries, 'section', /107/i);
+                    const subset = filterByRegex(entries, 'bnss_section', /107/i);
                     const val = subset.reduce((sum, e) => sum + parseVal(e.values?.property_value), 0);
                     return <ClickableNum num={val} entries={subset} onClick={openModal} />
                 }},
@@ -161,7 +161,7 @@ export const getTableColumns = (tableSlug) => {
             return [
                 { header: 'Total', renderCell: (entries, openModal) => <ClickableNum num={entries.length} entries={entries} onClick={openModal} /> }
             ];
-        case 'sho_dsp_appearance':
+        case 'sho-dsp-appeared':
             return [
                 { header: 'SHOs', renderCell: (entries, openModal) => {
                     const subset = filterByRegex(entries, 'rank', /sho/i);
@@ -259,16 +259,16 @@ export const getTableColumns = (tableSlug) => {
         case 'vc-prisoners':
             return [
                 { header: 'Total Accused produced Physically', renderCell: (entries, openModal) => {
-                    const sum = entries.reduce((acc, e) => acc + parseVal(e.values?.physically_produced), 0);
+                    const sum = entries.reduce((acc, e) => acc + parseVal(e.values?.produced_physically), 0);
                     return <ClickableNum num={sum} entries={entries} onClick={openModal} />
                 }},
                 { header: 'Total Accused produced through VC', renderCell: (entries, openModal) => {
-                    const sum = entries.reduce((acc, e) => acc + parseVal(e.values?.vc_produced), 0);
+                    const sum = entries.reduce((acc, e) => acc + parseVal(e.values?.produced_via_vc), 0);
                     return <ClickableNum num={sum} entries={entries} onClick={openModal} />
                 }},
                 { header: '% Appearance through VC', renderCell: (entries) => {
-                    const sumP = entries.reduce((acc, e) => acc + parseVal(e.values?.physically_produced), 0);
-                    const sumV = entries.reduce((acc, e) => acc + parseVal(e.values?.vc_produced), 0);
+                    const sumP = entries.reduce((acc, e) => acc + parseVal(e.values?.produced_physically), 0);
+                    const sumV = entries.reduce((acc, e) => acc + parseVal(e.values?.produced_via_vc), 0);
                     const tot = sumP + sumV;
                     if (tot === 0) return <span>0%</span>;
                     return <span>{((sumV / tot) * 100).toFixed(1)}%</span>;
@@ -277,16 +277,16 @@ export const getTableColumns = (tableSlug) => {
         case 'pairvi-witness':
             return [
                 { header: 'Total Witnesses Examined', renderCell: (entries, openModal) => {
-                    const sum = entries.reduce((acc, e) => acc + parseVal(e.values?.examined), 0);
+                    const sum = entries.reduce((acc, e) => acc + parseVal(e.values?.witnesses_examined), 0);
                     return <ClickableNum num={sum} entries={entries} onClick={openModal} />
                 }},
                 { header: 'Witness prepared to testify', renderCell: (entries, openModal) => {
-                    const sum = entries.reduce((acc, e) => acc + parseVal(e.values?.prepared_to_testify), 0);
+                    const sum = entries.reduce((acc, e) => acc + parseVal(e.values?.witnesses_prepared), 0);
                     return <ClickableNum num={sum} entries={entries} onClick={openModal} />
                 }},
                 { header: '% witnesses prepared', renderCell: (entries) => {
-                    const ex = entries.reduce((acc, e) => acc + parseVal(e.values?.examined), 0);
-                    const pr = entries.reduce((acc, e) => acc + parseVal(e.values?.prepared_to_testify), 0);
+                    const ex = entries.reduce((acc, e) => acc + parseVal(e.values?.witnesses_examined), 0);
+                    const pr = entries.reduce((acc, e) => acc + parseVal(e.values?.witnesses_prepared), 0);
                     if (ex === 0) return <span>0%</span>;
                     return <span>{((pr / ex) * 100).toFixed(1)}%</span>;
                 }}
