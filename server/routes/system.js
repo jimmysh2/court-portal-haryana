@@ -339,4 +339,147 @@ router.post('/sync-table-sort-order', authenticate, requireRole('developer'), as
     } catch (err) { next(err); }
 });
 
+// ─── 7. POST /api/v1/system/fix-tables ──────────────────────────────────────
+// One-click repair: delete rogue tables, create correct PDF tables
+router.post('/fix-tables', authenticate, requireRole('developer'), async (req, res, next) => {
+    try {
+        const developer = await prisma.user.findFirst({ where: { role: 'developer' } });
+        if (!developer) return res.status(500).json({ error: 'No developer user found' });
+
+        // Rogue slugs that should NOT exist
+        const rogueSlugs = [
+            'sentencing', 'judicial-misconduct', 'deposition-prosecution',
+            'deposition-official', 'deposition-medical', 'deposition-forensic',
+            'deposition-police', 'witnesses-no-appearance', 'summons-warrants-served',
+            'summons-warrants-unserved', 'nbw-served', 'nbw-unserved'
+        ];
+
+        let deleted = 0;
+        for (const slug of rogueSlugs) {
+            const table = await prisma.dataEntryTable.findUnique({ where: { slug } });
+            if (table) {
+                const count = await prisma.dataEntry.count({ where: { tableId: table.id } });
+                if (count > 0) continue; // Safety: skip if has data
+                await prisma.dataEntryColumn.deleteMany({ where: { tableId: table.id } });
+                await prisma.dataEntryTable.delete({ where: { id: table.id } });
+                deleted++;
+            }
+        }
+
+        // The 12 correct tables from the PDF that may be missing
+        const missingTables = [
+            { name: '6. Value of Property attached (85 BNSS & 107 BNSS)', slug: 'property-attached', singleRow: false, sortOrder: 6, columns: [
+                { name: 'Name of Accused', slug: 'accused_name', dataType: 'text', sortOrder: 0 },
+                { name: 'FIR Number', slug: 'fir_no', dataType: 'text', sortOrder: 1 },
+                { name: 'FIR Year', slug: 'fir_year', dataType: 'year', sortOrder: 2 },
+                { name: 'Sections (U/s)', slug: 'sections', dataType: 'text', sortOrder: 3 },
+                { name: 'Police Station', slug: 'police_station', dataType: 'text', sortOrder: 4 },
+                { name: 'BNSS Section', slug: 'bnss_section', dataType: 'enum', enumOptions: ['85 BNSS', '107 BNSS'], sortOrder: 5 },
+                { name: 'Property Details', slug: 'property_details', dataType: 'text', sortOrder: 6 },
+                { name: 'Property Value', slug: 'property_value', dataType: 'number', sortOrder: 7 },
+            ]},
+            { name: '7. Applications/Complaints Against Police Officials', slug: 'complaints-against-police', singleRow: false, sortOrder: 7, columns: [
+                { name: 'Details of Applicant', slug: 'applicant_details', dataType: 'text', sortOrder: 0 },
+                { name: 'Brief Facts', slug: 'brief_facts', dataType: 'text', sortOrder: 1 },
+                { name: 'Next Hearing Date', slug: 'next_hearing_date', dataType: 'date', sortOrder: 2 },
+            ]},
+            { name: '8. FIR Registration under 156(3) CrPC', slug: 'fir-156-3', singleRow: false, sortOrder: 8, columns: [
+                { name: 'Details of Applicant', slug: 'applicant_details', dataType: 'text', sortOrder: 0 },
+                { name: 'Sections in Complaint', slug: 'complaint_sections', dataType: 'text', sortOrder: 1 },
+                { name: 'Police Station', slug: 'police_station', dataType: 'text', sortOrder: 2 },
+                { name: 'Details of Police Officials', slug: 'police_official_details', dataType: 'text', sortOrder: 3 },
+            ]},
+            { name: '9. SHOs and DSPs Who Appeared in Court', slug: 'sho-dsp-appeared', singleRow: false, sortOrder: 9, columns: [
+                { name: 'Name of SHO/ DSP', slug: 'officer_name', dataType: 'text', sortOrder: 0 },
+                { name: 'Rank', slug: 'rank', dataType: 'enum', enumOptions: ['SHO', 'DSP/ASP/Addl SP'], sortOrder: 1 },
+                { name: 'Place of Posting', slug: 'posting_place', dataType: 'text', sortOrder: 2 },
+                { name: 'Reason', slug: 'reason', dataType: 'text', sortOrder: 3 },
+                { name: 'Remarks', slug: 'remarks', dataType: 'text', isRequired: false, sortOrder: 4 },
+            ]},
+            { name: '10. Deposition of Police Officials', slug: 'police-deposition', singleRow: true, sortOrder: 10, columns: [
+                { name: 'Supposed to Appear', slug: 'supposed_to_appear', dataType: 'number', sortOrder: 0 },
+                { name: 'Appeared Physically', slug: 'appeared_physically', dataType: 'number', sortOrder: 1 },
+                { name: 'Examined Physically', slug: 'examined_physically', dataType: 'number', sortOrder: 2 },
+                { name: 'Examined via VC', slug: 'examined_via_vc', dataType: 'number', sortOrder: 3 },
+                { name: 'Absent (Unauthorized/No Request)', slug: 'absent_unauthorized', dataType: 'number', sortOrder: 4 },
+            ]},
+            { name: '11. VC of Prisoners', slug: 'vc-prisoners', singleRow: true, sortOrder: 11, columns: [
+                { name: 'Produced Physically', slug: 'produced_physically', dataType: 'number', sortOrder: 0 },
+                { name: 'Produced via VC', slug: 'produced_via_vc', dataType: 'number', sortOrder: 1 },
+            ]},
+            { name: '12. TIPs Conducted Today', slug: 'tips-conducted', singleRow: false, sortOrder: 12, columns: [
+                { name: 'FIR Number', slug: 'fir_no', dataType: 'text', sortOrder: 0 },
+                { name: 'FIR Year', slug: 'fir_year', dataType: 'year', sortOrder: 1 },
+                { name: 'Sections (U/s)', slug: 'sections', dataType: 'text', sortOrder: 2 },
+                { name: 'Police Station', slug: 'police_station', dataType: 'text', sortOrder: 3 },
+            ]},
+            { name: '13. Pairvi for Private Witness', slug: 'pairvi-witness', singleRow: true, sortOrder: 13, columns: [
+                { name: 'Witnesses Examined', slug: 'witnesses_examined', dataType: 'number', sortOrder: 0 },
+                { name: 'Witnesses Prepared to Testify', slug: 'witnesses_prepared', dataType: 'number', sortOrder: 1 },
+            ]},
+            { name: '14. Gangster/Notorious Criminal Appearing Next Day', slug: 'gangster-next-day', singleRow: false, sortOrder: 14, columns: [
+                { name: 'Gangster & Gang Details', slug: 'gangster_details', dataType: 'text', sortOrder: 0 },
+                { name: 'FIR Number', slug: 'fir_no', dataType: 'text', sortOrder: 1 },
+                { name: 'FIR Year', slug: 'fir_year', dataType: 'year', sortOrder: 2 },
+                { name: 'Sections (U/s)', slug: 'sections', dataType: 'text', sortOrder: 3 },
+                { name: 'Police Station', slug: 'police_station', dataType: 'text', sortOrder: 4 },
+                { name: 'Accused Status', slug: 'accused_status', dataType: 'enum', enumOptions: ['Bail', 'Judicial Custody'], sortOrder: 5 },
+                { name: 'Name of Jail', slug: 'jail_name', dataType: 'text', isRequired: false, sortOrder: 6 },
+            ]},
+            { name: '15. Crime Against Property Offender Appearing Next Day', slug: 'property-offender-next-day', singleRow: false, sortOrder: 15, columns: [
+                { name: 'Details of Accused', slug: 'accused_details', dataType: 'text', sortOrder: 0 },
+                { name: 'FIR Number', slug: 'fir_no', dataType: 'text', sortOrder: 1 },
+                { name: 'FIR Year', slug: 'fir_year', dataType: 'year', sortOrder: 2 },
+                { name: 'Sections (U/s)', slug: 'sections', dataType: 'text', sortOrder: 3 },
+                { name: 'Police Station', slug: 'police_station', dataType: 'text', sortOrder: 4 },
+                { name: 'Accused Status', slug: 'accused_status', dataType: 'enum', enumOptions: ['Bail', 'Judicial Custody'], sortOrder: 5 },
+                { name: 'Name of Jail', slug: 'jail_name', dataType: 'text', isRequired: false, sortOrder: 6 },
+            ]},
+            { name: '16. Fresh Bail Applications listed for tomorrow', slug: 'bail-applications-tomorrow', singleRow: false, sortOrder: 16, columns: [
+                { name: 'Name of Accused', slug: 'accused_name', dataType: 'text', sortOrder: 0 },
+                { name: 'FIR Number', slug: 'fir_no', dataType: 'text', sortOrder: 1 },
+                { name: 'FIR Year', slug: 'fir_year', dataType: 'year', sortOrder: 2 },
+                { name: 'Sections (U/s)', slug: 'sections', dataType: 'text', sortOrder: 3 },
+                { name: 'Police Station', slug: 'police_station', dataType: 'text', sortOrder: 4 },
+                { name: 'Bail Type', slug: 'bail_type', dataType: 'enum', enumOptions: ['Regular Bail', 'Anticipatory Bail'], sortOrder: 5 },
+            ]},
+            { name: '17. NBW Arrest Warrants issued today', slug: 'nbw-arrest-warrants', singleRow: false, sortOrder: 17, columns: [
+                { name: 'Name of Accused', slug: 'accused_name', dataType: 'text', sortOrder: 0 },
+                { name: 'FIR Number', slug: 'fir_no', dataType: 'text', sortOrder: 1 },
+                { name: 'FIR Year', slug: 'fir_year', dataType: 'year', sortOrder: 2 },
+                { name: 'Sections (U/s)', slug: 'sections', dataType: 'text', sortOrder: 3 },
+                { name: 'Police Station', slug: 'police_station', dataType: 'text', sortOrder: 4 },
+                { name: 'Next Date', slug: 'next_date', dataType: 'date', sortOrder: 5 },
+            ]},
+        ];
+
+        // Fix sort orders for the 5 correct tables already in DB
+        const sortFixes = { 'trials-disposed': 1, 'cancellation-decisions': 2, 'police-applications': 3, 'bail-granted': 4, 'po-pp-bj': 5 };
+        for (const [slug, order] of Object.entries(sortFixes)) {
+            await prisma.dataEntryTable.updateMany({ where: { slug }, data: { sortOrder: order } });
+        }
+
+        let created = 0;
+        for (const t of missingTables) {
+            const exists = await prisma.dataEntryTable.findUnique({ where: { slug: t.slug } });
+            if (exists) continue;
+            await prisma.dataEntryTable.create({
+                data: {
+                    name: t.name, slug: t.slug, description: t.name, singleRow: t.singleRow,
+                    sortOrder: t.sortOrder, createdBy: developer.id,
+                    columns: { create: t.columns.map(c => ({
+                        name: c.name, slug: c.slug, dataType: c.dataType,
+                        enumOptions: c.enumOptions || null,
+                        isRequired: c.isRequired !== undefined ? c.isRequired : true,
+                        sortOrder: c.sortOrder
+                    }))}
+                }
+            });
+            created++;
+        }
+
+        res.json({ message: `Fix complete! Deleted ${deleted} rogue tables, created ${created} correct tables, fixed sort orders.` });
+    } catch (err) { next(err); }
+});
+
 module.exports = router;
