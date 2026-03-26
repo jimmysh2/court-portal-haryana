@@ -207,8 +207,10 @@ export default function SystemManagement() {
     return (
         <div>
             <div className="page-header">
-                <h2>📊 Data Backup/Cleanup</h2>
-                <div style={{ color: 'var(--color-text-secondary)', fontSize: '0.9rem' }}>Database maintenance and recovery tools</div>
+                <h2>⚙️ System Management</h2>
+                <div style={{ color: 'var(--color-text-secondary)', fontSize: '0.9rem', marginTop: 'var(--space-sm)' }}>
+                    Powerful developer tools to maintain the portal. You can manually lock or finalize daily submissions for any specific court or district, create & restore full database backups instantly, reorder reporting tables on the fly without writing code, configure automated daily background backups, and wipe redundant data arrays safely while keeping the core functionality intact.
+                </div>
             </div>
 
             {success && <div className="alert alert-success mt-lg">{success}</div>}
