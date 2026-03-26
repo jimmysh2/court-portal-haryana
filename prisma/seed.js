@@ -72,7 +72,7 @@ async function main() {
             slug: 'bail-granted',
             description: 'List of accused granted bail (along with surety/identifier, photos etc.)',
             singleRow: false,
-            sortOrder: 3,
+            sortOrder: 4,
             columns: [
                 { name: 'Name of Accused', slug: 'accused_name', dataType: 'text', sortOrder: 0 },
                 { name: 'FIR Number', slug: 'fir_no', dataType: 'text', sortOrder: 1 },
@@ -90,7 +90,7 @@ async function main() {
             slug: 'po-pp-bj',
             description: 'List of declared POs/PPs/BJs',
             singleRow: false,
-            sortOrder: 4,
+            sortOrder: 5,
             columns: [
                 { name: 'Name of Accused', slug: 'accused_name', dataType: 'text', sortOrder: 0 },
                 { name: 'FIR Number', slug: 'fir_no', dataType: 'text', sortOrder: 1 },
@@ -105,7 +105,7 @@ async function main() {
             slug: 'property-attached',
             description: 'Detail of Property attached (85 BNSS & 107 BNSS)',
             singleRow: false,
-            sortOrder: 9,
+            sortOrder: 6,
             columns: [
                 { name: 'Name of Accused', slug: 'accused_name', dataType: 'text', sortOrder: 0 },
                 { name: 'FIR Number', slug: 'fir_no', dataType: 'text', sortOrder: 1 },
@@ -122,7 +122,7 @@ async function main() {
             slug: 'complaints-against-police',
             description: 'Applications/Complaints/Istgasa filed against Police Officials',
             singleRow: false,
-            sortOrder: 11,
+            sortOrder: 7,
             columns: [
                 { name: 'Details of Applicant', slug: 'applicant_details', dataType: 'text', sortOrder: 0 },
                 { name: 'Brief Facts', slug: 'brief_facts', dataType: 'text', sortOrder: 1 },
@@ -134,7 +134,7 @@ async function main() {
             slug: 'fir-156-3',
             description: 'FIR Registration under 156(3) CrPC',
             singleRow: false,
-            sortOrder: 12,
+            sortOrder: 8,
             columns: [
                 { name: 'Details of Applicant', slug: 'applicant_details', dataType: 'text', sortOrder: 0 },
                 { name: 'Sections in Complaint', slug: 'complaint_sections', dataType: 'text', sortOrder: 1 },
@@ -147,7 +147,7 @@ async function main() {
             slug: 'sho-dsp-appeared',
             description: 'List of SHOs and DSPs who appeared in court today',
             singleRow: false,
-            sortOrder: 13,
+            sortOrder: 9,
             columns: [
                 { name: 'Name of SHO/ DSP', slug: 'officer_name', dataType: 'text', sortOrder: 0 },
                 { name: 'Rank', slug: 'rank', dataType: 'enum', enumOptions: ['SHO', 'DSP/ASP/Addl SP'], sortOrder: 1 },
@@ -161,7 +161,7 @@ async function main() {
             slug: 'police-deposition',
             description: 'Deposition of police officials — aggregate counts per court per day',
             singleRow: true,
-            sortOrder: 15,
+            sortOrder: 10,
             columns: [
                 { name: 'Supposed to Appear', slug: 'supposed_to_appear', dataType: 'number', sortOrder: 0 },
                 { name: 'Appeared Physically', slug: 'appeared_physically', dataType: 'number', sortOrder: 1 },
@@ -175,7 +175,7 @@ async function main() {
             slug: 'vc-prisoners',
             description: 'VC of prisoners — aggregate counts per court per day',
             singleRow: true,
-            sortOrder: 16,
+            sortOrder: 11,
             columns: [
                 { name: 'Produced Physically', slug: 'produced_physically', dataType: 'number', sortOrder: 0 },
                 { name: 'Produced via VC', slug: 'produced_via_vc', dataType: 'number', sortOrder: 1 },
@@ -186,7 +186,7 @@ async function main() {
             slug: 'tips-conducted',
             description: 'TIPs conducted today',
             singleRow: false,
-            sortOrder: 14,
+            sortOrder: 12,
             columns: [
                 { name: 'FIR Number', slug: 'fir_no', dataType: 'text', sortOrder: 0 },
                 { name: 'FIR Year', slug: 'fir_year', dataType: 'year', sortOrder: 1 },
@@ -199,7 +199,7 @@ async function main() {
             slug: 'pairvi-witness',
             description: 'Pairvi for private witness — aggregate counts per court per day',
             singleRow: true,
-            sortOrder: 17,
+            sortOrder: 13,
             columns: [
                 { name: 'Witnesses Examined', slug: 'witnesses_examined', dataType: 'number', sortOrder: 0 },
                 { name: 'Witnesses Prepared to Testify', slug: 'witnesses_prepared', dataType: 'number', sortOrder: 1 },
@@ -210,7 +210,7 @@ async function main() {
             slug: 'gangster-next-day',
             description: 'Any Gangster/Notorious Criminal appearing in Court the next day',
             singleRow: false,
-            sortOrder: 5,
+            sortOrder: 14,
             columns: [
                 { name: 'Gangster & Gang Details', slug: 'gangster_details', dataType: 'text', sortOrder: 0 },
                 { name: 'FIR Number', slug: 'fir_no', dataType: 'text', sortOrder: 1 },
@@ -226,7 +226,7 @@ async function main() {
             slug: 'property-offender-next-day',
             description: 'Any Crime against Property offender appearing in court the next day',
             singleRow: false,
-            sortOrder: 6,
+            sortOrder: 15,
             columns: [
                 { name: 'Details of Accused', slug: 'accused_details', dataType: 'text', sortOrder: 0 },
                 { name: 'FIR Number', slug: 'fir_no', dataType: 'text', sortOrder: 1 },
@@ -242,7 +242,7 @@ async function main() {
             slug: 'bail-applications-tomorrow',
             description: 'Bail Applications listed for tomorrow',
             singleRow: false,
-            sortOrder: 7,
+            sortOrder: 16,
             columns: [
                 { name: 'Name of Accused', slug: 'accused_name', dataType: 'text', sortOrder: 0 },
                 { name: 'FIR Number', slug: 'fir_no', dataType: 'text', sortOrder: 1 },
@@ -257,7 +257,7 @@ async function main() {
             slug: 'nbw-arrest-warrants',
             description: 'NBW Arrest Warrants issued today',
             singleRow: false,
-            sortOrder: 8,
+            sortOrder: 17,
             columns: [
                 { name: 'Name of Accused', slug: 'accused_name', dataType: 'text', sortOrder: 0 },
                 { name: 'FIR Number', slug: 'fir_no', dataType: 'text', sortOrder: 1 },
