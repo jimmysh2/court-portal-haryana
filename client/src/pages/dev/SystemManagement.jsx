@@ -209,6 +209,22 @@ export default function SystemManagement() {
                             >
                                 🔄 Sync Tables Sort Order
                             </button>
+                            <button 
+                                className="btn btn-sm" 
+                                onClick={async () => {
+                                    if(!window.confirm('This will DELETE rogue tables and CREATE the correct 17 tables from the PDF. Continue?')) return;
+                                    setLoading(true);
+                                    try {
+                                        const res = await api.post('/system/fix-tables');
+                                        setSuccess(res.message);
+                                    } catch(err) { setError(err.message || 'Fix failed'); }
+                                    finally { setLoading(false); }
+                                }} 
+                                disabled={loading}
+                                style={{ marginTop: 'var(--space-sm)', background: 'var(--color-danger)', color: 'white', border: 'none' }}
+                            >
+                                🔧 Fix Tables (PDF Compliance)
+                            </button>
                         </div>
                     </div>
 
