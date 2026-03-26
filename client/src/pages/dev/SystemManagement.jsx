@@ -432,6 +432,34 @@ export default function SystemManagement() {
                         )}
                     </div>
 
+                    <div className="card">
+                        <div className="card-header">
+                            <div className="card-title">🔢 Data Integrity: Round Off Decimals</div>
+                        </div>
+                        <p style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)', marginBottom: 'var(--space-md)' }}>
+                            Scans all <strong>number-type</strong> columns across every data entry and rounds any decimal values (e.g. 3.5 → 4, 2.1 → 2) to the nearest integer. Safe to run multiple times.
+                        </p>
+                        <button
+                            className="btn btn-secondary"
+                            style={{ width: '100%' }}
+                            disabled={loading}
+                            onClick={async () => {
+                                if (!window.confirm('Round off all decimal entries in number columns to integers?')) return;
+                                setLoading(true);
+                                try {
+                                    const res = await api.post('/system/round-decimals');
+                                    setSuccess(res.message);
+                                } catch (err) {
+                                    setError(err.message || 'Failed to round decimals');
+                                } finally {
+                                    setLoading(false);
+                                }
+                            }}
+                        >
+                            🔃 Round Off All Decimal Entries
+                        </button>
+                    </div>
+
                     <div className="card" style={{ border: '1px solid var(--color-primary-soft)' }}>
                         <div className="card-header">
                             <div className="card-title">🛂 Developer Power: Force Finalize</div>
