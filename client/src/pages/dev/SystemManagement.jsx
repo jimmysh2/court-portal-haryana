@@ -19,11 +19,14 @@ export default function SystemManagement() {
     const [serverTime, setServerTime] = useState('');
     const [loadingSettings, setLoadingSettings] = useState(true);
     const [savingTime, setSavingTime] = useState(false);
+    const [tables, setTables] = useState([]);
+    const [savingTables, setSavingTables] = useState(false);
 
     useEffect(() => {
         fetchSettings();
         fetchBackups();
         fetchDistricts();
+        fetchTables();
         
         // Update server time locally every 30s to keep it roughly sync'd
         const timer = setInterval(() => {
@@ -51,6 +54,41 @@ export default function SystemManagement() {
         }
         finally { setLoadingSettings(false); }
     }
+
+    const fetchTables = async () => {
+        try {
+            const res = await api.get('/data-tables');
+            setTables(res.tables || []);
+        } catch (err) {
+            console.error('Failed to fetch tables', err);
+        }
+    };
+
+    const handleMoveTable = (index, direction) => {
+        const newTables = [...tables];
+        if (direction === 'up' && index > 0) {
+            [newTables[index], newTables[index - 1]] = [newTables[index - 1], newTables[index]];
+        } else if (direction === 'down' && index < newTables.length - 1) {
+            [newTables[index], newTables[index + 1]] = [newTables[index + 1], newTables[index]];
+        }
+        setTables(newTables);
+    };
+
+    const handleSaveTableSort = async () => {
+        setSavingTables(true);
+        setError('');
+        setSuccess('');
+        try {
+            const updates = tables.map((t, idx) => ({ id: t.id, sortOrder: idx + 1 }));
+            const res = await api.post('/system/tables/reorder', { updates });
+            setSuccess(res.message);
+            fetchTables(); // Refresh
+        } catch (err) {
+            setError(err.message || 'Failed to save sort order');
+        } finally {
+            setSavingTables(false);
+        }
+    };
 
     const handleSaveTime = async () => {
         try {
@@ -225,6 +263,48 @@ export default function SystemManagement() {
                             >
                                 🔧 Fix Tables (PDF Compliance)
                             </button>
+                        </div>
+                    </div>
+
+                    <div className="card">
+                        <div className="card-header">
+                            <div className="card-title">Reorder Tables</div>
+                            <button 
+                                className="btn btn-sm" 
+                                onClick={handleSaveTableSort} 
+                                disabled={savingTables || tables.length === 0}
+                            >
+                                {savingTables ? 'Saving...' : '💾 Save Order'}
+                            </button>
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                            {tables.map((t, index) => (
+                                <div key={t.id} style={{
+                                    display: 'flex', alignItems: 'center', justifyContent: 'space-between', 
+                                    padding: '0.5rem 1rem', background: 'var(--color-bg-secondary)', 
+                                    borderRadius: 'var(--radius-sm)', border: '1px solid var(--color-border)'
+                                }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                        <div style={{ minWidth: '2rem', height: '2rem', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--color-primary)', color: 'white', borderRadius: '50%', fontWeight: 'bold' }}>
+                                            {index + 1}
+                                        </div>
+                                        <div style={{ fontWeight: 500 }}>{t.name}</div>
+                                    </div>
+                                    <div style={{ display: 'flex', gap: '0.25rem' }}>
+                                        <button 
+                                            className="btn btn-sm btn-secondary" 
+                                            onClick={() => handleMoveTable(index, 'up')}
+                                            disabled={index === 0}
+                                        >⬆️</button>
+                                        <button 
+                                            className="btn btn-sm btn-secondary" 
+                                            onClick={() => handleMoveTable(index, 'down')}
+                                            disabled={index === tables.length - 1}
+                                        >⬇️</button>
+                                    </div>
+                                </div>
+                            ))}
+                            {tables.length === 0 && <div className="text-secondary" style={{ padding: '1rem' }}>Loading tables...</div>}
                         </div>
                     </div>
 

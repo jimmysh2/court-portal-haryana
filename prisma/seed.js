@@ -26,7 +26,7 @@ async function main() {
     // ─── 17 Predefined Data Entry Tables ───────────────
     const tables = [
         {
-            name: '1. Trials Disposed/Completed Today',
+            name: '1. List of trials disposed/completed today',
             slug: 'trials-disposed',
             description: 'List of trials disposed/completed today',
             singleRow: false,
@@ -54,7 +54,7 @@ async function main() {
             ],
         },
         {
-            name: '3. Decision on Applications by Police Officials',
+            name: '3. Decision on any application filed by police officials',
             slug: 'police-applications',
             description: 'Decision on any application filed by police officials',
             singleRow: false,
@@ -68,7 +68,7 @@ async function main() {
             ],
         },
         {
-            name: '4. Accused Granted Bail',
+            name: '4. List of accused granted bail (along with surety / Identifier, Photos Etc)',
             slug: 'bail-granted',
             description: 'List of accused granted bail (along with surety/identifier, photos etc.)',
             singleRow: false,
@@ -86,7 +86,7 @@ async function main() {
             ],
         },
         {
-            name: '5. Declared POs/PPs/BJs',
+            name: '5. List of declared POs/PPs/BJs',
             slug: 'po-pp-bj',
             description: 'List of declared POs/PPs/BJs',
             singleRow: false,
@@ -118,7 +118,7 @@ async function main() {
             ],
         },
         {
-            name: '7. Applications/Complaints Against Police Officials',
+            name: '7. Applications/Complaints/Istgasa filed against Police Officials',
             slug: 'complaints-against-police',
             description: 'Applications/Complaints/Istgasa filed against Police Officials',
             singleRow: false,
@@ -143,7 +143,7 @@ async function main() {
             ],
         },
         {
-            name: '9. SHOs and DSPs Who Appeared in Court',
+            name: '9. List of SHOs and DSPs who appeared in court today (for deposition or other matter)',
             slug: 'sho-dsp-appeared',
             description: 'List of SHOs and DSPs who appeared in court today',
             singleRow: false,
@@ -157,7 +157,7 @@ async function main() {
             ],
         },
         {
-            name: '10. Deposition of Police Officials',
+            name: '10. Deposition of police officials',
             slug: 'police-deposition',
             description: 'Deposition of police officials — aggregate counts per court per day',
             singleRow: true,
@@ -171,7 +171,7 @@ async function main() {
             ],
         },
         {
-            name: '11. VC of Prisoners',
+            name: '11. VC of prisoners',
             slug: 'vc-prisoners',
             description: 'VC of prisoners — aggregate counts per court per day',
             singleRow: true,
@@ -182,7 +182,7 @@ async function main() {
             ],
         },
         {
-            name: '12. TIPs Conducted Today',
+            name: '12. TIPs conducted today',
             slug: 'tips-conducted',
             description: 'TIPs conducted today',
             singleRow: false,
@@ -195,7 +195,7 @@ async function main() {
             ],
         },
         {
-            name: '13. Pairvi for Private Witness',
+            name: '13. Pairvi for private witness',
             slug: 'pairvi-witness',
             description: 'Pairvi for private witness — aggregate counts per court per day',
             singleRow: true,
@@ -206,7 +206,7 @@ async function main() {
             ],
         },
         {
-            name: '14. Gangster/Notorious Criminal Appearing Next Day',
+            name: '14. Any Gangster/Notorious Criminal appearing in Court the next day',
             slug: 'gangster-next-day',
             description: 'Any Gangster/Notorious Criminal appearing in Court the next day',
             singleRow: false,
@@ -222,7 +222,7 @@ async function main() {
             ],
         },
         {
-            name: '15. Crime Against Property Offender Appearing Next Day',
+            name: '15. Any Crime against Property offender appearing in court the next day',
             slug: 'property-offender-next-day',
             description: 'Any Crime against Property offender appearing in court the next day',
             singleRow: false,
