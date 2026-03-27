@@ -23,12 +23,12 @@ export default function AiAssistant() {
 
     // ── Suggestions for the welcome screen ──
     const suggestions = [
-        "Show total accused in custody vs on bail across all districts (Table 1)",
-        "Which courts have the highest pending FIR registrations under 156(3)? (Table 2)",
-        "Summary of POs and PPs declared and arrested this year by district (Table 4)",
-        "List all courts with zero VC sessions conducted last month (Table 11)",
-        "Show percentage of witnesses prepared to testify vs examined (Table 13)",
-        "Top 10 districts by highest recovery of fine in MS cases (Table 17)"
+        "Show me the list of declared POs, PPs, and BJs, grouped by police station.",
+        "What are the details of FIRs registered under 156(3) CrPC this month?",
+        "List all NBW arrest warrants issued today across all districts.",
+        "Show me the details of property attached under 85/107 BNSS, including total property value.",
+        "Summarize the deposition of police officials, showing who was examined physically vs absent.",
+        "Which gangsters or notorious criminals are appearing in court tomorrow?"
     ];
 
     // ── Send message ──
