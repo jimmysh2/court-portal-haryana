@@ -82,26 +82,23 @@ async function runBackup() {
         } catch (e) { /* No docker */ }
 
         if (hasDocker && !IS_CLOUD) {
-            console.log('📡 Extracting from Local Docker container...');
+            console.log('📡 Extracting Full System Snapshot from Local Docker container...');
             dumpStream = spawn('docker', [
                 'exec', '-i', 'courtportalantigravity-db-1', 
-                'sh', '-c', 'PGPASSWORD=password pg_dump -U user --clean --if-exists --exclude-table=grievances --exclude-table=grievance_comments --exclude-table=grievance_attachments court_portal'
+                'sh', '-c', 'PGPASSWORD=password pg_dump -U user --clean --if-exists court_portal'
             ]);
         } 
         // 2. Fallback to pg_dump (Best for Cloud or local with Postgres installed)
         else if (process.env.DATABASE_URL) {
-            console.log('📡 Extracting directly from DATABASE_URL using pg_dump...');
+            console.log('📡 Extracting Full System Snapshot from DATABASE_URL...');
             dumpStream = spawn('pg_dump', [
                 process.env.DATABASE_URL, 
                 '--clean', 
-                '--if-exists',
-                '--exclude-table=public.grievances',
-                '--exclude-table=public.grievance_comments',
-                '--exclude-table=public.grievance_attachments'
+                '--if-exists'
             ]);
         }
         else {
-            throw new Error('No database extraction method available. Ensure Docker is running or DATABASE_URL is set.');
+            throw new Error('No database extraction method available.');
         }
         
         const gzip = zlib.createGzip();
@@ -143,7 +140,7 @@ async function runBackup() {
 
         const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
         let removed = 0;
-        files.slice(10).forEach(file => { // Keep 10 latest
+        files.slice(50).forEach(file => { // Keep 50 latest
             if (file.time < thirtyDaysAgo) {
                 fs.unlinkSync(path.join(BACKUP_DIR, file.name));
                 removed++;

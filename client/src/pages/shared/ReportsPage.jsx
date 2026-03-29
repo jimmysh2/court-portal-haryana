@@ -28,6 +28,7 @@ export default function ReportsPage() {
     const [reportData, setReportData] = useState(null);
     const [pendingData, setPendingData] = useState(null);
     const [loading, setLoading] = useState(false);
+    const [activeDropdown, setActiveDropdown] = useState(null);
 
     // Modal state for clickable aggregates
     const [modalData, setModalData] = useState(null);
@@ -64,6 +65,12 @@ export default function ReportsPage() {
         document.addEventListener('mousemove', onMouseMove);
         document.addEventListener('mouseup', onMouseUp);
         e.preventDefault();
+    }, []);
+
+    useEffect(() => {
+        const handleClickOutside = () => setActiveDropdown(null);
+        document.addEventListener('click', handleClickOutside);
+        return () => document.removeEventListener('click', handleClickOutside);
     }, []);
 
     useEffect(() => {
@@ -193,11 +200,13 @@ export default function ReportsPage() {
         setModalData({ title, entries });
     };
 
-    const exportToCSV = (tableId, tableName, entries) => {
+    const exportRawToExcel = async (tableId, tableName, entries) => {
         if (!entries || entries.length === 0) return;
         const targetTableDef = tables.find(t => t.id === tableId);
         if (!targetTableDef) return;
 
+        const XLSX = await import('xlsx');
+        
         // Build headers
         const headers = ['Date', 'District', 'Court', ...targetTableDef.columns.map(c => c.name)];
 
@@ -210,34 +219,96 @@ export default function ReportsPage() {
             ];
             const colFields = targetTableDef.columns.map(col => {
                 const val = entry.values?.[col.slug];
-                return (val !== undefined && val !== null) ? String(val) : '—';
+                return (val !== undefined && val !== null) ? val : '—';
             });
             return [...baseFields, ...colFields];
         });
 
-        // Escape a CSV cell (wrap in quotes if it contains comma, quote, or newline)
-        const escapeCell = (cell) => {
-            const str = String(cell);
-            if (str.includes(',') || str.includes('"') || str.includes('\n')) {
-                return `"${str.replace(/"/g, '""')}"`;
+        const wsData = [headers, ...rows];
+        const ws = XLSX.utils.aoa_to_sheet(wsData);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Raw Data');
+        XLSX.writeFile(wb, `${tableName.replace(/[^a-z0-9]/gi, '_')}_RawData.xlsx`);
+    };
+
+
+    const extractAggregatedValue = (node) => {
+        if (node == null) return 0;
+        if (typeof node === 'number' || typeof node === 'string') return node;
+        if (node.props) {
+            if (node.props.num !== undefined) return node.props.num;
+            if (node.props.children !== undefined) {
+                if (Array.isArray(node.props.children)) {
+                    return node.props.children.map(extractAggregatedValue).join('');
+                }
+                return extractAggregatedValue(node.props.children);
             }
-            return str;
-        };
+        }
+        return 0;
+    };
 
-        const csvContent = [
-            headers.map(escapeCell).join(','),
-            ...rows.map(row => row.map(escapeCell).join(','))
-        ].join('\r\n');
+    const getAggregatedMatrix = (tableBlock, groupedData, rowHeaderLabel, rawEntries) => {
+        const tableColumns = getTableColumns(tableBlock.tableSlug);
+        const headers = ['Sr. No.', rowHeaderLabel, ...tableColumns.map(c => c.header)];
+        
+        const rows = groupedData.map((row, idx) => {
+            return [
+                idx + 1,
+                row.label,
+                ...tableColumns.map(col => extractAggregatedValue(col.renderCell(row.entries, () => {})))
+            ];
+        });
 
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.setAttribute('download', `${tableName}_Report.csv`);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
+        if (groupedData.length > 0) {
+            rows.push([
+                '',
+                'OVERALL TOTAL:',
+                ...tableColumns.map(col => extractAggregatedValue(col.renderCell(rawEntries, () => {})))
+            ]);
+        }
+        return { headers, rows };
+    };
+
+    const exportAggregatedPDF = (tableBlock, groupedData, rowHeaderLabel, rawEntries) => {
+        const { headers, rows } = getAggregatedMatrix(tableBlock, groupedData, rowHeaderLabel, rawEntries);
+        const { jsPDF } = window.jspdf || {};
+        if (!jsPDF) { alert("PDF library not loaded yet."); return; }
+        
+        const doc = new jsPDF({ orientation: headers.length > 5 ? 'landscape' : 'portrait' });
+        doc.setFontSize(14);
+        doc.text(tableBlock.tableName, 14, 20);
+        doc.setFontSize(9);
+        doc.text(`Exported: ${new Date().toLocaleString('en-IN')}`, 14, 27);
+        
+        doc.autoTable({
+            startY: 33,
+            head: [headers],
+            body: rows,
+            styles: { fontSize: 9, cellPadding: 3 },
+            headStyles: { fillColor: [99, 102, 241], textColor: 255, fontStyle: 'bold' },
+            alternateRowStyles: { fillColor: [245, 245, 255] }
+        });
+        
+        doc.save(`${tableBlock.tableName.replace(/[^a-z0-9]/gi, '_')}.pdf`);
+    };
+
+    const exportAggregatedExcel = async (tableBlock, groupedData, rowHeaderLabel, rawEntries) => {
+        const { headers, rows } = getAggregatedMatrix(tableBlock, groupedData, rowHeaderLabel, rawEntries);
+        const XLSX = await import('xlsx');
+        
+        const wsData = [headers, ...rows];
+        const ws = XLSX.utils.aoa_to_sheet(wsData);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Aggregated Report');
+        XLSX.writeFile(wb, `${tableBlock.tableName.replace(/[^a-z0-9]/gi, '_')}.xlsx`);
+    };
+    const styles = {
+        dropdownItem: {
+            display: 'block', width: '100%', padding: '10px 16px',
+            textAlign: 'left', background: 'transparent',
+            border: 'none', color: '#e2e8f0', fontSize: '13px',
+            cursor: 'pointer', transition: 'background 0.2s'
+        }
     };
 
     return (
@@ -284,14 +355,50 @@ export default function ReportsPage() {
                 </div>
 
                 <div className="form-row">
-                    {/* District Dropdown (Unified) */}
+                    {/* District / Scope Selection (State Level) */}
                     {isStateLevel && (
-                        <div className="form-group">
-                            <label className="form-label">District Selection</label>
-                            <select className="form-select" value={selectedDistrict} onChange={e => setSelectedDistrict(e.target.value)}>
-                                <option value="all">🌐 All Districts (District Wise View)</option>
-                                {districts.map(d => <option key={d.id} value={d.id}>📍 {d.name} (Court Wise View)</option>)}
-                            </select>
+                        <div className="form-group" style={{ gridColumn: '1 / -1', background: 'var(--color-surface-hover)', padding: '16px', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)', marginBottom: '16px' }}>
+                            <label className="form-label" style={{ display: 'block', marginBottom: '12px', fontWeight: '600' }}>Report Scope</label>
+                            <div style={{ display: 'flex', gap: '16px', alignItems: 'center', flexWrap: 'wrap' }}>
+                                <div className="btn-group" style={{ display: 'flex', background: 'var(--color-surface)', padding: '4px', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)' }}>
+                                    <button 
+                                        className={`btn btn-sm ${selectedDistrict === 'all' ? 'btn-primary' : ''}`}
+                                        onClick={() => setSelectedDistrict('all')}
+                                        style={{ border: 'none', borderRadius: 'var(--radius-sm)', minWidth: '120px' }}
+                                    >
+                                        🌐 District-wise
+                                    </button>
+                                    <button 
+                                        className={`btn btn-sm ${selectedDistrict !== 'all' ? 'btn-primary' : ''}`}
+                                        onClick={() => {
+                                            if (selectedDistrict === 'all') {
+                                                setSelectedDistrict(districts[0]?.id || '');
+                                            }
+                                        }}
+                                        style={{ border: 'none', borderRadius: 'var(--radius-sm)', minWidth: '120px' }}
+                                    >
+                                        📍 Court-wise
+                                    </button>
+                                </div>
+
+                                {selectedDistrict !== 'all' && (
+                                    <div style={{ flex: 1, minWidth: '250px' }}>
+                                        <select 
+                                            className="form-select" 
+                                            value={selectedDistrict} 
+                                            onChange={e => setSelectedDistrict(e.target.value)}
+                                            style={{ margin: 0 }}
+                                        >
+                                            {districts.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                                        </select>
+                                    </div>
+                                )}
+                            </div>
+                            <p style={{ margin: '8px 0 0 0', fontSize: '13px', color: 'var(--color-text-secondary)' }}>
+                                {selectedDistrict === 'all' 
+                                    ? "Viewing aggregated data across all districts in Haryana." 
+                                    : `Viewing detailed court-wise reports for the selected district.`}
+                            </p>
                         </div>
                     )}
 
@@ -465,9 +572,56 @@ export default function ReportsPage() {
                     ) : (
                         <>
                         {/* Export All button */}
-                        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '12px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '16px', gap: '12px' }}>
                             <button
                                 className="btn btn-primary btn-sm"
+                                onClick={async () => {
+                                    const XLSX = await import('xlsx');
+                                    const workbook = XLSX.utils.book_new();
+
+                                    reportData.forEach(tableBlock => {
+                                        const raw = tableBlock.entries || [];
+                                        if (raw.length === 0) return;
+
+                                        // Re-calculate the exact row header used in UI
+                                        let rowHeaderLabel = 'Scope';
+                                        if (mode === 'date-wise') {
+                                            rowHeaderLabel = 'Date';
+                                        } else if (isStateLevel && selectedDistrict === 'all') {
+                                            rowHeaderLabel = 'District';
+                                        } else {
+                                            rowHeaderLabel = 'Court Name & No.';
+                                        }
+
+                                        // We need the helper here too - refactoring required to make it accessible 
+                                        // Simplified grouping logic for overall export
+                                        const grouped = {};
+                                        raw.forEach(entry => {
+                                            let key = (mode === 'date-wise') ? new Date(entry.entryDate).toLocaleDateString('en-IN') : 
+                                                      (isStateLevel && selectedDistrict === 'all') ? entry.district?.name :
+                                                      `Court ${entry.court?.courtNo} - ${entry.court?.name}`;
+                                            if (!grouped[key]) grouped[key] = { label: key, entries: [] };
+                                            grouped[key].entries.push(entry);
+                                        });
+                                        const groupedDataSorted = Object.values(grouped).sort((a,b) => a.label.localeCompare(b.label));
+
+                                        const { headers, rows } = getAggregatedMatrix(tableBlock, groupedDataSorted, rowHeaderLabel, raw);
+                                        const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+                                        
+                                        const rawName = tableBlock.tableName || `Table`;
+                                        const sheetName = rawName.replace(/[:\\/?*\[\]]/g, '').substring(0, 31);
+                                        XLSX.utils.book_append_sheet(workbook, ws, sheetName);
+                                    });
+
+                                    const dateStr = new Date().toLocaleDateString('en-IN').replace(/\//g, '-');
+                                    XLSX.writeFile(workbook, `Aggregated_Reports_Full_${dateStr}.xlsx`);
+                                }}
+                                >
+                                📋 Export All Reports
+                            </button>
+
+                            <button
+                                className="btn btn-secondary btn-sm"
                                 onClick={async () => {
                                     const XLSX = await import('xlsx');
                                     const workbook = XLSX.utils.book_new();
@@ -492,48 +646,50 @@ export default function ReportsPage() {
                                         });
 
                                         const worksheet = XLSX.utils.json_to_sheet(rows);
-                                        // Excel sheet names: max 31 chars, no special chars
                                         const rawName = tableBlock.tableName || `Table`;
                                         const sheetName = rawName.replace(/[:\\/?*\[\]]/g, '').substring(0, 31);
                                         XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
                                     });
 
                                     const date = new Date().toLocaleDateString('en-IN').replace(/\//g, '-');
-                                    XLSX.writeFile(workbook, `Full_Report_${date}.xlsx`);
+                                    XLSX.writeFile(workbook, `Raw_Data_Full_${date}.xlsx`);
                                 }}
                             >
-                                📦 Export All Tables (Excel)
+                                📦 Export All Raw Data
                             </button>
                         </div>
                         {reportData.map((tableBlock) => {
                             const rawEntries = tableBlock.entries || [];
                             if (rawEntries.length === 0) return null;
 
-                            // Grouping Logic
-                            const grouped = {};
-                            rawEntries.forEach(entry => {
-                                let groupKey = '';
-                                let groupLabel = '';
-                                if (mode === 'district-court-wise') {
-                                    if (isStateLevel && selectedDistrict === 'all') {
-                                        groupKey = entry.districtId;
-                                        groupLabel = entry.district?.name;
-                                    } else {
-                                        groupKey = entry.courtId;
-                                        groupLabel = `Court ${entry.court?.courtNo} - ${entry.court?.name}`;
+                            const getGroupedData = (raw) => {
+                                const grouped = {};
+                                raw.forEach(entry => {
+                                    let groupKey = '';
+                                    let groupLabel = '';
+                                    if (mode === 'district-court-wise') {
+                                        if (isStateLevel && selectedDistrict === 'all') {
+                                            groupKey = entry.districtId;
+                                            groupLabel = entry.district?.name;
+                                        } else {
+                                            groupKey = entry.courtId;
+                                            groupLabel = `Court ${entry.court?.courtNo} - ${entry.court?.name}`;
+                                        }
+                                    } else if (mode === 'date-wise') {
+                                        const dateStr = new Date(entry.entryDate).toLocaleDateString('en-CA');
+                                        groupKey = dateStr;
+                                        groupLabel = new Date(entry.entryDate).toLocaleDateString('en-IN');
                                     }
-                                } else if (mode === 'date-wise') {
-                                    const dateStr = new Date(entry.entryDate).toLocaleDateString('en-CA');
-                                    groupKey = dateStr;
-                                    groupLabel = new Date(entry.entryDate).toLocaleDateString('en-IN');
-                                }
-                                if (!groupKey) return;
-                                if (!grouped[groupKey]) {
-                                    grouped[groupKey] = { label: groupLabel, entries: [] };
-                                }
-                                grouped[groupKey].entries.push(entry);
-                            });
-                            const groupedData = Object.values(grouped).sort((a,b) => a.label.localeCompare(b.label));
+                                    if (!groupKey) return;
+                                    if (!grouped[groupKey]) {
+                                        grouped[groupKey] = { label: groupLabel, entries: [] };
+                                    }
+                                    grouped[groupKey].entries.push(entry);
+                                });
+                                return Object.values(grouped).sort((a,b) => a.label.localeCompare(b.label));
+                            };
+
+                            const groupedData = getGroupedData(rawEntries);
 
                             // Get column definitions
                             const tableColumns = getTableColumns(tableBlock.tableSlug);
@@ -549,11 +705,54 @@ export default function ReportsPage() {
 
                             return (
                                 <div key={tableBlock.tableId} className="card mb-xl">
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                                        <h3 className="card-title" style={{ margin: 0, color: 'var(--color-primary)' }}>{tableBlock.tableName}</h3>
-                                        <button className="btn btn-secondary btn-sm" onClick={() => exportToCSV(tableBlock.tableId, tableBlock.tableName, rawEntries)}>
-                                            📥 Export CSV
-                                        </button>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '8px' }}>
+                                        <h3 className="card-title" style={{ margin: 0, color: 'var(--color-primary)' }}>
+                                            {(tableBlock.tableName || '').replace(/today/gi, '').trim()}
+                                        </h3>
+                                        <div style={{ position: 'relative' }}>
+                                            <button 
+                                                className="btn btn-secondary btn-sm"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setActiveDropdown(activeDropdown === tableBlock.tableId ? null : tableBlock.tableId);
+                                                }}
+                                                style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+                                            >
+                                                📥 Export data ▾
+                                            </button>
+                                            
+                                            {activeDropdown === tableBlock.tableId && (
+                                                <div style={{
+                                                    position: 'absolute', top: '100%', right: 0, marginTop: '5px',
+                                                    background: '#1a2236', border: '1px solid var(--color-border)',
+                                                    borderRadius: 'var(--radius-md)', boxShadow: '0 10px 25px rgba(0,0,0,0.5)',
+                                                    zIndex: 100, minWidth: '180px', overflow: 'hidden'
+                                                }}>
+                                                    <button 
+                                                        className="export-dropdown-item" 
+                                                        onClick={() => exportAggregatedPDF(tableBlock, groupedData, rowHeaderLabel, rawEntries)}
+                                                        style={styles.dropdownItem}
+                                                    >
+                                                        📄 PDF (Report)
+                                                    </button>
+                                                    <button 
+                                                        className="export-dropdown-item" 
+                                                        onClick={() => exportAggregatedExcel(tableBlock, groupedData, rowHeaderLabel, rawEntries)}
+                                                        style={styles.dropdownItem}
+                                                    >
+                                                        📊 Excel (Report)
+                                                    </button>
+                                                    <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', margin: '4px 0' }} />
+                                                    <button 
+                                                        className="export-dropdown-item" 
+                                                        onClick={() => exportRawToExcel(tableBlock.tableId, tableBlock.tableName, rawEntries)}
+                                                        style={{ ...styles.dropdownItem, color: 'var(--color-text-secondary)' }}
+                                                    >
+                                                        📊 Excel (Raw Data)
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
 
                                     <div className="data-table-wrapper" style={{ overflowX: 'auto', width: 'fit-content', maxWidth: '100%' }}>
