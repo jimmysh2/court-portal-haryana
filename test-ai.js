@@ -1,0 +1,1 @@
+require('dotenv').config(); const { generateAIReport } = require('./server/services/aiService.js'); generateAIReport('How many courts are in Ambala?', { role: 'developer' }).then(res => { console.log('AI Response:', res); process.exit(0); }).catch(e => { console.error('AI Error:', e); process.exit(1); });

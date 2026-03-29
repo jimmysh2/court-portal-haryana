@@ -26,21 +26,21 @@ model District {
 }
 
 model Court {
-  id                 Int           @id @default(autoincrement())
-  districtId         Int           @map("district_id")
-  name               String        @db.VarChar(150)
-  courtNo            String        @map("court_no") @db.VarChar(20)
-  magistrateId       Int?          @map("magistrate_id")
-  createdAt          DateTime      @default(now()) @map("created_at")
-  deletedAt          DateTime?     @map("deleted_at")
-  cisNumber          String?       @map("cis_number") @db.VarChar(50)
-  district           District      @relation(fields: [districtId], references: [id])
-  magistrate         Magistrate?   @relation(fields: [magistrateId], references: [id])
-  dataEntries        DataEntry[]
-  transfersFromCourt TransferLog[] @relation("TransferFromCourt")
-  transfersToCourt   TransferLog[] @relation("TransferToCourt")
-  usersLastSelected  User[]        @relation("LastSelectedCourt")
+  id                 Int               @id @default(autoincrement())
+  districtId         Int               @map("district_id")
+  name               String            @db.VarChar(150)
+  courtNo            String            @map("court_no") @db.VarChar(20)
+  magistrateId       Int?              @map("magistrate_id")
+  createdAt          DateTime          @default(now()) @map("created_at")
+  deletedAt          DateTime?         @map("deleted_at")
+  cisNumber          String?           @map("cis_number") @db.VarChar(50)
+  district           District          @relation(fields: [districtId], references: [id])
+  magistrate         Magistrate?       @relation(fields: [magistrateId], references: [id])
   dailySubmissions   DailySubmission[]
+  dataEntries        DataEntry[]
+  transfersFromCourt TransferLog[]     @relation("TransferFromCourt")
+  transfersToCourt   TransferLog[]     @relation("TransferToCourt")
+  usersLastSelected  User[]            @relation("LastSelectedCourt")
 
   @@unique([districtId, courtNo])
   @@map("courts")
@@ -76,6 +76,8 @@ model User {
   createdAt           DateTime           @default(now()) @map("created_at")
   deletedAt           DateTime?          @map("deleted_at")
   rank                String?            @db.VarChar(50)
+  alerts              Alert[]            @relation("UserAlerts")
+  dailySubmissions    DailySubmission[]  @relation("SubmissionCreatedBy")
   dataEntriesCreated  DataEntry[]        @relation("EntryCreatedBy")
   dataEntriesUpdated  DataEntry[]        @relation("EntryUpdatedBy")
   dataTablesCreated   DataEntryTable[]
@@ -83,10 +85,8 @@ model User {
   grievancesAssigned  Grievance[]        @relation("GrievanceAssignedTo")
   grievancesRaised    Grievance[]        @relation("GrievanceRaisedBy")
   transfersMade       TransferLog[]      @relation("TransferredBy")
-  alerts              Alert[]            @relation("UserAlerts")
   district            District?          @relation(fields: [districtId], references: [id])
   lastSelectedCourt   Court?             @relation("LastSelectedCourt", fields: [lastSelectedCourtId], references: [id])
-  dailySubmissions    DailySubmission[]  @relation("SubmissionCreatedBy")
 
   @@map("users")
 }
@@ -117,10 +117,10 @@ model DataEntryTable {
   slug        String            @unique @db.VarChar(100)
   description String?
   singleRow   Boolean           @default(false) @map("single_row")
-  sortOrder   Int               @default(0) @map("sort_order")
   createdBy   Int               @map("created_by")
   createdAt   DateTime          @default(now()) @map("created_at")
   deletedAt   DateTime?         @map("deleted_at")
+  sortOrder   Int               @default(0) @map("sort_order")
   entries     DataEntry[]
   columns     DataEntryColumn[]
   creator     User              @relation(fields: [createdBy], references: [id])
@@ -158,7 +158,7 @@ model DataEntry {
   createdAt     DateTime       @default(now()) @map("created_at")
   updatedAt     DateTime       @updatedAt @map("updated_at")
   court         Court          @relation(fields: [courtId], references: [id])
-  createdByUser User?          @relation("EntryCreatedBy", fields: [createdBy], references: [id])
+  createdByUser User           @relation("EntryCreatedBy", fields: [createdBy], references: [id])
   district      District       @relation(fields: [districtId], references: [id])
   magistrate    Magistrate?    @relation(fields: [magistrateId], references: [id])
   table         DataEntryTable @relation(fields: [tableId], references: [id])
@@ -168,49 +168,49 @@ model DataEntry {
 }
 
 model Grievance {
-  id             Int                @id @default(autoincrement())
-  raisedBy       Int                @map("raised_by")
-  subject        String             @db.VarChar(200)
+  id             Int                   @id @default(autoincrement())
+  raisedBy       Int                   @map("raised_by")
+  subject        String                @db.VarChar(200)
   description    String
-  status         GrievanceStatus    @default(open)
-  currentLevel   GrievanceLevel     @map("current_level")
-  districtId     Int?               @map("district_id")
-  assignedTo     Int?               @map("assigned_to")
-  createdAt      DateTime           @default(now()) @map("created_at")
-  resolvedAt     DateTime?          @map("resolved_at")
-  comments       GrievanceComment[]
+  status         GrievanceStatus       @default(open)
+  currentLevel   GrievanceLevel        @map("current_level")
+  districtId     Int?                  @map("district_id")
+  assignedTo     Int?                  @map("assigned_to")
+  createdAt      DateTime              @default(now()) @map("created_at")
+  resolvedAt     DateTime?             @map("resolved_at")
   attachments    GrievanceAttachment[]
-  assignedToUser User?              @relation("GrievanceAssignedTo", fields: [assignedTo], references: [id])
-  district       District?          @relation(fields: [districtId], references: [id])
-  raisedByUser   User               @relation("GrievanceRaisedBy", fields: [raisedBy], references: [id])
+  comments       GrievanceComment[]
+  assignedToUser User?                 @relation("GrievanceAssignedTo", fields: [assignedTo], references: [id])
+  district       District?             @relation(fields: [districtId], references: [id])
+  raisedByUser   User                  @relation("GrievanceRaisedBy", fields: [raisedBy], references: [id])
 
   @@map("grievances")
 }
 
 model GrievanceAttachment {
-  id          Int       @id @default(autoincrement())
-  grievanceId Int       @map("grievance_id")
-  commentId   Int?      @map("comment_id")
-  fileName    String    @map("file_name") @db.VarChar(255)
-  filePath    String    @map("file_path") @db.VarChar(255)
-  mimeType    String    @map("mime_type") @db.VarChar(100)
-  fileSize    Int       @map("file_size")
-  createdAt   DateTime  @default(now()) @map("created_at")
-  grievance   Grievance @relation(fields: [grievanceId], references: [id], onDelete: Cascade)
+  id          Int               @id @default(autoincrement())
+  grievanceId Int               @map("grievance_id")
+  fileName    String            @map("file_name") @db.VarChar(255)
+  filePath    String            @map("file_path") @db.VarChar(255)
+  mimeType    String            @map("mime_type") @db.VarChar(100)
+  fileSize    Int               @map("file_size")
+  createdAt   DateTime          @default(now()) @map("created_at")
+  commentId   Int?              @map("comment_id")
   comment     GrievanceComment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  grievance   Grievance         @relation(fields: [grievanceId], references: [id], onDelete: Cascade)
 
   @@map("grievance_attachments")
 }
 
 model GrievanceComment {
-  id          Int       @id @default(autoincrement())
-  grievanceId Int       @map("grievance_id")
-  userId      Int       @map("user_id")
+  id          Int                   @id @default(autoincrement())
+  grievanceId Int                   @map("grievance_id")
+  userId      Int                   @map("user_id")
   body        String
-  createdAt   DateTime  @default(now()) @map("created_at")
-  grievance   Grievance @relation(fields: [grievanceId], references: [id])
-  user        User      @relation(fields: [userId], references: [id])
+  createdAt   DateTime              @default(now()) @map("created_at")
   attachments GrievanceAttachment[]
+  grievance   Grievance             @relation(fields: [grievanceId], references: [id])
+  user        User                  @relation(fields: [userId], references: [id])
 
   @@map("grievance_comments")
 }
@@ -218,7 +218,6 @@ model GrievanceComment {
 model Alert {
   id         Int       @id @default(autoincrement())
   districtId Int       @map("district_id")
-  userId     Int?      @map("user_id")
   alertType  String    @map("alert_type") @db.VarChar(50)
   message    String
   metadata   Json?
@@ -227,6 +226,7 @@ model Alert {
   alertDate  DateTime  @map("alert_date") @db.Date
   createdAt  DateTime  @default(now()) @map("created_at")
   resolvedAt DateTime? @map("resolved_at")
+  userId     Int?      @map("user_id")
   user       User?     @relation("UserAlerts", fields: [userId], references: [id])
 
   @@map("alerts")
@@ -242,6 +242,27 @@ model PoliceStation {
 
   @@unique([districtId, name])
   @@map("police_stations")
+}
+
+model SystemSetting {
+  id    Int    @id @default(autoincrement())
+  key   String @unique @db.VarChar(100)
+  value String
+
+  @@map("system_settings")
+}
+
+model DailySubmission {
+  id          Int      @id @default(autoincrement())
+  courtId     Int      @map("court_id")
+  entryDate   DateTime @map("entry_date") @db.Date
+  submittedAt DateTime @default(now()) @map("submitted_at")
+  submittedBy Int      @map("submitted_by")
+  court       Court    @relation(fields: [courtId], references: [id])
+  user        User     @relation("SubmissionCreatedBy", fields: [submittedBy], references: [id])
+
+  @@unique([courtId, entryDate])
+  @@map("daily_submissions")
 }
 
 enum UserRole {
@@ -276,29 +297,7 @@ enum ColumnDataType {
   text
   number
   date
-  year
   enum
   boolean
-}
-
-model SystemSetting {
-  id    Int    @id @default(autoincrement())
-  key   String @unique @db.VarChar(100)
-  value String
-  
-  @@map("system_settings")
-}
-
-model DailySubmission {
-  id          Int      @id @default(autoincrement())
-  courtId     Int      @map("court_id")
-  entryDate   DateTime @map("entry_date") @db.Date
-  submittedAt DateTime @default(now()) @map("submitted_at")
-  submittedBy Int      @map("submitted_by")
-
-  court       Court    @relation(fields: [courtId], references: [id])
-  user        User     @relation("SubmissionCreatedBy", fields: [submittedBy], references: [id])
-
-  @@unique([courtId, entryDate])
-  @@map("daily_submissions")
+  year
 }

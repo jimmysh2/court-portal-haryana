@@ -693,7 +693,7 @@ const styles = {
         flexShrink: 0, transition: 'all 0.3s ease'
     },
     textInput: {
-        flex: 1, padding: '14px 20px', borderRadius: '14px',
+        flex: 1, minWidth: 0, padding: '14px 20px', borderRadius: '14px',
         border: '1px solid rgba(148,163,184,0.12)',
         background: '#0f172a', color: '#f1f5f9',
         fontSize: '14px', outline: 'none',
