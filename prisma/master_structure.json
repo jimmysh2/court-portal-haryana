@@ -35,7 +35,7 @@
             "districtId": 3,
             "phone": "9812342085",
             "lastSelectedCourtId": 45,
-            "refreshToken": null,
+            "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjQ3LCJpYXQiOjE3NzQ3OTQ2ODEsImV4cCI6MTc3NTM5OTQ4MX0.UoUUaNNJrVIoj2qxBiPNT5J5GUGVK2GELtcQ7T2QZHg",
             "createdAt": "2026-03-29T12:27:09.993Z",
             "deletedAt": null,
             "rank": "ASI"
@@ -6353,7 +6353,7 @@
             "districtId": 2,
             "phone": "9053499824",
             "lastSelectedCourtId": 21,
-            "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjIzLCJpYXQiOjE3NzQ3OTMzNTksImV4cCI6MTc3NTM5ODE1OX0.aHf_fyfaBm7ftYnSpqyOrhVqXa47C7lO6jvZaFBbd_E",
+            "refreshToken": null,
             "createdAt": "2026-03-29T12:27:09.755Z",
             "deletedAt": null,
             "rank": "HC/ESI"
