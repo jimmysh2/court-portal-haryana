@@ -1019,6 +1019,15 @@ async function syncStructure() {
     }
 ];
 
+        // Get the developer user to associate with tables
+        const developer = await prisma.user.findUnique({
+            where: { username: 'developer' }
+        });
+
+        if (!developer) {
+            throw new Error('Developer user not found. Please run seed-production.js first.');
+        }
+
         for (const t of tablesFromCode) {
             console.log(`📡 [SYNC] Checking Table: ${t.name}`);
             
@@ -1036,7 +1045,8 @@ async function syncStructure() {
                     slug: t.slug,
                     description: t.description,
                     singleRow: t.singleRow,
-                    sortOrder: t.sortOrder
+                    sortOrder: t.sortOrder,
+                    creator: { connect: { id: developer.id } }
                 }
             });
 
