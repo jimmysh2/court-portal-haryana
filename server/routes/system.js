@@ -1441,6 +1441,7 @@ router.post('/sync-to-code', authenticate, requireRole('developer'), async (req,
             if (startIdx !== -1 && endIdx !== -1) {
                 const newContent = seedProdContent.substring(0, startIdx + startMarker.length)
                                  + jsonString
+                                 + ';\n'
                                  + seedProdContent.substring(endIdx);
                 fs.writeFileSync(seedProdPath, newContent);
                 console.log('✅ Updated prisma/seed-production.js');
