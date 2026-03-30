@@ -1,6 +1,7 @@
 const express = require('express');
 const prisma = require('../lib/prisma');
 const { authenticate, requireRole } = require('../middleware/auth');
+const { syncPoliceStations } = require('../../scripts/auto-sync');
 
 const router = express.Router();
 
@@ -62,6 +63,7 @@ router.post('/:id/police-stations', authenticate, requireRole('developer', 'stat
                 districtId: parseInt(req.params.id)
             }
         });
+        syncPoliceStations(prisma);
         res.status(201).json({ policeStation });
     } catch (err) { next(err); }
 });
@@ -74,6 +76,7 @@ router.put('/:districtId/police-stations/:id', authenticate, requireRole('develo
             where: { id: parseInt(req.params.id) },
             data: { name }
         });
+        syncPoliceStations(prisma);
         res.json({ policeStation });
     } catch (err) { next(err); }
 });
@@ -84,6 +87,7 @@ router.delete('/:districtId/police-stations/:id', authenticate, requireRole('dev
         await prisma.policeStation.delete({
             where: { id: parseInt(req.params.id) }
         });
+        syncPoliceStations(prisma);
         res.json({ message: 'Police station deleted' });
     } catch (err) { next(err); }
 });
@@ -95,6 +99,7 @@ router.post('/', authenticate, requireRole('developer', 'state_admin'), async (r
         if (!name || !code) return res.status(400).json({ error: 'Name and code are required' });
 
         const district = await prisma.district.create({ data: { name, code: code.toUpperCase() } });
+        syncPoliceStations(prisma);
         res.status(201).json({ district });
     } catch (err) { next(err); }
 });
@@ -107,6 +112,7 @@ router.put('/:id', authenticate, requireRole('developer', 'state_admin'), async 
             where: { id: parseInt(req.params.id) },
             data: { ...(name && { name }), ...(code && { code: code.toUpperCase() }) },
         });
+        syncPoliceStations(prisma);
         res.json({ district });
     } catch (err) { next(err); }
 });
@@ -118,6 +124,7 @@ router.delete('/:id', authenticate, requireRole('developer', 'state_admin'), asy
             where: { id: parseInt(req.params.id) },
             data: { deletedAt: new Date() },
         });
+        syncPoliceStations(prisma);
         res.json({ message: 'District deleted' });
     } catch (err) { next(err); }
 });
