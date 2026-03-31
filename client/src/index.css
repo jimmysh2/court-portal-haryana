@@ -2,27 +2,27 @@
 
 /* ─── CSS Variables (Design Tokens) ─────────────────── */
 :root {
-  /* Colors */
-  --color-bg: #0f1117;
-  --color-bg-secondary: #1a1d27;
-  --color-bg-card: #1e2130;
-  --color-bg-hover: #252838;
-  --color-bg-input: #161822;
-  --color-border: #2a2d3a;
-  --color-border-focus: #818cf8;
+  /* Colors - Eye Comfort Teal Theme */
+  --color-bg: #0d1117;
+  --color-bg-secondary: #161b22;
+  --color-bg-card: #1c2128;
+  --color-bg-hover: #252b33;
+  --color-bg-input: #0d1117;
+  --color-border: #30363d;
+  --color-border-focus: #58a6ff;
 
-  --color-primary: #818cf8;
-  --color-primary-hover: #a5b4fc;
-  --color-primary-soft: rgba(129, 140, 248, 0.15);
-  --color-secondary: #06b6d4;
-  --color-success: #10b981;
-  --color-warning: #f59e0b;
-  --color-danger: #ef4444;
-  --color-danger-soft: rgba(239, 68, 68, 0.15);
+  --color-primary: #58a6ff;
+  --color-primary-hover: #79b8ff;
+  --color-primary-soft: rgba(88, 166, 255, 0.15);
+  --color-secondary: #7ee787;
+  --color-success: #3fb950;
+  --color-warning: #d29922;
+  --color-danger: #f85149;
+  --color-danger-soft: rgba(248, 81, 73, 0.15);
 
-  --color-text: #e5e7eb;
-  --color-text-secondary: #9ca3af;
-  --color-text-muted: #6b7280;
+  --color-text: #e6edf3;
+  --color-text-secondary: #8b949e;
+  --color-text-muted: #6e7681;
 
   /* Typography */
   --font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -57,6 +57,12 @@
   /* Transitions */
   --transition-fast: 150ms ease;
   --transition-normal: 250ms ease;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+  --shadow-glow: 0 0 20px rgba(88, 166, 255, 0.15);
 }
 
 /* ─── Reset & Base ──────────────────────────────────── */
@@ -419,12 +425,12 @@ a:hover {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  background: linear-gradient(135deg, #388bfd, #58a6ff);
   color: white;
 }
 
 .btn-primary:hover {
-  background: linear-gradient(135deg, #818cf8, #a78bfa);
+  background: linear-gradient(135deg, #58a6ff, #79b8ff);
   box-shadow: 0 4px 15px rgba(99, 102, 241, 0.25);
   transform: translateY(-1px);
 }
