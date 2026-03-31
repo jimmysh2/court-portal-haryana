@@ -301,10 +301,9 @@ export default function AiAssistant() {
                     disabled={!input.trim() || loading}
                     style={{
                         ...styles.sendBtn,
-                        background: (!input.trim() || loading) ? 'var(--color-bg-hover)' : 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-                        color: (!input.trim() || loading) ? 'var(--color-text-muted)' : 'white',
+                        background: (!input.trim() || loading) ? 'var(--color-bg-hover)' : 'linear-gradient(135deg, #388bfd, #58a6ff)',
                         cursor: (!input.trim() || loading) ? 'not-allowed' : 'pointer',
-                        boxShadow: (!input.trim() || loading) ? 'none' : '0 4px 15px rgba(99,102,241,0.4)'
+                        boxShadow: (!input.trim() || loading) ? 'none' : '0 4px 15px rgba(56,139,253,0.4)'
                     }}
                 >
                     {loading ? '⏳' : '➤'}
@@ -422,9 +421,9 @@ function ChartViz({ data, type, config }) {
         const values = data.map(r => Number(r[valueCol] || r[keys[keys.length - 1]] || 0));
 
         const colors = [
-            '#6366f1', '#8b5cf6', '#06b6d4', '#10b981', '#f59e0b',
-            '#ef4444', '#ec4899', '#14b8a6', '#f97316', '#84cc16',
-            '#a855f7', '#3b82f6', '#22d3ee', '#facc15', '#fb923c'
+            '#388bfd', '#58a6ff', '#7ee787', '#3fb950', '#d29922',
+            '#f85149', '#a855f7', '#79c0ff', '#d2a8ff', '#7ee787',
+            '#a371f7', '#388bfd', '#79c0ff', '#e3b341', '#ffa657'
         ];
 
         chartRef.current = new window.Chart(canvasRef.current, {
@@ -434,12 +433,12 @@ function ChartViz({ data, type, config }) {
                 datasets: [{
                     label: config?.title || 'Result',
                     data: values,
-                    backgroundColor: type === 'pie' ? colors.slice(0, labels.length) : 'rgba(99,102,241,0.7)',
-                    borderColor: type === 'line' ? '#6366f1' : 'transparent',
+                    backgroundColor: type === 'pie' ? colors.slice(0, labels.length) : 'rgba(56,139,253,0.7)',
+                    borderColor: type === 'line' ? '#388bfd' : 'transparent',
                     borderWidth: type === 'line' ? 2 : 0,
                     borderRadius: type === 'bar' ? 6 : 0,
                     tension: 0.4,
-                    fill: type === 'line' ? { target: 'origin', above: 'rgba(99,102,241,0.1)' } : false
+                    fill: type === 'line' ? { target: 'origin', above: 'rgba(56,139,253,0.1)' } : false
                 }]
             },
             options: {
@@ -527,21 +526,21 @@ const styles = {
     },
     aiAvatar: {
         width: 36, height: 36, borderRadius: '10px', flexShrink: 0,
-        background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
+        background: 'linear-gradient(135deg, #388bfd, #58a6ff)',
         color: 'white', fontWeight: 700, fontSize: '12px',
         display: 'flex', alignItems: 'center', justifyContent: 'center'
     },
     userBubble: {
         padding: '14px 20px', borderRadius: '20px 20px 4px 20px',
-        background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+        background: 'linear-gradient(135deg, #388bfd, #58a6ff)',
         color: 'white', fontSize: '14px', lineHeight: '1.6',
         maxWidth: '100%', wordBreak: 'break-word'
     },
     aiBubble: {
         padding: '14px 20px', borderRadius: '4px 20px 20px 20px',
-        background: '#1a2236', color: '#f1f5f9',
+        background: 'var(--color-bg-card)', color: 'var(--color-text)',
         fontSize: '14px', lineHeight: '1.7',
-        border: '1px solid rgba(148,163,184,0.08)',
+        border: '1px solid var(--color-border)',
         maxWidth: '100%', wordBreak: 'break-word',
         position: 'relative'
     },
@@ -589,7 +588,7 @@ const styles = {
     },
     statValue: {
         fontSize: '48px', fontWeight: 800,
-        background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
+        background: 'linear-gradient(135deg, #388bfd, #58a6ff)',
         WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
         letterSpacing: '-1px'
     },
@@ -647,7 +646,7 @@ const styles = {
     },
     dotPulse: {
         display: 'flex', gap: '6px',
-        ['& span']: { width: 8, height: 8, borderRadius: '50%', background: '#6366f1' }
+        ['& span']: { width: 8, height: 8, borderRadius: '50%', background: '#58a6ff' }
     },
 
     // Welcome
@@ -715,7 +714,7 @@ const styles = {
         padding: '7px 16px', borderRadius: '20px',
         border: '1px solid rgba(99,102,241,0.35)',
         background: 'rgba(99,102,241,0.12)',
-        color: '#818cf8', fontSize: '12px', fontWeight: 600,
+        color: '#58a6ff', fontSize: '12px', fontWeight: 600,
         cursor: 'pointer', letterSpacing: '0.3px',
         transition: 'all 0.2s ease',
         display: 'flex', alignItems: 'center', gap: '6px'
