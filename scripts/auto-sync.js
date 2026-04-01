@@ -1,13 +1,22 @@
 /**
  * auto-sync.js
- * Reads the live database structure and writes it to prisma/table-definitions.js.
- * Called automatically after any table or column modification.
+ * Reads the live database structure and writes it to:
+ * 1. prisma/table-definitions.js (The primary UI source of truth)
+ * 2. prisma/seed-production.js (The database initialization source)
+ * 3. server/routes/system.js (Backup structure for system routes)
+ * 4. Disrtrict_PS.csv (The police station master list)
+ * 
+ * This is called automatically after any table, column, district, or police station modification
+ * via the UI, ensuring the repository always matches the current database state.
  */
 
 const fs = require('fs');
 const path = require('path');
 
 const TABLE_DEFS_PATH = path.join(__dirname, '../prisma/table-definitions.js');
+const SEED_FILE_PATH = path.join(__dirname, '../prisma/seed-production.js');
+const SYSTEM_ROUTE_PATH = path.join(__dirname, '../server/routes/system.js');
+const DISTRICT_CSV_PATH = path.join(__dirname, '../Disrtrict_PS.csv');
 
 async function syncTableDefinitions(prisma) {
     try {
@@ -38,6 +47,7 @@ async function syncTableDefinitions(prisma) {
             }))
         }));
 
+        // 1. Sync prisma/table-definitions.js
         const fileContent = `// ─── AUTO-GENERATED: Single Source of Truth for Table Definitions ───────────
 // This file is automatically updated whenever a table or column is modified
 // via the Developer Dashboard. Do NOT edit manually.
@@ -45,13 +55,60 @@ async function syncTableDefinitions(prisma) {
 
 module.exports = ${JSON.stringify(tables, null, 4)};
 `;
-
         fs.writeFileSync(TABLE_DEFS_PATH, fileContent, 'utf8');
         console.log('✅ [AUTO-SYNC] prisma/table-definitions.js updated.');
+
+        // 2. Sync prisma/seed-production.js and server/routes/system.js
+        const tablesJs = JSON.stringify(tables, null, 8).replace(/"([^"]+)":/g, '$1:');
+        
+        [SEED_FILE_PATH, SYSTEM_ROUTE_PATH].forEach(filePath => {
+            if (fs.existsSync(filePath)) {
+                let content = fs.readFileSync(filePath, 'utf8');
+                const startMarker = 'const tables = [';
+                const followMarker = filePath.includes('seed-production.js') 
+                    ? "console.log('📋 Syncing data entry tables...');"
+                    : "    console.log('📋 Syncing data entry tables...');";
+                
+                const startIndex = content.indexOf(startMarker);
+                const followIndex = content.indexOf(followMarker);
+
+                if (startIndex !== -1 && followIndex !== -1) {
+                    const newArray = `const tables = ${tablesJs};\n\n    `;
+                    content = content.substring(0, startIndex) + newArray + content.substring(followIndex);
+                    fs.writeFileSync(filePath, content);
+                    console.log(`✅ [AUTO-SYNC] ${path.basename(filePath)} updated.`);
+                }
+            }
+        });
+
     } catch (err) {
-        // Non-fatal — log but don't crash the API response
-        console.error('⚠️ [AUTO-SYNC] Failed to sync table-definitions.js:', err.message);
+        console.error('⚠️ [AUTO-SYNC] Table sync failed:', err.message);
     }
 }
 
-module.exports = { syncTableDefinitions };
+async function syncPoliceStations(prisma) {
+    try {
+        const districts = await prisma.district.findMany({
+            include: { policeStations: { orderBy: { name: 'asc' } } },
+            orderBy: { name: 'asc' }
+        });
+
+        let csvLines = ['District,PS'];
+        for (const d of districts) {
+            for (const ps of d.policeStations) {
+                let psName = ps.name;
+                if (psName.includes(',') || psName.includes('"')) {
+                    psName = `"${psName.replace(/"/g, '""')}"`;
+                }
+                csvLines.push(`${d.name},${psName}`);
+            }
+        }
+
+        fs.writeFileSync(DISTRICT_CSV_PATH, csvLines.join('\n'), 'utf8');
+        console.log('✅ [AUTO-SYNC] Disrtrict_PS.csv updated.');
+    } catch (err) {
+        console.error('⚠️ [AUTO-SYNC] Police station sync failed:', err.message);
+    }
+}
+
+module.exports = { syncTableDefinitions, syncPoliceStations };

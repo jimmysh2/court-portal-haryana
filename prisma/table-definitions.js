@@ -228,7 +228,7 @@ module.exports = [
                 "slug": "surety_name",
                 "dataType": "text",
                 "enumOptions": null,
-                "isRequired": true,
+                "isRequired": false,
                 "sortOrder": 6
             },
             {
@@ -260,7 +260,7 @@ module.exports = [
                 "slug": "identifier_name",
                 "dataType": "text",
                 "enumOptions": null,
-                "isRequired": true,
+                "isRequired": false,
                 "sortOrder": 10
             },
             {
@@ -295,7 +295,7 @@ module.exports = [
                     "Yes",
                     "No"
                 ],
-                "isRequired": true,
+                "isRequired": false,
                 "sortOrder": 14
             }
         ]
