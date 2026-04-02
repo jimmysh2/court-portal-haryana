@@ -1,0 +1,13 @@
+# Force LF line endings for shell scripts so they work
+# inside Linux Docker containers even when developed on Windows
+*.sh        text eol=lf
+*.bash      text eol=lf
+Dockerfile  text eol=lf
+
+# Windows scripts get CRLF (normal for Windows)
+*.ps1       text eol=crlf
+*.bat       text eol=crlf
+*.cmd       text eol=crlf
+
+# Everything else — Git decides
+*           text=auto
