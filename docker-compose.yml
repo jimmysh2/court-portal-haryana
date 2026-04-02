@@ -5,26 +5,33 @@ services:
     image: postgres:15-alpine
     restart: always
     environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: Hosting@123
       POSTGRES_DB: court_portal
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U user -d court_portal" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   app:
     build: .
     restart: always
     ports:
       - "3000:3000"
-    # Loads DATABASE_URL, JWT secrets, GD_FOLDER_ID, GD_SERVICE_ACCOUNT_JSON from .env (gitignored)
     env_file:
       - .env
     volumes:
       - ./backups:/app/backups
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+    environment:
+      - DATABASE_URL=postgresql://postgres:Hosting@123@db:5432/court_portal
 
 volumes:
   postgres_data:

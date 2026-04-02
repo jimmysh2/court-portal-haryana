@@ -13,6 +13,7 @@
     "db:seed": "node prisma/seed-production.js",
     "db:studio": "npx prisma studio",
     "db:generate": "npx prisma generate",
+    "build": "cd client && npm install && npm run build && cd .. && npx prisma generate",
     "test": "jest",
     "postinstall": "npx prisma generate"
   },
