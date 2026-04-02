@@ -30,11 +30,12 @@ RUN npm ci --omit=dev
 # ── Application source ────────────────────────────────────
 COPY server      ./server
 COPY prisma      ./prisma
+COPY scripts     ./scripts
 
 # ── Data files used by seed / CSV import ──────────────────
 COPY Disrtrict_PS.csv            ./
 COPY Police_Stations_Haryana.xlsx ./
-COPY "TESTING COURT EXCEL FILE"  "./TESTING COURT EXCEL FILE"
+COPY ["TESTING COURT EXCEL FILE/", "./TESTING COURT EXCEL FILE/"]
 
 # ── Pre-built frontend from builder stage ─────────────────
 COPY --from=builder /build/client/dist ./client/dist
