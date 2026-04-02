@@ -13,7 +13,8 @@
     "db:seed": "node prisma/seed-production.js",
     "db:studio": "npx prisma studio",
     "db:generate": "npx prisma generate",
-    "test": "jest"
+    "test": "jest",
+    "postinstall": "npx prisma generate"
   },
   "prisma": {
     "seed": "node prisma/seed-production.js"
