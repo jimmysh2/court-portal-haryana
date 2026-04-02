@@ -5,6 +5,8 @@ const { authenticate, requireRole } = require('../middleware/auth');
 
 const router = express.Router();
 
+const bcrypt = require('bcryptjs');
+
 // POST /api/v1/auth/login
 router.post('/login', async (req, res, next) => {
     try {
@@ -23,9 +25,14 @@ router.post('/login', async (req, res, next) => {
             return res.status(401).json({ error: 'Invalid credentials' });
         }
 
-        if (password !== user.password) {
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch && password !== user.password) {
             return res.status(401).json({ error: 'Invalid credentials' });
         }
+
+        console.log('--- DEBUG JWT ---');
+        console.log('JWT_SECRET:', process.env.JWT_SECRET ? 'Defined' : 'Undefined', `'${process.env.JWT_SECRET}'`);
+        console.log('JWT_REFRESH_SECRET:', process.env.JWT_REFRESH_SECRET ? 'Defined' : 'Undefined', `'${process.env.JWT_REFRESH_SECRET}'`);
 
         const token = jwt.sign(
             { userId: user.id, role: user.role },

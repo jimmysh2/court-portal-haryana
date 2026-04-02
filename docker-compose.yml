@@ -6,25 +6,31 @@ services:
     restart: always
     environment:
       POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
+      POSTGRES_PASSWORD: 123456
       POSTGRES_DB: court_portal
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
   app:
     build: .
+    container_name: court-portal-app
     restart: always
     ports:
       - "3000:3000"
-    # Loads DATABASE_URL, JWT secrets, GD_FOLDER_ID, GD_SERVICE_ACCOUNT_JSON from .env (gitignored)
     env_file:
       - .env
-    volumes:
-      - ./backups:/app/backups
+    environment:
+      - DATABASE_URL=postgresql://user:123456@db:5432/court_portal?sslmode=disable
+      - PORT=3000
+      - NODE_ENV=production
+      - JWT_SECRET=super-secret-key-12345
+      - JWT_REFRESH_SECRET=another-super-secret-key-12345
+      - CORS_ORIGIN=http://localhost:3000
     depends_on:
       - db
+    command: sh -c "npx prisma db push --accept-data-loss && node server/index.js"
 
 volumes:
   postgres_data:

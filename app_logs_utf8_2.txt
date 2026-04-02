@@ -1,0 +1,17 @@
+﻿court-portal-app  | prisma:warn Prisma failed to detect the libssl/openssl version to use, and may not work as expected. Defaulting to "openssl-1.1.x".
+court-portal-app  | Please manually install OpenSSL and try installing Prisma again.
+court-portal-app  | Error: Can't write to /app/node_modules/@prisma/engines please make sure you install "prisma" with the right permissions.
+court-portal-app  | npm notice
+court-portal-app  | npm notice New major version of npm available! 10.8.2 -> 11.12.1
+court-portal-app  | npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.12.1
+court-portal-app  | npm notice To update run: npm install -g npm@11.12.1
+court-portal-app  | npm notice
+court-portal-app  | prisma:warn Prisma failed to detect the libssl/openssl version to use, and may not work as expected. Defaulting to "openssl-1.1.x".
+court-portal-app  | Please manually install OpenSSL and try installing Prisma again.
+court-portal-app  | Error: Can't write to /app/node_modules/@prisma/engines please make sure you install "prisma" with the right permissions.
+court-portal-app  | prisma:warn Prisma failed to detect the libssl/openssl version to use, and may not work as expected. Defaulting to "openssl-1.1.x".
+court-portal-app  | Please manually install OpenSSL and try installing Prisma again.
+court-portal-app  | Error: Can't write to /app/node_modules/@prisma/engines please make sure you install "prisma" with the right permissions.
+court-portal-app  | prisma:warn Prisma failed to detect the libssl/openssl version to use, and may not work as expected. Defaulting to "openssl-1.1.x".
+court-portal-app  | Please manually install OpenSSL and try installing Prisma again.
+court-portal-app  | Error: Can't write to /app/node_modules/@prisma/engines please make sure you install "prisma" with the right permissions.

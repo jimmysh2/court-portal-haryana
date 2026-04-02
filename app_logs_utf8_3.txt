@@ -1,0 +1,104 @@
+﻿court-portal-app  | Prisma schema loaded from prisma/schema.prisma
+court-portal-app  | Datasource "db": PostgreSQL database "court_portal", schema "public" at "db:5432"
+court-portal-app  | 
+court-portal-app  | 16 migrations found in prisma/migrations
+court-portal-app  | 
+court-portal-app  | Error: P3005
+court-portal-app  | 
+court-portal-app  | The database schema is not empty. Read more about how to baseline an existing production database: https://pris.ly/d/migrate-baseline
+court-portal-app  | 
+court-portal-app  | npm notice
+court-portal-app  | npm notice New major version of npm available! 10.8.2 -> 11.12.1
+court-portal-app  | npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.12.1
+court-portal-app  | npm notice To update run: npm install -g npm@11.12.1
+court-portal-app  | npm notice
+court-portal-app  | Prisma schema loaded from prisma/schema.prisma
+court-portal-app  | Datasource "db": PostgreSQL database "court_portal", schema "public" at "db:5432"
+court-portal-app  | 
+court-portal-app  | 16 migrations found in prisma/migrations
+court-portal-app  | 
+court-portal-app  | Error: P3005
+court-portal-app  | 
+court-portal-app  | The database schema is not empty. Read more about how to baseline an existing production database: https://pris.ly/d/migrate-baseline
+court-portal-app  | 
+court-portal-app  | Prisma schema loaded from prisma/schema.prisma
+court-portal-app  | Datasource "db": PostgreSQL database "court_portal", schema "public" at "db:5432"
+court-portal-app  | 
+court-portal-app  | 16 migrations found in prisma/migrations
+court-portal-app  | 
+court-portal-app  | Error: P3005
+court-portal-app  | 
+court-portal-app  | The database schema is not empty. Read more about how to baseline an existing production database: https://pris.ly/d/migrate-baseline
+court-portal-app  | 
+court-portal-app  | Prisma schema loaded from prisma/schema.prisma
+court-portal-app  | Datasource "db": PostgreSQL database "court_portal", schema "public" at "db:5432"
+court-portal-app  | 
+court-portal-app  | 16 migrations found in prisma/migrations
+court-portal-app  | 
+court-portal-app  | Error: P3005
+court-portal-app  | 
+court-portal-app  | The database schema is not empty. Read more about how to baseline an existing production database: https://pris.ly/d/migrate-baseline
+court-portal-app  | 
+court-portal-app  | Prisma schema loaded from prisma/schema.prisma
+court-portal-app  | Datasource "db": PostgreSQL database "court_portal", schema "public" at "db:5432"
+court-portal-app  | 
+court-portal-app  | 16 migrations found in prisma/migrations
+court-portal-app  | 
+court-portal-app  | Error: P3005
+court-portal-app  | 
+court-portal-app  | The database schema is not empty. Read more about how to baseline an existing production database: https://pris.ly/d/migrate-baseline
+court-portal-app  | 
+court-portal-app  | Prisma schema loaded from prisma/schema.prisma
+court-portal-app  | Datasource "db": PostgreSQL database "court_portal", schema "public" at "db:5432"
+court-portal-app  | 
+court-portal-app  | 16 migrations found in prisma/migrations
+court-portal-app  | 
+court-portal-app  | Error: P3005
+court-portal-app  | 
+court-portal-app  | The database schema is not empty. Read more about how to baseline an existing production database: https://pris.ly/d/migrate-baseline
+court-portal-app  | 
+court-portal-app  | Prisma schema loaded from prisma/schema.prisma
+court-portal-app  | Datasource "db": PostgreSQL database "court_portal", schema "public" at "db:5432"
+court-portal-app  | 
+court-portal-app  | 16 migrations found in prisma/migrations
+court-portal-app  | 
+court-portal-app  | Error: P3005
+court-portal-app  | 
+court-portal-app  | The database schema is not empty. Read more about how to baseline an existing production database: https://pris.ly/d/migrate-baseline
+court-portal-app  | 
+court-portal-app  | Prisma schema loaded from prisma/schema.prisma
+court-portal-app  | Datasource "db": PostgreSQL database "court_portal", schema "public" at "db:5432"
+court-portal-app  | 
+court-portal-app  | 16 migrations found in prisma/migrations
+court-portal-app  | 
+court-portal-app  | Error: P3005
+court-portal-app  | 
+court-portal-app  | The database schema is not empty. Read more about how to baseline an existing production database: https://pris.ly/d/migrate-baseline
+court-portal-app  | 
+court-portal-app  | Prisma schema loaded from prisma/schema.prisma
+court-portal-app  | Datasource "db": PostgreSQL database "court_portal", schema "public" at "db:5432"
+court-portal-app  | 
+court-portal-app  | 16 migrations found in prisma/migrations
+court-portal-app  | 
+court-portal-app  | Error: P3005
+court-portal-app  | 
+court-portal-app  | The database schema is not empty. Read more about how to baseline an existing production database: https://pris.ly/d/migrate-baseline
+court-portal-app  | 
+court-portal-app  | Prisma schema loaded from prisma/schema.prisma
+court-portal-app  | Datasource "db": PostgreSQL database "court_portal", schema "public" at "db:5432"
+court-portal-app  | 
+court-portal-app  | 16 migrations found in prisma/migrations
+court-portal-app  | 
+court-portal-app  | Error: P3005
+court-portal-app  | 
+court-portal-app  | The database schema is not empty. Read more about how to baseline an existing production database: https://pris.ly/d/migrate-baseline
+court-portal-app  | 
+court-portal-app  | Prisma schema loaded from prisma/schema.prisma
+court-portal-app  | Datasource "db": PostgreSQL database "court_portal", schema "public" at "db:5432"
+court-portal-app  | 
+court-portal-app  | 16 migrations found in prisma/migrations
+court-portal-app  | 
+court-portal-app  | Error: P3005
+court-portal-app  | 
+court-portal-app  | The database schema is not empty. Read more about how to baseline an existing production database: https://pris.ly/d/migrate-baseline
+court-portal-app  | 

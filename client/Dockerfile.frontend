@@ -1,0 +1,27 @@
+# Stage 1: Build React Application
+FROM node:20-alpine AS build
+
+WORKDIR /app
+
+# Copy client manifest and install dependencies
+COPY package*.json ./
+RUN npm install
+
+# Build client-side assets
+COPY . .
+RUN npm run build
+
+# Stage 2: Serve with Nginx for Production
+FROM nginx:stable-alpine
+
+# Copy built files from Stage 1 to Nginx distribution folder
+COPY --from=build /app/dist /usr/share/nginx/html
+
+# EXTREMELY IMPORTANT: Copy custom Nginx proxy config
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# Expose Frontend port (Standard HTTP inside container)
+EXPOSE 80
+
+# Start Nginx
+CMD ["nginx", "-g", "daemon off;"]

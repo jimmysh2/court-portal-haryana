@@ -51,6 +51,10 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+// ─── Static files and Error Handler ────────────────────
+app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
+app.use(errorHandler);
+
 // ─── Serve Frontend (Production) ─────────────────────
 if (process.env.NODE_ENV === 'production') {
   app.use(express.static(path.join(__dirname, '..', 'client', 'dist')));
@@ -59,9 +63,6 @@ if (process.env.NODE_ENV === 'production') {
   });
 }
 
-// ─── Error Handler ───────────────────────────────────
-app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
-app.use(errorHandler);
 
 // ─── Background Jobs ──────────────────────────────────
 const { refreshBackupJob, initDailyJobs } = require('./services/cronService');
