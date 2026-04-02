@@ -1,7 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useLanguage } from '../../context/LanguageContext';
 import api from '../../utils/api';
 
 export default function SystemManagement() {
+    const { t, lang } = useLanguage();
     const [backups, setBackups] = useState([]);
     const [districts, setDistricts] = useState([]);
     const [selectedDistrict, setSelectedDistrict] = useState('');
@@ -81,7 +83,7 @@ export default function SystemManagement() {
     const handleSaveTableSort = async () => {
         setSavingTables(true);
         try {
-            const updates = tables.map((t, idx) => ({ id: t.id, sortOrder: idx + 1 }));
+            const updates = tables.map((t_table, idx) => ({ id: t_table.id, sortOrder: idx + 1 }));
             const res = await api.post('/system/tables/reorder', { updates });
             showToast(res.message);
             fetchTables();
@@ -96,10 +98,10 @@ export default function SystemManagement() {
         try {
             setSavingTime(true);
             await api.post('/system/settings/backup-time', { value: backupTime });
-            showToast(`Daily backup successfully scheduled for ${backupTime}.`);
+            showToast(lang === 'hi' ? `${backupTime} के लिए दैनिक बैकअप सफलतापूर्वक निर्धारित किया गया।` : `Daily backup successfully scheduled for ${backupTime}.`);
             fetchSettings();
         } catch (err) {
-            showToast(err.message || 'Failed to save schedule', 'error');
+            showToast(err.message || t('failedToSaveSchedule'), 'error');
         } finally {
             setSavingTime(false);
         }
@@ -123,10 +125,10 @@ export default function SystemManagement() {
         setLoading(true);
         try {
             const res = await api.post('/system/backup');
-            showToast(res.message || 'Backup created successfully!');
+            showToast(res.message || (lang === 'hi' ? 'बैकअप सफलतापूर्वक बनाया गया!' : 'Backup created successfully!'));
             fetchBackups();
         } catch (err) { 
-            showToast(`Error: ${err.message || 'Failed to create backup.'}`, 'error');
+            showToast(`Error: ${err.message || (lang === 'hi' ? 'बैकअप बनाने में विफल।' : 'Failed to create backup.')}`, 'error');
         }
         finally { setLoading(false); }
     };
@@ -141,11 +143,13 @@ export default function SystemManagement() {
 
     const handleFinalize = async () => {
         let sc = '';
-        if (finalSelect.courtId) sc = `Court ${finalSelect.courtId}`;
-        else if (finalSelect.districtId) sc = `District ${finalSelect.districtId}`;
-        else sc = 'Global (ALL Districts)';
+        if (finalSelect.courtId) sc = `${t('court')} ${finalSelect.courtId}`;
+        else if (finalSelect.districtId) sc = `${t('district')} ${finalSelect.districtId}`;
+        else sc = lang === 'hi' ? 'वैश्विक (सभी जिले)' : 'Global (ALL Districts)';
 
-        const msg = `⚠️ Bulk Finalization: Mark all existing entries for ${sc} ${finalSelect.date ? `on ${finalSelect.date}` : 'across ALL history'} as "Final Submitted"?`;
+        const msg = lang === 'hi' 
+            ? `⚠️ थोक अंतिमीकरण: ${sc} के लिए सभी मौजूदा प्रविष्टियों को ${finalSelect.date ? `${finalSelect.date} को` : 'सभी इतिहास में'} "अंतिम जमा" के रूप में चिह्नित करें?`
+            : `⚠️ Bulk Finalization: Mark all existing entries for ${sc} ${finalSelect.date ? `on ${finalSelect.date}` : 'across ALL history'} as "Final Submitted"?`;
         if (!window.confirm(msg)) return;
 
         setLoading(true);
@@ -157,21 +161,21 @@ export default function SystemManagement() {
     };
 
     const handleRestore = async (name) => {
-        if (!window.confirm(`⚠️ DANGER: Restoration will overwrite all current data. Are you sure you want to restore from: ${name}?`)) return;
+        if (!window.confirm(t('restoreWarning') + ` (${name})`)) return;
         
         setLoading(true);
         try {
             await api.post('/system/restore', { filename: name });
-            showToast(`System successfully restored to backup: ${name}`);
+            showToast(lang === 'hi' ? `सिस्टम को सफलतापूर्वक बैकअप पर पुनर्स्थापित किया गया: ${name}` : `System successfully restored to backup: ${name}`);
         } catch (err) { showToast('Restore failed. Check if psql is installed.', 'error'); }
         finally { setLoading(false); }
     };
 
     const handleCleanup = async (scope) => {
-        const districtName = selectedDistrict ? districts.find(d => d.id === parseInt(selectedDistrict))?.name : 'ALL districts';
+        const districtName = selectedDistrict ? districts.find(d => d.id === parseInt(selectedDistrict))?.name : (lang === 'hi' ? 'सभी जिले' : 'ALL districts');
         const msg = scope === 'full_wipe' 
-            ? '⚠️ DANGER: This will wipe ALL data (Courts, Entries, Users). Reset the system to zero? (Only the developer account will remain)' 
-            : `Are you sure you want to clear "${scope.replace('_', ' ')}" for ${districtName}?`;
+            ? (lang === 'hi' ? '⚠️ खतरा: यह सभी डेटा (न्यायालय, प्रविष्टियाँ, उपयोगकर्ता) मिटा देगा। क्या आप सिस्टम को शून्य पर रीसेट करना चाहते हैं? (केवल डेवलपर खाता रहेगा)' : '⚠️ DANGER: This will wipe ALL data (Courts, Entries, Users). Reset the system to zero? (Only the developer account will remain)')
+            : (lang === 'hi' ? `क्या आप वाकई ${districtName} के लिए "${scope}" साफ करना चाहते हैं?` : `Are you sure you want to clear "${scope.replace('_', ' ')}" for ${districtName}?`);
             
         if (!window.confirm(msg)) return;
         
@@ -184,12 +188,12 @@ export default function SystemManagement() {
     };
 
     const handleDeleteBackup = async (name) => {
-        if (!window.confirm(`⚠️ PERMANENT DELETE: Are you sure you want to delete ${name}? This cannot be undone.`)) return;
+        if (!window.confirm(t('confirmDeleteBackup') + ` (${name})`)) return;
         
         setLoading(true);
         try {
             await api.delete(`/system/backups/${name}`);
-            showToast(`Backup ${name} deleted successfully.`);
+            showToast(lang === 'hi' ? `बैकअप ${name} सफलतापूर्वक हटा दिया गया।` : `Backup ${name} deleted successfully.`);
             fetchBackups();
         } catch (err) { showToast('Failed to delete backup.', 'error'); }
         finally { setLoading(false); }
@@ -198,15 +202,15 @@ export default function SystemManagement() {
     return (
         <div>
             <div className="page-header">
-                <h2>⚙️ System Management</h2>
+                <h2>⚙️ {t('systemManagement')}</h2>
                 <div style={{ color: 'var(--color-text-secondary)', fontSize: '0.9rem', marginTop: 'var(--space-md)' }}>
-                    <p style={{ marginBottom: '8px' }}><strong>Powerful developer tools to maintain the portal:</strong></p>
+                    <p style={{ marginBottom: '8px' }}><strong>{lang === 'hi' ? 'पोर्टल को बनाए रखने के लिए शक्तिशाली डेवलपर उपकरण:' : 'Powerful developer tools to maintain the portal:'}</strong></p>
                     <ul style={{ paddingLeft: '20px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                        <li><strong>Daily Submissions:</strong> Manually lock or finalize data entries for any specific court or district.</li>
-                        <li><strong>Data Backups:</strong> Create and restore full PostgreSQL database backups instantly.</li>
-                        <li><strong>Structural Sync:</strong> Export live table name and column changes back into the <code>seed.js</code> and <code>system.js</code> source code.</li>
-                        <li><strong>Table Configuration:</strong> Reorder reporting tables dynamically without writing code.</li>
-                        <li><strong>Cleanup Options:</strong> Safely wipe redundant data arrays while keeping core functionality intact.</li>
+                        <li><strong>{lang === 'hi' ? 'दैनिक सबमिशन:' : 'Daily Submissions:'}</strong> {lang === 'hi' ? 'किसी भी विशिष्ट न्यायालय या जिले के लिए डेटा प्रविष्टियों को मैन्युअल रूप से लॉक या अंतिम रूप दें।' : 'Manually lock or finalize data entries for any specific court or district.'}</li>
+                        <li><strong>{lang === 'hi' ? 'डेटा बैकअप:' : 'Data Backups:'}</strong> {lang === 'hi' ? 'तुरंत पूर्ण पोस्टग्रेएसक्यूएल डेटाबेस बैकअप बनाएं और पुनर्स्थापित करें।' : 'Create and restore full PostgreSQL database backups instantly.'}</li>
+                        <li><strong>{lang === 'hi' ? 'संरचनात्मक सिंक:' : 'Structural Sync:'}</strong> {lang === 'hi' ? 'लाइव टेबल नाम और कॉलम परिवर्तनों को वापस स्रोत कोड में निर्यात करें।' : 'Export live table name and column changes back into the source code.'}</li>
+                        <li><strong>{lang === 'hi' ? 'टेबल कॉन्फ़िगरेशन:' : 'Table Configuration:'}</strong> {lang === 'hi' ? 'कोड लिखे बिना रिपोर्टिंग टेबल को गतिशील रूप से पुनर्व्यवस्थित करें।' : 'Reorder reporting tables dynamically without writing code.'}</li>
+                        <li><strong>{lang === 'hi' ? 'सफाई विकल्प:' : 'Cleanup Options:'}</strong> {lang === 'hi' ? 'कोर कार्यक्षमता को बरकरार रखते हुए अनावश्यक डेटा को सुरक्षित रूप से मिटाएं।' : 'Safely wipe redundant data arrays while keeping core functionality intact.'}</li>
                     </ul>
                 </div>
             </div>
@@ -235,7 +239,7 @@ export default function SystemManagement() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-xl)' }}>
                     
                     <div className="card">
-                        <div className="card-header"><div className="card-title">Manual Data Backup</div></div>
+                        <div className="card-header"><div className="card-title">{t('manualDataBackup')}</div></div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
                             <button 
                                 className="btn btn-primary" 
@@ -243,20 +247,20 @@ export default function SystemManagement() {
                                 disabled={loading}
                                 style={{ justifyContent: 'start' }}
                             >
-                                📦 Create Manual Data Backup
+                                📦 {t('createManualBackup')}
                             </button>
                             <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', background: 'rgba(255,165,0,0.05)', padding: 'var(--space-sm) var(--space-md)', borderRadius: 'var(--radius-sm)', borderLeft: '3px solid var(--color-warning)' }}>
-                                Note: Backups are stored in the '/backups' directory and Google Drive of courtdataportal@gmail.com.
+                                {lang === 'hi' ? 'ध्यान दें: बैकअप \'/backups\' निर्देशिका और Google Drive में संग्रहीत किए जाते हैं।' : 'Note: Backups are stored in the \'/backups\' directory and Google Drive.'}
                             </div>
                         </div>
                     </div>
 
                     <div className="card">
-                        <div className="card-header"><div className="card-title">Schedule Daily Backup</div></div>
+                        <div className="card-header"><div className="card-title">{t('scheduleDailyBackup')}</div></div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                 <div style={{ fontSize: '0.85rem', color: 'var(--color-text-secondary)' }}>
-                                    Automated Daily Data Snapshot
+                                    {lang === 'hi' ? 'स्वचालित दैनिक डेटा स्नैपशॉट' : 'Automated Daily Data Snapshot'}
                                 </div>
                                 <div style={{ display: 'flex', gap: 'var(--space-md)' }}>
                                     <div style={{ 
@@ -273,7 +277,7 @@ export default function SystemManagement() {
                                         letterSpacing: '0.5px'
                                     }}>
                                         <span style={{ width: '8px', height: '8px', background: '#34d399', borderRadius: '50%', display: 'inline-block', boxShadow: '0 0 10px #34d399' }}></span>
-                                        SERVER CLOCK: {serverTime || '--:--'}
+                                        {t('serverClock')}: {serverTime || '--:--'}
                                     </div>
                                     {backupTime && (
                                         <div style={{ 
@@ -286,14 +290,14 @@ export default function SystemManagement() {
                                             fontWeight: 700,
                                             letterSpacing: '0.5px'
                                         }}>
-                                            SCHEDULED JOB: {backupTime}
+                                            {t('scheduledJob')}: {backupTime}
                                         </div>
                                     )}
                                 </div>
                             </div>
 
                             {loadingSettings ? (
-                                <div style={{ height: '38px', background: 'var(--color-bg-secondary)', borderRadius: 'var(--radius-sm)', animate: 'pulse 1.5s infinite' }}></div>
+                                <div style={{ height: '38px', background: 'var(--color-bg-secondary)', borderRadius: 'var(--radius-sm)' }}></div>
                             ) : (
                                 <div style={{ display: 'flex', gap: 'var(--space-md)', alignItems: 'center' }}>
                                     <input 
@@ -312,23 +316,23 @@ export default function SystemManagement() {
                                         }}
                                     />
                                     <button className="btn btn-primary btn-sm" onClick={handleSaveTime} disabled={savingTime || loading}>
-                                        {savingTime ? 'Saving...' : 'Set Schedule'}
+                                        {savingTime ? t('saving') : t('setSchedule')}
                                     </button>
                                 </div>
                             )}
                             <div style={{ fontSize: '10px', color: 'var(--color-text-muted)' }}>
-                                Note: Backups will trigger according to the Server Time shown above.
+                                {lang === 'hi' ? 'ध्यान दें: बैकअप ऊपर दिखाए गए सर्वर समय के अनुसार सक्रिय होंगे।' : 'Note: Backups will trigger according to the Server Time shown above.'}
                             </div>
                         </div>
                     </div>
 
                     <div className="card">
                         <div className="card-header">
-                            <div className="card-title">Restore from Archive</div>
+                            <div className="card-title">{t('restoreFromArchive')}</div>
                         </div>
                         {backups.length === 0 ? (
                             <div style={{ padding: 'var(--space-xl)', textAlign: 'center', color: 'var(--color-text-muted)' }}>
-                                No backup files found yet.
+                                {lang === 'hi' ? 'अभी तक कोई बैकअप फ़ाइल नहीं मिली।' : 'No backup files found yet.'}
                             </div>
                         ) : (
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
@@ -355,7 +359,7 @@ export default function SystemManagement() {
                                                 disabled={loading}
                                                 style={{ fontSize: '11px', padding: '4px 8px' }}
                                             >
-                                                REVERT ↺
+                                                {lang === 'hi' ? 'वापस लें' : 'REVERT'} ↺
                                             </button>
                                             <button 
                                                 className="btn btn-danger btn-sm" 
@@ -363,7 +367,7 @@ export default function SystemManagement() {
                                                 disabled={loading}
                                                 style={{ fontSize: '11px', padding: '4px 8px', background: 'rgba(239, 68, 68, 0.1)', color: 'var(--color-danger)', border: '1px solid rgba(239, 68, 68, 0.3)' }}
                                             >
-                                                DELETE 🗑️
+                                                {t('delete')} 🗑️
                                             </button>
                                         </div>
                                     </div>
@@ -377,45 +381,45 @@ export default function SystemManagement() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-xl)' }}>
                     
                     <div className="card" style={{ border: '1px solid rgba(239, 68, 68, 0.3)' }}>
-                        <div className="card-header"><div className="card-title" style={{ color: 'var(--color-danger)' }}>💣 Database Cleanup</div></div>
+                        <div className="card-header"><div className="card-title" style={{ color: 'var(--color-danger)' }}>💣 {t('databaseCleanup')}</div></div>
                         
                         <div style={{ marginBottom: 'var(--space-md)' }}>
-                            <label className="form-label" style={{ fontSize: '11px' }}>Apply cleanup to:</label>
+                            <label className="form-label" style={{ fontSize: '11px' }}>{lang === 'hi' ? 'सफाई लागू करें:' : 'Apply cleanup to:'}</label>
                             <select 
                                 className="form-select" 
                                 value={selectedDistrict} 
                                 onChange={e => setSelectedDistrict(e.target.value)}
                                 style={{ fontSize: 'var(--font-size-sm)' }}
                             >
-                                <option value="">Global (All Districts)</option>
+                                <option value="">{lang === 'hi' ? 'वैश्विक (सभी जिले)' : 'Global (All Districts)'}</option>
                                 {districts.map(d => (
-                                    <option key={d.id} value={d.id}>{d.name} District</option>
+                                    <option key={d.id} value={d.id}>{d.name} {t('district')}</option>
                                 ))}
                             </select>
                         </div>
 
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-sm)' }}>
                             <button className="btn btn-secondary btn-sm" onClick={() => handleCleanup('entries_only')} disabled={loading}>
-                                Clear Table Entries
+                                {t('clearTableEntries')}
                             </button>
                             <button className="btn btn-secondary btn-sm" onClick={() => handleCleanup('grievances_only')} disabled={loading}>
-                                Clear Grievances
+                                {t('clearGrievances')}
                             </button>
                             <button className="btn btn-secondary btn-sm" onClick={() => handleCleanup('police_stations_only')} disabled={loading}>
-                                Clear Police Stations
+                                {t('clearPoliceStations')}
                             </button>
                             <button className="btn btn-secondary btn-sm" onClick={() => handleCleanup('courts_only')} disabled={loading}>
-                                Clear Courts
+                                {t('clearCourts')}
                             </button>
                             <button className="btn btn-secondary btn-sm" onClick={() => handleCleanup('magistrates_only')} disabled={loading}>
-                                Clear Jud. Officers
+                                {t('clearJudicialOfficers')}
                             </button>
                             <button className="btn btn-secondary btn-sm" onClick={() => handleCleanup('naib_courts_only')} disabled={loading}>
-                                Clear Naib Courts
+                                {t('clearNaibCourts')}
                             </button>
                             {!selectedDistrict && (
                                 <button className="btn btn-secondary btn-sm" onClick={() => handleCleanup('districts_only')} disabled={loading}>
-                                    Clear Districts
+                                    {t('clearDistricts')}
                                 </button>
                             )}
                         </div>
@@ -429,29 +433,29 @@ export default function SystemManagement() {
                                 disabled={loading}
                                 style={{ width: '100%' }}
                             >
-                                🔥 FULL SYSTEM WIPE 
+                                🔥 {t('fullSystemWipe')} 
                             </button>
                         )}
                         {selectedDistrict && (
                             <div style={{ fontSize: '11px', color: 'var(--color-text-muted)', textAlign: 'center' }}>
-                                Full wipe is only available when "Global" is selected.
+                                {lang === 'hi' ? 'पूर्ण वाइप केवल तभी उपलब्ध है जब "Global" चयनित हो।' : 'Full wipe is only available when "Global" is selected.'}
                             </div>
                         )}
                     </div>
 
                     <div className="card">
                         <div className="card-header">
-                            <div className="card-title">🔢 Data Integrity: Round Off Decimals</div>
+                            <div className="card-title">🔢 {t('dataIntegrity')}: {t('roundOffDecimals')}</div>
                         </div>
                         <p style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)', marginBottom: 'var(--space-md)' }}>
-                            Scans all <strong>number-type</strong> columns across every data entry and rounds any decimal values (e.g. 3.5 → 4, 2.1 → 2) to the nearest integer. Safe to run multiple times.
+                            {lang === 'hi' ? 'सभी संख्या-प्रकार के कॉलम को स्कैन करता है और किसी भी दशमलव मान को निकटतम पूर्णांक में बदल देता है।' : 'Scans all number-type columns across every data entry and rounds any decimal values to the nearest integer.'}
                         </p>
                         <button
                             className="btn btn-secondary"
                             style={{ width: '100%' }}
                             disabled={loading}
                             onClick={async () => {
-                                if (!window.confirm('Round off all decimal entries in number columns to integers?')) return;
+                                if (!window.confirm(lang === 'hi' ? 'क्या आप सभी संख्या कॉलम में दशमलव प्रविष्टियों को पूर्णांकों में बदलना चाहते हैं?' : 'Round off all decimal entries in number columns to integers?')) return;
                                 setLoading(true);
                                 try {
                                     const res = await api.post('/system/round-decimals');
@@ -463,21 +467,21 @@ export default function SystemManagement() {
                                 }
                             }}
                         >
-                            🔃 Round Off All Decimal Entries
+                            🔃 {t('roundOffDecimals')}
                         </button>
                     </div>
 
                     <div className="card" style={{ border: '1px solid var(--color-primary-soft)' }}>
                         <div className="card-header">
-                            <div className="card-title">🛂 Developer Power: Force Finalize</div>
+                            <div className="card-title">🛂 {lang === 'hi' ? 'डेवलपर शक्ति: फोर्स सबमिट' : 'Developer Power: Force Finalize'}</div>
                         </div>
                         <p style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)', marginBottom: 'var(--space-md)' }}>
-                            Instantly mark data as "Submitted" to bypass Naib Court requirements for reports.
+                            {lang === 'hi' ? 'रिपोर्टों के लिए नायब कोर्ट की आवश्यकताओं को बायपास करने के लिए डेटा को तुरंत "सबमिट" के रूप में चिह्नित करें।' : 'Instantly mark data as "Submitted" to bypass Naib Court requirements for reports.'}
                         </p>
 
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
                             <div>
-                                <label className="form-label" style={{ fontSize: '11px' }}>District</label>
+                                <label className="form-label" style={{ fontSize: '11px' }}>{t('district')}</label>
                                 <select 
                                     className="form-select" 
                                     value={finalSelect.districtId} 
@@ -487,27 +491,27 @@ export default function SystemManagement() {
                                         fetchCourts(id);
                                     }}
                                 >
-                                    <option value="">Global (State Level)</option>
+                                    <option value="">{lang === 'hi' ? 'वैश्विक (राज्य स्तर)' : 'Global (State Level)'}</option>
                                     {districts.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
                                 </select>
                             </div>
 
                             {finalSelect.districtId && (
                             <div>
-                                <label className="form-label" style={{ fontSize: '11px' }}>Court (Optional)</label>
+                                <label className="form-label" style={{ fontSize: '11px' }}>{t('court')} ({lang === 'hi' ? 'वैकल्पिक' : 'Optional'})</label>
                                 <select 
                                     className="form-select" 
                                     value={finalSelect.courtId} 
                                     onChange={e => setFinalSelect({ ...finalSelect, courtId: e.target.value })}
                                 >
-                                    <option value="">All Courts in District</option>
-                                    {courts.map(c => <option key={c.id} value={c.id}>Court {c.courtNo} - {c.name}</option>)}
+                                    <option value="">{lang === 'hi' ? 'जिले के सभी न्यायालय' : 'All Courts in District'}</option>
+                                    {courts.map(c => <option key={c.id} value={c.id}>{t('court')} {c.courtNo} - {c.name}</option>)}
                                 </select>
                             </div>
                             )}
 
                             <div>
-                                <label className="form-label" style={{ fontSize: '11px' }}>Specific Date (Leave blank for ALL history)</label>
+                                <label className="form-label" style={{ fontSize: '11px' }}>{lang === 'hi' ? 'विशिष्ट तिथि (सभी इतिहास के लिए खाली छोड़ें)' : 'Specific Date (Leave blank for ALL history)'}</label>
                                 <input 
                                     type="date" 
                                     className="form-input" 
@@ -517,44 +521,44 @@ export default function SystemManagement() {
                             </div>
 
                             <button className="btn btn-primary mt-md" onClick={handleFinalize} disabled={loading}>
-                                ✅ Force Mark as Submitted
+                                ✅ {t('forceMarkAsSubmitted')}
                             </button>
                         </div>
                     </div>
 
                     <div className="card">
                         <div className="card-header">
-                            <div className="card-title">Table Reordering</div>
+                            <div className="card-title">{lang === 'hi' ? 'टेबल पुनर्व्यवस्थित करना' : 'Table Reordering'}</div>
                             <div style={{ display: 'flex', gap: 'var(--space-xs)' }}>
                                 <button 
                                     className="btn btn-secondary btn-sm" 
                                     onClick={async () => {
-                                        if(!window.confirm('Reset all 17 tables to their default sequential order (1–17)?')) return;
+                                        if(!window.confirm(lang === 'hi' ? 'सभी 17 तालिकाओं को उनके डिफ़ॉल्ट क्रम (1-17) में रीसेट करें?' : 'Reset all 17 tables to their default sequential order (1–17)?')) return;
                                         setLoading(true);
                                         try {
                                             const res = await api.post('/system/sync-table-sort-order');
-                                            setSuccess(res.message);
+                                            showToast(res.message);
                                             const data = await api.get('/data-tables');
                                             setTables(data.tables || []);
-                                        } catch(err) { setError(err.message || 'Reset failed'); }
+                                        } catch(err) { showToast(err.message || 'Reset failed', 'error'); }
                                         finally { setLoading(false); }
                                     }} 
                                     disabled={loading}
                                 >
-                                    🔃 Reset
+                                    🔃 {lang === 'hi' ? 'रीसेट' : 'Reset'}
                                 </button>
                                 <button 
                                     className="btn btn-sm" 
                                     onClick={handleSaveTableSort} 
                                     disabled={savingTables || tables.length === 0}
                                 >
-                                    {savingTables ? 'Saving...' : '💾 Save Order'}
+                                    {savingTables ? t('saving') : `💾 ${lang === 'hi' ? 'क्रम सहेजें' : 'Save Order'}`}
                                 </button>
                             </div>
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                            {tables.map((t, index) => (
-                                <div key={t.id} style={{
+                            {tables.map((t_item, index) => (
+                                <div key={t_item.id} style={{
                                     display: 'flex', alignItems: 'center', justifyContent: 'space-between', 
                                     padding: '0.5rem 1rem', background: 'var(--color-bg-secondary)', 
                                     borderRadius: 'var(--radius-sm)', border: '1px solid var(--color-border)'
@@ -563,7 +567,7 @@ export default function SystemManagement() {
                                         <div style={{ minWidth: '2rem', height: '2rem', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--color-primary)', color: 'white', borderRadius: '50%', fontWeight: 'bold' }}>
                                             {index + 1}
                                         </div>
-                                        <div style={{ fontWeight: 500 }}>{t.name}</div>
+                                        <div style={{ fontWeight: 500 }}>{t_item.name}</div>
                                     </div>
                                     <div style={{ display: 'flex', gap: '0.25rem' }}>
                                         <button 
@@ -579,7 +583,7 @@ export default function SystemManagement() {
                                     </div>
                                 </div>
                             ))}
-                            {tables.length === 0 && <div className="text-secondary" style={{ padding: '1rem' }}>Loading tables...</div>}
+                            {tables.length === 0 && <div className="text-secondary" style={{ padding: '1rem' }}>{t('loading')}</div>}
                         </div>
                     </div>
                 </div>
