@@ -1,41 +1,56 @@
-# Use Node.js as the base image
+# ─────────────────────────────────────────────────────────────
+# Stage 1: Build the React frontend
+# ─────────────────────────────────────────────────────────────
+FROM node:20-alpine AS frontend-builder
+
+WORKDIR /build
+
+# Install client dependencies
+COPY client/package*.json ./
+RUN npm install --include=dev
+
+# Copy client source and build
+COPY client ./
+RUN npm run build
+
+# ─────────────────────────────────────────────────────────────
+# Stage 2: Production image
+# ─────────────────────────────────────────────────────────────
 FROM node:20-alpine
 
-# Install system dependencies (for DB backup/restore)
-RUN apk add --no-cache postgresql-client gzip
+# Install system tools needed for DB backup/restore
+RUN apk add --no-cache postgresql-client gzip bash
 
-# Set working directory
 WORKDIR /app
 
-# Install root dependencies
+# ── Root dependencies ──────────────────────────────────────
 COPY package*.json ./
-RUN npm install
+RUN npm install --omit=dev
 
-# Copy shared prisma folder
+# ── Prisma schema & generate client ───────────────────────
 COPY prisma ./prisma
-
-# Copy the server folder
-COPY server ./server
-
-# Copy data files for seeding
-COPY ["TESTING COURT EXCEL FILE", "./TESTING COURT EXCEL FILE"]
-COPY Disrtrict_PS.csv ./
-COPY Police_Stations_Haryana.xlsx ./
-
-# Build the frontend
-COPY client/package*.json ./client/
-RUN cd client && npm install
-COPY client ./client
-RUN cd client && npm run build
-
-# Generate Prisma client
 RUN npx prisma generate
 
-# Expose the API port
+# ── Server source ──────────────────────────────────────────
+COPY server ./server
+
+# ── Data files (for seeding) ───────────────────────────────
+COPY Disrtrict_PS.csv ./
+COPY Police_Stations_Haryana.xlsx ./
+COPY ["TESTING COURT EXCEL FILE", "./TESTING COURT EXCEL FILE"]
+
+# ── Pre-built frontend from Stage 1 ───────────────────────
+COPY --from=frontend-builder /build/dist ./client/dist
+
+# ── Uploads directory (persisted via volume) ───────────────
+RUN mkdir -p /app/uploads /app/backups
+
+# ── Docker entrypoint script ───────────────────────────────
+COPY docker-entrypoint.sh ./
+RUN chmod +x docker-entrypoint.sh
+
 EXPOSE 3000
 
-# Set production environment
 ENV NODE_ENV=production
 
-# Start the application
-CMD ["npm", "start"]
+ENTRYPOINT ["./docker-entrypoint.sh"]

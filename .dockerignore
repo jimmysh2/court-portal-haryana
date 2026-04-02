@@ -1,0 +1,43 @@
+# Git
+.git
+.gitignore
+
+# Node modules (installed inside Docker)
+node_modules
+client/node_modules
+
+# Frontend source (built in Docker)
+# (we copy client/ for the build stage, so exclude node_modules only)
+
+# Environment files — NEVER bake secrets into the image
+.env
+.env.*
+!.env.example
+
+# Dev/test artifacts
+tests
+tmp
+backups
+*.log
+*.pdf
+*.xlsx
+parse_pdf.py
+extract.js
+fetch-slugs.js
+read_new_pdf.js
+test-ai.js
+replication_plan.md
+slugs.json
+reports.txt
+new_reports.txt
+tables.txt
+temp-parser
+
+# Agent/workflow files
+.agent
+AGENTS.md
+CONTRIBUTING.md
+
+# OS files
+.DS_Store
+Thumbs.db
