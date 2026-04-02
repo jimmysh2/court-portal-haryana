@@ -1,30 +1,41 @@
 version: '3.8'
 
 services:
+  # ─── PostgreSQL Database ──────────────────────────────────
   db:
     image: postgres:15-alpine
-    restart: always
+    restart: unless-stopped
     environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: court_portal
-    ports:
-      - "5432:5432"
+      POSTGRES_USER:     ${DB_USER:-court_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-changeme}
+      POSTGRES_DB:       ${DB_NAME:-court_portal}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-court_user} -d ${DB_NAME:-court_portal}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
+  # ─── Application (Express + Vite-built frontend) ─────────
   app:
-    build: .
-    restart: always
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
     ports:
-      - "3000:3000"
-    # Loads DATABASE_URL, JWT secrets, GD_FOLDER_ID, GD_SERVICE_ACCOUNT_JSON from .env (gitignored)
+      - "${PORT:-3000}:3000"
     env_file:
       - .env
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://${DB_USER:-court_user}:${DB_PASSWORD:-changeme}@db:5432/${DB_NAME:-court_portal}?schema=public
     volumes:
       - ./backups:/app/backups
+      - ./uploads:/app/uploads
     depends_on:
-      - db
+      db:
+        condition: service_healthy
 
 volumes:
   postgres_data:

@@ -1,0 +1,43 @@
+# Dependencies (rebuilt inside Docker)
+node_modules/
+client/node_modules/
+
+# Frontend build output (rebuilt inside Docker by builder stage)
+client/dist/
+
+# Dev & editor
+.git/
+.gitignore
+.env
+*.log
+.DS_Store
+.vscode/
+.idea/
+
+# Test / temp files
+tests/
+temp-parser/
+tmp/
+backups/
+uploads/
+
+# Docs / PDF assets not needed at runtime
+*.pdf
+*.txt
+replication_plan.md
+CONTRIBUTING.md
+README.md
+
+# Dev scripts (not needed in the image)
+extract.js
+fetch-slugs.js
+parse_pdf.py
+read_new_pdf.js
+test-ai.js
+slugs.json
+new_reports.txt
+reports.txt
+tables.txt
+
+# Local render config
+render.yaml
