@@ -21,7 +21,7 @@ IF NOT EXIST ".env" (
     copy .env.example .env >nul
     echo.
     echo   ACTION REQUIRED: Edit the .env file with your real passwords/secrets.
-    echo   (Notepad will open now. Save it, close it, and then re-run this script).
+    echo   ^(Notepad will open now. Save it, close it, and then re-run this script^).
     echo.
     notepad .env
     pause

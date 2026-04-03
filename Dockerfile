@@ -31,8 +31,9 @@ RUN npm install --omit=dev
 COPY prisma ./prisma
 RUN npx prisma generate
 
-# ── Server source ──────────────────────────────────────────
+# ── Server & Scripts source ──────────────────────────────────────────
 COPY server ./server
+COPY scripts ./scripts
 
 # ── Data files (for seeding) ───────────────────────────────
 COPY Disrtrict_PS.csv ./

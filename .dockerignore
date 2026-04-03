@@ -21,6 +21,7 @@ backups
 *.log
 *.pdf
 *.xlsx
+!Police_Stations_Haryana.xlsx
 parse_pdf.py
 extract.js
 fetch-slugs.js
