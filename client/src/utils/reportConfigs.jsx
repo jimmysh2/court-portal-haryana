@@ -381,15 +381,15 @@ export const getTableColumns = (tableSlug) => {
             ];
         case 'accused-surrendered':
             return [
-                { header: 'Regular Bail', renderCell: (entries, openModal) => {
+                { header: 'Granted Regular Bail', renderCell: (entries, openModal) => {
                     const subset = filterByRegex(entries, 'status', /regular/i);
                     return <ClickableNum num={subset.length} entries={subset} onClick={openModal} />
                 }},
-                { header: 'Judicial Custody', renderCell: (entries, openModal) => {
+                { header: 'Sent to Judicial Custody', renderCell: (entries, openModal) => {
                     const subset = filterByRegex(entries, 'status', /judicial/i);
                     return <ClickableNum num={subset.length} entries={subset} onClick={openModal} />
                 }},
-                { header: 'Police Custody', renderCell: (entries, openModal) => {
+                { header: 'Sent to Police Custody', renderCell: (entries, openModal) => {
                     const subset = filterByRegex(entries, 'status', /police/i);
                     return <ClickableNum num={subset.length} entries={subset} onClick={openModal} />
                 }},
@@ -398,68 +398,50 @@ export const getTableColumns = (tableSlug) => {
         case 'adverse-orders':
             return [
                 { header: 'Arnesh Kumar Violation', renderCell: (entries, openModal) => {
-                    const sum = entries.reduce((acc, e) => acc + parseVal(e.values?.arnesh_kumar_violation), 0);
-                    return <ClickableNum num={sum} entries={entries} onClick={openModal} />
+                    const subset = filterByRegex(entries, 'category', /arnesh/i);
+                    return <ClickableNum num={subset.length} entries={subset} onClick={openModal} />
                 }},
                 { header: 'Arrest Violation (47 BNSS)', renderCell: (entries, openModal) => {
-                    const sum = entries.reduce((acc, e) => acc + parseVal(e.values?.arrest_violation_47_bnss), 0);
-                    return <ClickableNum num={sum} entries={entries} onClick={openModal} />
+                    const subset = filterByRegex(entries, 'category', /47\s+bnss/i);
+                    return <ClickableNum num={subset.length} entries={subset} onClick={openModal} />
                 }},
-                { header: 'No Reply Submitted', renderCell: (entries, openModal) => {
-                    const sum = entries.reduce((acc, e) => acc + parseVal(e.values?.no_reply_submitted), 0);
-                    return <ClickableNum num={sum} entries={entries} onClick={openModal} />
+                { header: 'Filing/No filing replies', renderCell: (entries, openModal) => {
+                    const subset = filterByRegex(entries, 'category', /filing/i);
+                    return <ClickableNum num={subset.length} entries={subset} onClick={openModal} />
                 }},
                 { header: 'Summon/Warrant Not Submitted', renderCell: (entries, openModal) => {
-                    const sum = entries.reduce((acc, e) => acc + parseVal(e.values?.summon_warrant_not_submitted), 0);
-                    return <ClickableNum num={sum} entries={entries} onClick={openModal} />
+                    const subset = filterByRegex(entries, 'category', /summon/i);
+                    return <ClickableNum num={subset.length} entries={subset} onClick={openModal} />
                 }},
                 { header: 'BW/NBW Execution Failure', renderCell: (entries, openModal) => {
-                    const sum = entries.reduce((acc, e) => acc + parseVal(e.values?.bw_nbw_execution_failure), 0);
-                    return <ClickableNum num={sum} entries={entries} onClick={openModal} />
+                    const subset = filterByRegex(entries, 'category', /bw/i);
+                    return <ClickableNum num={subset.length} entries={subset} onClick={openModal} />
                 }},
                 { header: 'Detention > 24hrs', renderCell: (entries, openModal) => {
-                    const sum = entries.reduce((acc, e) => acc + parseVal(e.values?.detention_more_than_24hrs), 0);
-                    return <ClickableNum num={sum} entries={entries} onClick={openModal} />
+                    const subset = filterByRegex(entries, 'category', /24/i);
+                    return <ClickableNum num={subset.length} entries={subset} onClick={openModal} />
                 }},
                 { header: 'Misbehaviour', renderCell: (entries, openModal) => {
-                    const sum = entries.reduce((acc, e) => acc + parseVal(e.values?.misbehaviour), 0);
-                    return <ClickableNum num={sum} entries={entries} onClick={openModal} />
+                    const subset = filterByRegex(entries, 'category', /misbehav/i);
+                    return <ClickableNum num={subset.length} entries={subset} onClick={openModal} />
                 }},
-                { header: 'Total Orders', renderCell: (entries, openModal) => {
-                    const sum = entries.reduce((acc, e) => acc + 
-                        parseVal(e.values?.arnesh_kumar_violation) + 
-                        parseVal(e.values?.arrest_violation_47_bnss) + 
-                        parseVal(e.values?.no_reply_submitted) + 
-                        parseVal(e.values?.summon_warrant_not_submitted) + 
-                        parseVal(e.values?.bw_nbw_execution_failure) + 
-                        parseVal(e.values?.detention_more_than_24hrs) + 
-                        parseVal(e.values?.misbehaviour)
-                    , 0);
-                    return <ClickableNum num={sum} entries={entries} onClick={openModal} />
-                }}
+                { header: 'Total Orders', renderCell: (entries, openModal) => <ClickableNum num={entries.length} entries={entries} onClick={openModal} /> }
             ];
         case 'applications-dismissed':
             return [
                 { header: 'Bail Cancellation', renderCell: (entries, openModal) => {
-                    const sum = entries.reduce((acc, e) => acc + parseVal(e.values?.bail_cancellation), 0);
-                    return <ClickableNum num={sum} entries={entries} onClick={openModal} />
+                    const subset = filterByRegex(entries, 'category', /bail/i);
+                    return <ClickableNum num={subset.length} entries={subset} onClick={openModal} />
                 }},
-                { header: 'Case Property Disposal', renderCell: (entries, openModal) => {
-                    const sum = entries.reduce((acc, e) => acc + parseVal(e.values?.case_property_disposal), 0);
-                    return <ClickableNum num={sum} entries={entries} onClick={openModal} />
+                { header: 'Disposal of case property', renderCell: (entries, openModal) => {
+                    const subset = filterByRegex(entries, 'category', /disposal/i);
+                    return <ClickableNum num={subset.length} entries={subset} onClick={openModal} />
                 }},
                 { header: 'Remand from Judicial Custody', renderCell: (entries, openModal) => {
-                    const sum = entries.reduce((acc, e) => acc + parseVal(e.values?.remand_from_judicial_custody), 0);
-                    return <ClickableNum num={sum} entries={entries} onClick={openModal} />
+                    const subset = filterByRegex(entries, 'category', /remand/i);
+                    return <ClickableNum num={subset.length} entries={subset} onClick={openModal} />
                 }},
-                { header: 'Total Dismissed', renderCell: (entries, openModal) => {
-                    const sum = entries.reduce((acc, e) => acc + 
-                        parseVal(e.values?.bail_cancellation) + 
-                        parseVal(e.values?.case_property_disposal) + 
-                        parseVal(e.values?.remand_from_judicial_custody)
-                    , 0);
-                    return <ClickableNum num={sum} entries={entries} onClick={openModal} />
-                }}
+                { header: 'Total Dismissed', renderCell: (entries, openModal) => <ClickableNum num={entries.length} entries={entries} onClick={openModal} /> }
             ];
         default:
             return [

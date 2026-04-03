@@ -1062,15 +1062,15 @@ module.exports = [
         "columns": [
             {
                 "name": "Name of Accused",
-                "slug": "name",
+                "slug": "name_accused",
                 "dataType": "text",
                 "enumOptions": null,
                 "isRequired": true,
                 "sortOrder": 0
             },
             {
-                "name": "FIR Number",
-                "slug": "fir_no",
+                "name": "FIR No., Date & U/s",
+                "slug": "fir_no_date_us",
                 "dataType": "text",
                 "enumOptions": null,
                 "isRequired": true,
@@ -1085,13 +1085,13 @@ module.exports = [
                 "sortOrder": 2
             },
             {
-                "name": "Status",
+                "name": "Status of Accused",
                 "slug": "status",
                 "dataType": "enum",
                 "enumOptions": [
-                    "Regular Bail",
-                    "Judicial Custody",
-                    "Police Custody"
+                    "Granted Regular Bail",
+                    "Sent to Judicial Custody",
+                    "Sent to Police Custody"
                 ],
                 "isRequired": true,
                 "sortOrder": 3
@@ -1099,98 +1099,78 @@ module.exports = [
         ]
     },
     {
-        "name": "20. Adverse orders against police officials",
+        "name": "20. Detail of adverse order passed against police officials",
         "slug": "adverse-orders",
         "description": "Adverse orders passed against police officials",
-        "singleRow": true,
+        "singleRow": false,
         "sortOrder": 21,
         "columns": [
             {
-                "name": "Arnesh Kumar Violation",
-                "slug": "arnesh_kumar_violation",
-                "dataType": "number",
+                "name": "Case Details",
+                "slug": "case_details",
+                "dataType": "text",
                 "enumOptions": null,
                 "isRequired": true,
                 "sortOrder": 0
             },
             {
-                "name": "Arrest Violation (47 BNSS)",
-                "slug": "arrest_violation_47_bnss",
-                "dataType": "number",
+                "name": "PS",
+                "slug": "police_station",
+                "dataType": "text",
                 "enumOptions": null,
                 "isRequired": true,
                 "sortOrder": 1
             },
             {
-                "name": "No Reply Submitted",
-                "slug": "no_reply_submitted",
-                "dataType": "number",
-                "enumOptions": null,
+                "name": "Category",
+                "slug": "category",
+                "dataType": "enum",
+                "enumOptions": [
+                    "Arnesh Kumar Violation",
+                    "Ground of Arrest Violation (47 BNSS)",
+                    "Filing / No filing replies",
+                    "Summons/ Warrant reports not submitted",
+                    "Unable to execute BW/NBW",
+                    "Detention for more than 24 Hrs",
+                    "Misbehaviour"
+                ],
                 "isRequired": true,
                 "sortOrder": 2
-            },
-            {
-                "name": "Summon/Warrant Not Submitted",
-                "slug": "summon_warrant_not_submitted",
-                "dataType": "number",
-                "enumOptions": null,
-                "isRequired": true,
-                "sortOrder": 3
-            },
-            {
-                "name": "BW/NBW Execution Failure",
-                "slug": "bw_nbw_execution_failure",
-                "dataType": "number",
-                "enumOptions": null,
-                "isRequired": true,
-                "sortOrder": 4
-            },
-            {
-                "name": "Detention More Than 24hrs",
-                "slug": "detention_more_than_24hrs",
-                "dataType": "number",
-                "enumOptions": null,
-                "isRequired": true,
-                "sortOrder": 5
-            },
-            {
-                "name": "Misbehaviour",
-                "slug": "misbehaviour",
-                "dataType": "number",
-                "enumOptions": null,
-                "isRequired": true,
-                "sortOrder": 6
             }
         ]
     },
     {
-        "name": "21. Applications dismissed by court",
+        "name": "21. Details of applications filed by police officials DISMISSED by the court",
         "slug": "applications-dismissed",
         "description": "Police applications dismissed by the court",
-        "singleRow": true,
+        "singleRow": false,
         "sortOrder": 22,
         "columns": [
             {
-                "name": "Bail Cancellation",
-                "slug": "bail_cancellation",
-                "dataType": "number",
+                "name": "Case Details",
+                "slug": "case_details",
+                "dataType": "text",
                 "enumOptions": null,
                 "isRequired": true,
                 "sortOrder": 0
             },
             {
-                "name": "Case Property Disposal",
-                "slug": "case_property_disposal",
-                "dataType": "number",
+                "name": "PS",
+                "slug": "police_station",
+                "dataType": "text",
                 "enumOptions": null,
                 "isRequired": true,
                 "sortOrder": 1
             },
             {
-                "name": "Remand from Judicial Custody",
-                "slug": "remand_from_judicial_custody",
-                "dataType": "number",
-                "enumOptions": null,
+                "name": "Category",
+                "slug": "category",
+                "dataType": "enum",
+                "enumOptions": [
+                    "Bail Cancellation",
+                    "Disposal of case property",
+                    "Remand from judicial custody"
+                ],
                 "isRequired": true,
                 "sortOrder": 2
             }
