@@ -1,32 +1,45 @@
-# Use Node.js as the base image
-FROM node:20-alpine
+# Stage 1: Build Frontend
+FROM node:20-alpine AS frontend-builder
 
-# Install system dependencies (for DB backup/restore)
-RUN apk add --no-cache postgresql-client gzip
+WORKDIR /app/client
+
+COPY client/package*.json ./
+RUN npm install
+
+COPY client ./
+RUN npm run build
+
+# Stage 2: Production Runtime
+FROM node:20-alpine AS production
+
+# Install system dependencies
+RUN apk add --no-cache postgresql-client gzip curl
 
 # Set working directory
 WORKDIR /app
 
-# Install root dependencies
+# Copy root package files
 COPY package*.json ./
-RUN npm install
 
-# Copy shared prisma folder
+# Install root dependencies only (production)
+RUN npm install --omit=dev
+
+# Copy prisma folder
 COPY prisma ./prisma
 
-# Copy the server folder
+# Copy server folder
 COPY server ./server
+
+# Copy scripts folder
+COPY scripts ./scripts
 
 # Copy data files for seeding
 COPY ["TESTING COURT EXCEL FILE", "./TESTING COURT EXCEL FILE"]
 COPY Disrtrict_PS.csv ./
 COPY Police_Stations_Haryana.xlsx ./
 
-# Build the frontend
-COPY client/package*.json ./client/
-RUN cd client && npm install
-COPY client ./client
-RUN cd client && npm run build
+# Copy built frontend from stage 1
+COPY --from=frontend-builder /app/client/dist ./client/dist
 
 # Generate Prisma client
 RUN npx prisma generate
@@ -36,6 +49,10 @@ EXPOSE 3000
 
 # Set production environment
 ENV NODE_ENV=production
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+  CMD curl -f http://localhost:3000/api/health || exit 1
 
 # Start the application
 CMD ["npm", "start"]
