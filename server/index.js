@@ -17,7 +17,6 @@ const alertRoutes = require('./routes/alerts');
 const grievanceRoutes = require('./routes/grievances');
 const reportRoutes = require('./routes/reports');
 const systemRoutes = require('./routes/system');
-const deltaSyncRoutes = require('./routes/delta-sync'); // TEMP: remove after sync
 
 const { errorHandler } = require('./middleware/errorHandler');
 
@@ -46,25 +45,12 @@ app.use('/api/v1/alerts', alertRoutes);
 app.use('/api/v1/grievances', grievanceRoutes);
 app.use('/api/v1/reports', reportRoutes);
 app.use('/api/v1/system', systemRoutes);
-app.use('/api', deltaSyncRoutes); // TEMP: remove after sync
 
 // ─── Health Check ────────────────────────────────────
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// ─── Debug Env (TEMP - remove after diagnosis) ───────
-app.get('/api/debug-env', (req, res) => {
-  res.json({
-    has_DATABASE_URL: !!process.env.DATABASE_URL,
-    has_DIRECT_URL: !!process.env.DIRECT_URL,
-    has_JWT_SECRET: !!process.env.JWT_SECRET,
-    has_SUPABASE_URL: !!process.env.SUPABASE_URL,
-    NODE_ENV: process.env.NODE_ENV,
-    DATABASE_URL_prefix: process.env.DATABASE_URL ? process.env.DATABASE_URL.substring(0, 30) + '...' : 'NOT SET',
-    all_env_keys: Object.keys(process.env).sort(),
-  });
-});
 
 // ─── Serve Frontend (Production) ─────────────────────
 if (process.env.NODE_ENV === 'production') {
