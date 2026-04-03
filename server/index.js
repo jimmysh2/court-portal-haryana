@@ -17,6 +17,7 @@ const alertRoutes = require('./routes/alerts');
 const grievanceRoutes = require('./routes/grievances');
 const reportRoutes = require('./routes/reports');
 const systemRoutes = require('./routes/system');
+const deltaSyncRoutes = require('./routes/delta-sync'); // TEMP: remove after sync
 
 const { errorHandler } = require('./middleware/errorHandler');
 
@@ -45,6 +46,7 @@ app.use('/api/v1/alerts', alertRoutes);
 app.use('/api/v1/grievances', grievanceRoutes);
 app.use('/api/v1/reports', reportRoutes);
 app.use('/api/v1/system', systemRoutes);
+app.use('/api', deltaSyncRoutes); // TEMP: remove after sync
 
 // ─── Health Check ────────────────────────────────────
 app.get('/api/health', (req, res) => {
