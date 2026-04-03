@@ -963,7 +963,7 @@ module.exports = [
         "sortOrder": 18,
         "columns": [
             {
-                "name": "Total Summoned",
+                "name": "No of govt officials who were supposed to appear for deposition in court",
                 "slug": "total_summoned",
                 "dataType": "number",
                 "enumOptions": null,
@@ -971,7 +971,7 @@ module.exports = [
                 "sortOrder": 0
             },
             {
-                "name": "Telephonically Informed",
+                "name": "No of govt officials informed on phone one day before",
                 "slug": "telephonically_informed",
                 "dataType": "number",
                 "enumOptions": null,
@@ -979,7 +979,7 @@ module.exports = [
                 "sortOrder": 1
             },
             {
-                "name": "Appeared Physically",
+                "name": "No of govt officials who appeared physically in court",
                 "slug": "appeared_physically",
                 "dataType": "number",
                 "enumOptions": null,
@@ -987,7 +987,7 @@ module.exports = [
                 "sortOrder": 2
             },
             {
-                "name": "Examined Physically",
+                "name": "No of the appeared govt officials examined physically by the court",
                 "slug": "examined_physically",
                 "dataType": "number",
                 "enumOptions": null,
@@ -995,7 +995,7 @@ module.exports = [
                 "sortOrder": 3
             },
             {
-                "name": "Examined via VC",
+                "name": "No of govt officials examined through VC by the court",
                 "slug": "examined_vc",
                 "dataType": "number",
                 "enumOptions": null,
@@ -1012,7 +1012,7 @@ module.exports = [
         "sortOrder": 19,
         "columns": [
             {
-                "name": "Total Summoned",
+                "name": "No of private individual who were supposed to appear for deposition in court",
                 "slug": "total_summoned",
                 "dataType": "number",
                 "enumOptions": null,
@@ -1020,7 +1020,7 @@ module.exports = [
                 "sortOrder": 0
             },
             {
-                "name": "Telephonically Informed",
+                "name": "No of private individual informed on phone one day before",
                 "slug": "telephonically_informed",
                 "dataType": "number",
                 "enumOptions": null,
@@ -1028,7 +1028,7 @@ module.exports = [
                 "sortOrder": 1
             },
             {
-                "name": "Appeared Physically",
+                "name": "No of private individual who appeared physically in court",
                 "slug": "appeared_physically",
                 "dataType": "number",
                 "enumOptions": null,
@@ -1036,7 +1036,7 @@ module.exports = [
                 "sortOrder": 2
             },
             {
-                "name": "Examined Physically",
+                "name": "No of the appeared private individual examined physically by the court",
                 "slug": "examined_physically",
                 "dataType": "number",
                 "enumOptions": null,
@@ -1044,7 +1044,7 @@ module.exports = [
                 "sortOrder": 3
             },
             {
-                "name": "Examined via VC",
+                "name": "No of the private individual examined through VC by the court",
                 "slug": "examined_vc",
                 "dataType": "number",
                 "enumOptions": null,
@@ -1085,7 +1085,7 @@ module.exports = [
                 "sortOrder": 2
             },
             {
-                "name": "Status of Accused",
+                "name": "Status of Accused (Granted Regular Bail/Sent to Judicial Custody/Sent to Police Custody)",
                 "slug": "status",
                 "dataType": "enum",
                 "enumOptions": [
