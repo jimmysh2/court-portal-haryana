@@ -1,0 +1,13 @@
+node_modules
+client/node_modules
+.git
+.env
+tmp
+test-ai.js
+.agent
+uploads
+backups
+.vs
+api
+vercel.json
+render.yaml
