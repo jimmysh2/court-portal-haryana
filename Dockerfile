@@ -17,6 +17,9 @@ COPY prisma ./prisma
 # Copy the server folder
 COPY server ./server
 
+# Copy scripts folder (required by server/services/cronService.js at runtime)
+COPY scripts ./scripts
+
 # Copy data files for seeding
 COPY ["TESTING COURT EXCEL FILE", "./TESTING COURT EXCEL FILE"]
 COPY Disrtrict_PS.csv ./
@@ -37,5 +40,5 @@ EXPOSE 3000
 # Set production environment
 ENV NODE_ENV=production
 
-# Start the application
-CMD ["npm", "start"]
+# Run DB migrations then start the app
+CMD npx prisma migrate deploy && node server/index.js

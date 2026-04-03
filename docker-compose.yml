@@ -5,26 +5,37 @@ services:
     image: postgres:15-alpine
     restart: always
     environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 123456
       POSTGRES_DB: court_portal
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d court_portal"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   app:
     build: .
     restart: always
     ports:
       - "3000:3000"
-    # Loads DATABASE_URL, JWT secrets, GD_FOLDER_ID, GD_SERVICE_ACCOUNT_JSON from .env (gitignored)
+    # Loads JWT secrets, GD_FOLDER_ID, GD_SERVICE_ACCOUNT_JSON from .env (gitignored)
     env_file:
       - .env
+    environment:
+      # Override DATABASE_URL to use the Docker internal network hostname 'db'
+      - DATABASE_URL=postgresql://postgres:123456@db:5432/court_portal?schema=public
+      - NODE_ENV=production
     volumes:
       - ./backups:/app/backups
+      - ./uploads:/app/uploads
     depends_on:
-      - db
+      db:
+        condition: service_healthy
 
 volumes:
   postgres_data:
