@@ -380,4 +380,20 @@ router.post('/:id/reopen', authenticate, async (req, res, next) => {
     } catch (err) { next(err); }
 });
 
+// DELETE /api/v1/grievances/comments/:commentId
+router.delete('/comments/:commentId', authenticate, requireRole('developer'), async (req, res, next) => {
+    try {
+        const commentId = parseInt(req.params.commentId);
+        const comment = await prisma.grievanceComment.findUnique({ where: { id: commentId } });
+        
+        if (!comment) return res.status(404).json({ error: 'Comment not found' });
+
+        await prisma.grievanceComment.delete({
+            where: { id: commentId }
+        });
+        
+        res.json({ message: 'Comment deleted successfully' });
+    } catch (err) { next(err); }
+});
+
 module.exports = router;

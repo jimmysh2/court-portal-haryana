@@ -155,6 +155,14 @@ export default function GrievancesPage() {
         } catch (err) { alert(err.message); }
     };
 
+    const handleDeleteComment = async (commentId) => {
+        if (!window.confirm('Are you sure you want to delete this comment?')) return;
+        try {
+            await api.delete(`/grievances/comments/${commentId}`);
+            load();
+        } catch (err) { alert(err.message); }
+    };
+
     const statusBadge = (status) => {
         const map = { 
             open: 'badge-warning', 
@@ -296,8 +304,19 @@ export default function GrievancesPage() {
                                     <div style={{ borderTop: '1px solid var(--color-border)', paddingTop: 'var(--space-lg)', marginBottom: 'var(--space-lg)' }}>
                                         {g.comments.map(c => (
                                             <div key={c.id} style={{ marginBottom: 'var(--space-md)', padding: 'var(--space-md)', background: 'var(--color-bg)', borderRadius: 'var(--radius-sm)' }}>
-                                                <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-muted)', marginBottom: '4px' }}>
-                                                    <strong>{c.user?.name}</strong> ({c.user?.role}) • {new Date(c.createdAt).toLocaleString('en-IN')}
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                                    <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-muted)', marginBottom: '4px' }}>
+                                                        <strong>{c.user?.name}</strong> ({c.user?.role}) • {new Date(c.createdAt).toLocaleString('en-IN')}
+                                                    </div>
+                                                    {user.role === 'developer' && (
+                                                        <button 
+                                                            className="btn btn-danger btn-sm" 
+                                                            style={{ padding: '2px 6px', fontSize: '10px' }}
+                                                            onClick={(e) => { e.stopPropagation(); handleDeleteComment(c.id); }}
+                                                        >
+                                                            🗑️ Delete
+                                                        </button>
+                                                    )}
                                                 </div>
                                                 <div style={{ wordBreak: 'break-word', whiteSpace: 'pre-wrap' }}>{c.body}</div>
                                                 
