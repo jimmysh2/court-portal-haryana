@@ -954,5 +954,246 @@ module.exports = [
                 "sortOrder": 5
             }
         ]
+    },
+    {
+        "name": "10. Deposition of other govt officials",
+        "slug": "deposition-other-govt",
+        "description": "Deposition of other govt officials",
+        "singleRow": true,
+        "sortOrder": 18,
+        "columns": [
+            {
+                "name": "Total Summoned",
+                "slug": "total_summoned",
+                "dataType": "number",
+                "enumOptions": null,
+                "isRequired": true,
+                "sortOrder": 0
+            },
+            {
+                "name": "Telephonically Informed",
+                "slug": "telephonically_informed",
+                "dataType": "number",
+                "enumOptions": null,
+                "isRequired": true,
+                "sortOrder": 1
+            },
+            {
+                "name": "Appeared Physically",
+                "slug": "appeared_physically",
+                "dataType": "number",
+                "enumOptions": null,
+                "isRequired": true,
+                "sortOrder": 2
+            },
+            {
+                "name": "Examined Physically",
+                "slug": "examined_physically",
+                "dataType": "number",
+                "enumOptions": null,
+                "isRequired": true,
+                "sortOrder": 3
+            },
+            {
+                "name": "Examined via VC",
+                "slug": "examined_vc",
+                "dataType": "number",
+                "enumOptions": null,
+                "isRequired": true,
+                "sortOrder": 4
+            }
+        ]
+    },
+    {
+        "name": "11. Deposition of private individuals",
+        "slug": "deposition-private",
+        "description": "Deposition of private individuals",
+        "singleRow": true,
+        "sortOrder": 19,
+        "columns": [
+            {
+                "name": "Total Summoned",
+                "slug": "total_summoned",
+                "dataType": "number",
+                "enumOptions": null,
+                "isRequired": true,
+                "sortOrder": 0
+            },
+            {
+                "name": "Telephonically Informed",
+                "slug": "telephonically_informed",
+                "dataType": "number",
+                "enumOptions": null,
+                "isRequired": true,
+                "sortOrder": 1
+            },
+            {
+                "name": "Appeared Physically",
+                "slug": "appeared_physically",
+                "dataType": "number",
+                "enumOptions": null,
+                "isRequired": true,
+                "sortOrder": 2
+            },
+            {
+                "name": "Examined Physically",
+                "slug": "examined_physically",
+                "dataType": "number",
+                "enumOptions": null,
+                "isRequired": true,
+                "sortOrder": 3
+            },
+            {
+                "name": "Examined via VC",
+                "slug": "examined_vc",
+                "dataType": "number",
+                "enumOptions": null,
+                "isRequired": true,
+                "sortOrder": 4
+            }
+        ]
+    },
+    {
+        "name": "19. List of accused who surrendered",
+        "slug": "accused-surrendered",
+        "description": "List of accused who surrendered in the court",
+        "singleRow": false,
+        "sortOrder": 20,
+        "columns": [
+            {
+                "name": "Name of Accused",
+                "slug": "name",
+                "dataType": "text",
+                "enumOptions": null,
+                "isRequired": true,
+                "sortOrder": 0
+            },
+            {
+                "name": "FIR Number",
+                "slug": "fir_no",
+                "dataType": "text",
+                "enumOptions": null,
+                "isRequired": true,
+                "sortOrder": 1
+            },
+            {
+                "name": "Police Station",
+                "slug": "police_station",
+                "dataType": "text",
+                "enumOptions": null,
+                "isRequired": true,
+                "sortOrder": 2
+            },
+            {
+                "name": "Status",
+                "slug": "status",
+                "dataType": "enum",
+                "enumOptions": [
+                    "Regular Bail",
+                    "Judicial Custody",
+                    "Police Custody"
+                ],
+                "isRequired": true,
+                "sortOrder": 3
+            }
+        ]
+    },
+    {
+        "name": "20. Adverse orders against police officials",
+        "slug": "adverse-orders",
+        "description": "Adverse orders passed against police officials",
+        "singleRow": true,
+        "sortOrder": 21,
+        "columns": [
+            {
+                "name": "Arnesh Kumar Violation",
+                "slug": "arnesh_kumar_violation",
+                "dataType": "number",
+                "enumOptions": null,
+                "isRequired": true,
+                "sortOrder": 0
+            },
+            {
+                "name": "Arrest Violation (47 BNSS)",
+                "slug": "arrest_violation_47_bnss",
+                "dataType": "number",
+                "enumOptions": null,
+                "isRequired": true,
+                "sortOrder": 1
+            },
+            {
+                "name": "No Reply Submitted",
+                "slug": "no_reply_submitted",
+                "dataType": "number",
+                "enumOptions": null,
+                "isRequired": true,
+                "sortOrder": 2
+            },
+            {
+                "name": "Summon/Warrant Not Submitted",
+                "slug": "summon_warrant_not_submitted",
+                "dataType": "number",
+                "enumOptions": null,
+                "isRequired": true,
+                "sortOrder": 3
+            },
+            {
+                "name": "BW/NBW Execution Failure",
+                "slug": "bw_nbw_execution_failure",
+                "dataType": "number",
+                "enumOptions": null,
+                "isRequired": true,
+                "sortOrder": 4
+            },
+            {
+                "name": "Detention More Than 24hrs",
+                "slug": "detention_more_than_24hrs",
+                "dataType": "number",
+                "enumOptions": null,
+                "isRequired": true,
+                "sortOrder": 5
+            },
+            {
+                "name": "Misbehaviour",
+                "slug": "misbehaviour",
+                "dataType": "number",
+                "enumOptions": null,
+                "isRequired": true,
+                "sortOrder": 6
+            }
+        ]
+    },
+    {
+        "name": "21. Applications dismissed by court",
+        "slug": "applications-dismissed",
+        "description": "Police applications dismissed by the court",
+        "singleRow": true,
+        "sortOrder": 22,
+        "columns": [
+            {
+                "name": "Bail Cancellation",
+                "slug": "bail_cancellation",
+                "dataType": "number",
+                "enumOptions": null,
+                "isRequired": true,
+                "sortOrder": 0
+            },
+            {
+                "name": "Case Property Disposal",
+                "slug": "case_property_disposal",
+                "dataType": "number",
+                "enumOptions": null,
+                "isRequired": true,
+                "sortOrder": 1
+            },
+            {
+                "name": "Remand from Judicial Custody",
+                "slug": "remand_from_judicial_custody",
+                "dataType": "number",
+                "enumOptions": null,
+                "isRequired": true,
+                "sortOrder": 2
+            }
+        ]
     }
 ];

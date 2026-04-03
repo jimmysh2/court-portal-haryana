@@ -316,6 +316,151 @@ export const getTableColumns = (tableSlug) => {
                 }},
                 { header: 'Total', renderCell: (entries, openModal) => <ClickableNum num={entries.length} entries={entries} onClick={openModal} /> }
             ];
+        case 'deposition-other-govt':
+        case 'deposition-private':
+            return [
+                { header: 'Total Summoned', renderCell: (entries, openModal) => {
+                    const sum = entries.reduce((acc, e) => acc + parseVal(e.values?.total_summoned), 0);
+                    return <ClickableNum num={sum} entries={entries} onClick={openModal} />
+                }},
+                { header: 'Telephonically Informed', renderCell: (entries, openModal) => {
+                    const sum = entries.reduce((acc, e) => acc + parseVal(e.values?.telephonically_informed), 0);
+                    return <ClickableNum num={sum} entries={entries} onClick={openModal} />
+                }},
+                { header: '% Informed', renderCell: (entries) => {
+                    const s1 = entries.reduce((acc, e) => acc + parseVal(e.values?.total_summoned), 0);
+                    const s2 = entries.reduce((acc, e) => acc + parseVal(e.values?.telephonically_informed), 0);
+                    if (s1 === 0) return <span>0%</span>;
+                    return <span>{((s2 / s1) * 100).toFixed(1)}%</span>;
+                }},
+                { header: 'Appeared Physically', renderCell: (entries, openModal) => {
+                    const sum = entries.reduce((acc, e) => acc + parseVal(e.values?.appeared_physically), 0);
+                    return <ClickableNum num={sum} entries={entries} onClick={openModal} />
+                }},
+                { header: 'Examined Physically', renderCell: (entries, openModal) => {
+                    const sum = entries.reduce((acc, e) => acc + parseVal(e.values?.examined_physically), 0);
+                    return <ClickableNum num={sum} entries={entries} onClick={openModal} />
+                }},
+                { header: 'Examined via VC', renderCell: (entries, openModal) => {
+                    const sum = entries.reduce((acc, e) => acc + parseVal(e.values?.examined_vc), 0);
+                    return <ClickableNum num={sum} entries={entries} onClick={openModal} />
+                }},
+                { header: 'Total Examined (Phys + VC)', renderCell: (entries) => {
+                    const p = entries.reduce((acc, e) => acc + parseVal(e.values?.examined_physically), 0);
+                    const v = entries.reduce((acc, e) => acc + parseVal(e.values?.examined_vc), 0);
+                    return <span>{p + v}</span>;
+                }},
+                { header: '% Total Examined', renderCell: (entries) => {
+                    const s = entries.reduce((acc, e) => acc + parseVal(e.values?.total_summoned), 0);
+                    const p = entries.reduce((acc, e) => acc + parseVal(e.values?.examined_physically), 0);
+                    const v = entries.reduce((acc, e) => acc + parseVal(e.values?.examined_vc), 0);
+                    if (s === 0) return <span>0%</span>;
+                    return <span>{(((p + v) / s) * 100).toFixed(1)}%</span>;
+                }},
+                { header: 'Not Appeared', renderCell: (entries) => {
+                    const sum = entries.reduce((acc, e) => acc + parseVal(e.values?.total_summoned), 0);
+                    const p = entries.reduce((acc, e) => acc + parseVal(e.values?.appeared_physically), 0);
+                    const v = entries.reduce((acc, e) => acc + parseVal(e.values?.examined_vc), 0);
+                    const val = sum - (p + v);
+                    return <span>{val < 0 ? 0 : val}</span>;
+                }},
+                { header: '% Not Appeared', renderCell: (entries) => {
+                    const sum = entries.reduce((acc, e) => acc + parseVal(e.values?.total_summoned), 0);
+                    const p = entries.reduce((acc, e) => acc + parseVal(e.values?.appeared_physically), 0);
+                    const v = entries.reduce((acc, e) => acc + parseVal(e.values?.examined_vc), 0);
+                    if (sum === 0) return <span>0%</span>;
+                    const val = sum - (p + v);
+                    return <span>{((val / sum) * 100).toFixed(1)}%</span>;
+                }},
+                { header: 'Not Examined (after appearing)', renderCell: (entries) => {
+                    const p = entries.reduce((acc, e) => acc + parseVal(e.values?.appeared_physically), 0);
+                    const e_p = entries.reduce((acc, e) => acc + parseVal(e.values?.examined_physically), 0);
+                    const val = p - e_p;
+                    return <span>{val < 0 ? 0 : val}</span>;
+                }}
+            ];
+        case 'accused-surrendered':
+            return [
+                { header: 'Regular Bail', renderCell: (entries, openModal) => {
+                    const subset = filterByRegex(entries, 'status', /regular/i);
+                    return <ClickableNum num={subset.length} entries={subset} onClick={openModal} />
+                }},
+                { header: 'Judicial Custody', renderCell: (entries, openModal) => {
+                    const subset = filterByRegex(entries, 'status', /judicial/i);
+                    return <ClickableNum num={subset.length} entries={subset} onClick={openModal} />
+                }},
+                { header: 'Police Custody', renderCell: (entries, openModal) => {
+                    const subset = filterByRegex(entries, 'status', /police/i);
+                    return <ClickableNum num={subset.length} entries={subset} onClick={openModal} />
+                }},
+                { header: 'Total', renderCell: (entries, openModal) => <ClickableNum num={entries.length} entries={entries} onClick={openModal} /> }
+            ];
+        case 'adverse-orders':
+            return [
+                { header: 'Arnesh Kumar Violation', renderCell: (entries, openModal) => {
+                    const sum = entries.reduce((acc, e) => acc + parseVal(e.values?.arnesh_kumar_violation), 0);
+                    return <ClickableNum num={sum} entries={entries} onClick={openModal} />
+                }},
+                { header: 'Arrest Violation (47 BNSS)', renderCell: (entries, openModal) => {
+                    const sum = entries.reduce((acc, e) => acc + parseVal(e.values?.arrest_violation_47_bnss), 0);
+                    return <ClickableNum num={sum} entries={entries} onClick={openModal} />
+                }},
+                { header: 'No Reply Submitted', renderCell: (entries, openModal) => {
+                    const sum = entries.reduce((acc, e) => acc + parseVal(e.values?.no_reply_submitted), 0);
+                    return <ClickableNum num={sum} entries={entries} onClick={openModal} />
+                }},
+                { header: 'Summon/Warrant Not Submitted', renderCell: (entries, openModal) => {
+                    const sum = entries.reduce((acc, e) => acc + parseVal(e.values?.summon_warrant_not_submitted), 0);
+                    return <ClickableNum num={sum} entries={entries} onClick={openModal} />
+                }},
+                { header: 'BW/NBW Execution Failure', renderCell: (entries, openModal) => {
+                    const sum = entries.reduce((acc, e) => acc + parseVal(e.values?.bw_nbw_execution_failure), 0);
+                    return <ClickableNum num={sum} entries={entries} onClick={openModal} />
+                }},
+                { header: 'Detention > 24hrs', renderCell: (entries, openModal) => {
+                    const sum = entries.reduce((acc, e) => acc + parseVal(e.values?.detention_more_than_24hrs), 0);
+                    return <ClickableNum num={sum} entries={entries} onClick={openModal} />
+                }},
+                { header: 'Misbehaviour', renderCell: (entries, openModal) => {
+                    const sum = entries.reduce((acc, e) => acc + parseVal(e.values?.misbehaviour), 0);
+                    return <ClickableNum num={sum} entries={entries} onClick={openModal} />
+                }},
+                { header: 'Total Orders', renderCell: (entries, openModal) => {
+                    const sum = entries.reduce((acc, e) => acc + 
+                        parseVal(e.values?.arnesh_kumar_violation) + 
+                        parseVal(e.values?.arrest_violation_47_bnss) + 
+                        parseVal(e.values?.no_reply_submitted) + 
+                        parseVal(e.values?.summon_warrant_not_submitted) + 
+                        parseVal(e.values?.bw_nbw_execution_failure) + 
+                        parseVal(e.values?.detention_more_than_24hrs) + 
+                        parseVal(e.values?.misbehaviour)
+                    , 0);
+                    return <ClickableNum num={sum} entries={entries} onClick={openModal} />
+                }}
+            ];
+        case 'applications-dismissed':
+            return [
+                { header: 'Bail Cancellation', renderCell: (entries, openModal) => {
+                    const sum = entries.reduce((acc, e) => acc + parseVal(e.values?.bail_cancellation), 0);
+                    return <ClickableNum num={sum} entries={entries} onClick={openModal} />
+                }},
+                { header: 'Case Property Disposal', renderCell: (entries, openModal) => {
+                    const sum = entries.reduce((acc, e) => acc + parseVal(e.values?.case_property_disposal), 0);
+                    return <ClickableNum num={sum} entries={entries} onClick={openModal} />
+                }},
+                { header: 'Remand from Judicial Custody', renderCell: (entries, openModal) => {
+                    const sum = entries.reduce((acc, e) => acc + parseVal(e.values?.remand_from_judicial_custody), 0);
+                    return <ClickableNum num={sum} entries={entries} onClick={openModal} />
+                }},
+                { header: 'Total Dismissed', renderCell: (entries, openModal) => {
+                    const sum = entries.reduce((acc, e) => acc + 
+                        parseVal(e.values?.bail_cancellation) + 
+                        parseVal(e.values?.case_property_disposal) + 
+                        parseVal(e.values?.remand_from_judicial_custody)
+                    , 0);
+                    return <ClickableNum num={sum} entries={entries} onClick={openModal} />
+                }}
+            ];
         default:
             return [
                 { header: 'Total Entries', renderCell: (entries, openModal) => <ClickableNum num={entries.length} entries={entries} onClick={openModal} /> }
