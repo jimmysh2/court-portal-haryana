@@ -1,6 +1,8 @@
 {
   "version": 2,
-  "regions": ["bom1"],
+  "regions": [
+    "bom1"
+  ],
   "env": {
     "NODE_ENV": "production"
   },
@@ -14,7 +16,9 @@
       "src": "server/index.js",
       "use": "@vercel/node",
       "config": {
-        "includeFiles": ["prisma/**"]
+        "includeFiles": [
+          "prisma/**"
+        ]
       }
     },
     {
@@ -32,8 +36,12 @@
       "destination": "/server/index.js"
     },
     {
-      "source": "/(.*)",
-      "destination": "/client/dist/index.html"
+      "source": "/uploads/(.*)",
+      "destination": "/server/index.js"
+    },
+    {
+      "source": "/((?!api/|assets/|favicon.ico).*)",
+      "destination": "/index.html"
     }
   ]
 }
