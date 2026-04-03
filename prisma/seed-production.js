@@ -67,7 +67,7 @@ async function main() {
 
     const developer = await prisma.user.upsert({
         where: { username: 'developer' },
-        update: {},
+        update: { password: devPassword, deletedAt: null },
         create: {
             username: 'developer',
             password: devPassword,
@@ -78,7 +78,7 @@ async function main() {
 
     await prisma.user.upsert({
         where: { username: 'state_admin' },
-        update: {},
+        update: { password: statePassword, deletedAt: null },
         create: {
             username: 'state_admin',
             password: statePassword,
@@ -387,7 +387,7 @@ async function main() {
     for (const district of allKnownDistricts) {
         await prisma.user.upsert({
             where: { username: `admin_${district.code.toLowerCase()}` },
-            update: { deletedAt: null },
+            update: { password: 'district123', deletedAt: null },
             create: {
                 username: `admin_${district.code.toLowerCase()}`, password: 'district123',
                 name: `District Admin ${district.name}`, role: 'district_admin', districtId: district.id,
@@ -395,7 +395,7 @@ async function main() {
         });
         await prisma.user.upsert({
             where: { username: `viewer_${district.code.toLowerCase()}` },
-            update: { deletedAt: null },
+            update: { password: 'viewer123', deletedAt: null },
             create: {
                 username: `viewer_${district.code.toLowerCase()}`, password: 'viewer123',
                 name: `District Viewer ${district.name}`, role: 'viewer_district', districtId: district.id,
@@ -404,7 +404,7 @@ async function main() {
     }
     await prisma.user.upsert({
         where: { username: 'viewer_state' },
-        update: { deletedAt: null },
+        update: { password: 'viewer123', deletedAt: null },
         create: { username: 'viewer_state', password: 'viewer123', name: 'State Viewer', role: 'viewer_state' },
     });
 
