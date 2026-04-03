@@ -63,8 +63,8 @@ export default function LoginPage() {
                 <h1>Court Portal</h1>
                 <p className="subtitle">Haryana District Courts Data Entry System</p>
 
-                {/* Quick Login for Dev - Local Only */}
-                {import.meta.env.DEV && (
+                {/* Quick Login - Only if explicitly enabled in environment */}
+                {import.meta.env.VITE_ENABLE_QUICK_LOGIN === 'true' && (
                     <div style={{ marginBottom: 'var(--space-xl)', padding: 'var(--space-md)', background: 'rgba(255,255,255,0.05)', borderRadius: 'var(--radius-md)', border: '1px dashed var(--color-border)' }}>
                         <div style={{ fontSize: '11px', textTransform: 'uppercase', color: 'var(--color-text-muted)', marginBottom: 'var(--space-sm)', fontWeight: 700 }}>Quick Login (Local Dev Only)</div>
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 'var(--space-xs)' }}>
