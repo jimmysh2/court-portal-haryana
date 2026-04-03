@@ -156,7 +156,7 @@ export default function GrievancesPage() {
     };
 
     const handleDeleteComment = async (commentId) => {
-        if (!window.confirm('Are you sure you want to delete this comment?')) return;
+        if (!window.confirm(t('deleteConfirm'))) return;
         try {
             await api.delete(`/grievances/comments/${commentId}`);
             load();
@@ -313,8 +313,9 @@ export default function GrievancesPage() {
                                                             className="btn btn-danger btn-sm" 
                                                             style={{ padding: '2px 6px', fontSize: '10px' }}
                                                             onClick={(e) => { e.stopPropagation(); handleDeleteComment(c.id); }}
+                                                            title={t('deleteComment')}
                                                         >
-                                                            🗑️ Delete
+                                                            🗑️ {t('delete')}
                                                         </button>
                                                     )}
                                                 </div>
