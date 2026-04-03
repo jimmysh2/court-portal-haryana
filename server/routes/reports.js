@@ -8,17 +8,20 @@ const fs = require('fs');
 const axios = require('axios');
 const FormData = require('form-data');
 
+const os = require('os');
+
 const router = express.Router();
 
-// Multer for Audio transcription (Whisper)
-const uploadDir = path.join(__dirname, '..', '..', 'uploads', 'temp_audio');
+// Multer for Audio transcription (Whisper) - use /tmp for Vercel compatibility
+const uploadDir = path.join(os.tmpdir(), 'court_portal_audio');
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => cb(null, uploadDir),
-    filename: (req, file, cb) => cb(null, Date.now() + path.extname(file.originalname))
+const upload = multer({
+    storage: multer.diskStorage({
+        destination: (req, file, cb) => cb(null, uploadDir),
+        filename: (req, file, cb) => cb(null, Date.now() + path.extname(file.originalname))
+    })
 });
-const upload = multer({ storage });
 
 // POST /api/v1/reports/ai-assistant/transcript
 router.post('/ai-assistant/transcript', authenticate, upload.single('file'), async (req, res, next) => {
@@ -73,7 +76,7 @@ async function getDbSchema() {
             try {
                 const sample = await prisma.$queryRawUnsafe(`SELECT * FROM "${name}" LIMIT 3`);
                 if (sample.length > 0) schema += `Sample data: ${JSON.stringify(sample, (k, v) => typeof v === 'bigint' ? v.toString() : v, 2)}\n`;
-            } catch (_) {}
+            } catch (_) { }
         }
     } catch (err) {
         console.error('Schema extraction failed:', err);
@@ -149,7 +152,7 @@ router.post('/ai-assistant/query', authenticate, async (req, res, next) => {
         const history = conversations.get(convId);
 
         let contextPrompt = SYSTEM_PROMPT + '\n\n';
-        
+
         // ── Role-Based Restrictions ──
         const userRole = req.user.role;
         const userDistrictId = req.user.districtId;
@@ -259,7 +262,7 @@ router.post('/generate', authenticate, async (req, res, next) => {
         if (mode === 'pending-entries') {
             const courtsWhere = { deletedAt: null };
             if (targetDistrict !== 'all') courtsWhere.districtId = parseInt(targetDistrict);
-            
+
             const courts = await prisma.court.findMany({
                 where: courtsWhere,
                 include: { district: { select: { name: true } } }
@@ -313,7 +316,7 @@ router.post('/generate', authenticate, async (req, res, next) => {
         if (targetDistrict !== 'all') {
             smWhere.court = { districtId: parseInt(targetDistrict) };
         }
-        
+
         // Fetch valid submissions to enforce the lock constraint
         const submissions = await prisma.dailySubmission.findMany({
             where: smWhere,

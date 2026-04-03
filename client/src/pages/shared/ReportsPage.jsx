@@ -317,18 +317,18 @@ export default function ReportsPage() {
         <div>
             <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <h2 style={{ margin: 0 }}>📈 Reports Hub</h2>
-                <button 
-                    className="btn btn-primary" 
-                    onClick={() => {
-                        const pathPrefix = user.role === 'developer' ? 'dev' : 
-                                         user.role === 'state_admin' ? 'state' : 
-                                         user.role === 'district_admin' ? 'district' : 'viewer';
-                        window.location.href = `/${pathPrefix}/reports/ai-assistant`;
-                    }}
-                    style={{ background: 'var(--gradient-primary)', border: 'none', display: 'flex', alignItems: 'center', gap: '8px' }}
-                >
-                    ✨ Ask AI Assistant
-                </button>
+                {['developer', 'state_admin'].includes(user.role) && (
+                    <button 
+                        className="btn btn-primary" 
+                        onClick={() => {
+                            const pathPrefix = user.role === 'developer' ? 'dev' : 'state';
+                            window.location.href = `/${pathPrefix}/reports/ai-assistant`;
+                        }}
+                        style={{ background: 'var(--gradient-primary)', border: 'none', display: 'flex', alignItems: 'center', gap: '8px' }}
+                    >
+                        {t('askAiAssistant')}
+                    </button>
+                )}
             </div>
 
             <div

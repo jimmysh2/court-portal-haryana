@@ -84,6 +84,7 @@ export const translations = {
         confirmDeleteDistrict: "Are you sure you want to delete this district?",
         exportExcel: "Export to Excel",
         generateReport: "Generate Report",
+        askAiAssistant: "✨ Ask AI Assistant",
 
         // Dashboard Stats
         openGrievances: "Open Grievances",
@@ -230,6 +231,7 @@ export const translations = {
         confirmDeleteDistrict: "क्या आप वाकई इस जिले को हटाना चाहते हैं?",
         exportExcel: "एक्सेल में निर्यात करें",
         generateReport: "रिपोर्ट तैयार करें",
+        askAiAssistant: "✨ AI सहायक से पूछें",
 
         // Dashboard Stats
         openGrievances: "खुली शिकायतें",

@@ -1,5 +1,10 @@
 const express = require('express');
 const router = express.Router();
+const { authenticate, requireRole } = require('../middleware/auth');
+
+// Apply auth and role protection to all AI assistant routes
+router.use(authenticate);
+router.use(requireRole('developer', 'state_admin'));
 const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
