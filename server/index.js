@@ -69,9 +69,11 @@ refreshBackupJob();
 initDailyJobs();
 
 // ─── Start Server ────────────────────────────────────
-app.listen(PORT, () => {
-  console.log(`🚀 Court Portal API running on port ${PORT}`);
-});
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`🚀 Court Portal API running on port ${PORT}`);
+  });
+}
 
 module.exports = app;
 

@@ -13,6 +13,15 @@ services:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-court_user} -d ${DB_NAME:-court_portal}"]
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: Hosting@123
+      POSTGRES_DB: court_portal
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U user -d court_portal" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -25,6 +34,7 @@ services:
     restart: unless-stopped
     ports:
       - "${PORT:-3000}:3000"
+      - "3000:3000"
     env_file:
       - .env
     environment:
@@ -36,6 +46,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    environment:
+      - DATABASE_URL=postgresql://postgres:Hosting@123@db:5432/court_portal
 
 volumes:
   postgres_data:
