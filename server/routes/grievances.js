@@ -8,11 +8,8 @@ const { uploadFile } = require('../services/supabaseStorage');
 
 const router = express.Router();
 
-// Ensure upload directory exists
-const uploadDir = path.join(__dirname, '..', '..', 'uploads', 'grievances');
-if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir, { recursive: true });
-}
+// Storage is now handled by Supabase in memory, no local directory needed.
+// (Local directory creation is disabled for Vercel compatibility)
 
 // Configure multer for memory storage
 const upload = multer({

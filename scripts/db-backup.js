@@ -7,8 +7,8 @@ const { RELAY_URL } = require('./gdrive-credentials');
 /**
  * Deployment Awareness
  */
-const IS_CLOUD = !!process.env.RENDER;
-const BACKUP_DIR = IS_CLOUD ? '/tmp/backups' : path.join(__dirname, '../backups');
+const IS_CLOUD = !!(process.env.RENDER || process.env.VERCEL);
+const BACKUP_DIR = IS_CLOUD ? path.join(require('os').tmpdir(), 'backups') : path.join(__dirname, '../backups');
 
 // Ensure directory exists as soon as module is loaded
 if (!fs.existsSync(BACKUP_DIR)) {
@@ -24,7 +24,7 @@ if (!fs.existsSync(BACKUP_DIR)) {
  */
 async function uploadToDrive(filePath, fileName) {
     console.log(`☁️  Relaying ${fileName} to Google Drive...`);
-    
+
     if (!RELAY_URL) {
         console.warn('⚠️  Cloud Backup skipped: No Relay URL configured.');
         return false;
@@ -45,7 +45,7 @@ async function uploadToDrive(filePath, fileName) {
         });
 
         const result = await response.json();
-        
+
         if (result.success) {
             console.log(`✅ Cloud Backup Successful via Relay! Drive ID: ${result.id}`);
             return true;
@@ -62,7 +62,7 @@ async function uploadToDrive(filePath, fileName) {
 async function runBackup() {
     console.log(`📦 Starting ${IS_CLOUD ? 'Cloud' : 'Local'} Compressed Backup...`);
     const result = { success: false, filename: null, cloudSync: false, error: null };
-    
+
     // Final safety check
     if (!fs.existsSync(BACKUP_DIR)) fs.mkdirSync(BACKUP_DIR, { recursive: true });
 
@@ -72,7 +72,7 @@ async function runBackup() {
 
     try {
         let dumpStream;
-        
+
         // 1. Try Docker First (Best for Local Development)
         // We check for Docker by attempting to run 'docker -v'
         let hasDocker = false;
@@ -84,23 +84,23 @@ async function runBackup() {
         if (hasDocker && !IS_CLOUD) {
             console.log('📡 Extracting Full System Snapshot from Local Docker container...');
             dumpStream = spawn('docker', [
-                'exec', '-i', 'courtportalantigravity-db-1', 
+                'exec', '-i', 'courtportalantigravity-db-1',
                 'sh', '-c', 'PGPASSWORD=password pg_dump -U user --clean --if-exists court_portal'
             ]);
-        } 
+        }
         // 2. Fallback to pg_dump (Best for Cloud or local with Postgres installed)
         else if (process.env.DATABASE_URL) {
             console.log('📡 Extracting Full System Snapshot from DATABASE_URL...');
             dumpStream = spawn('pg_dump', [
-                process.env.DATABASE_URL, 
-                '--clean', 
+                process.env.DATABASE_URL,
+                '--clean',
                 '--if-exists'
             ]);
         }
         else {
             throw new Error('No database extraction method available.');
         }
-        
+
         const gzip = zlib.createGzip();
         const output = fs.createWriteStream(backupPath);
         dumpStream.stdout.pipe(gzip).pipe(output);
@@ -113,7 +113,7 @@ async function runBackup() {
             });
             gzip.on('error', reject);
             output.on('error', reject);
-            
+
             // Capture stderr to diagnose credential issues
             let stderrData = '';
             dumpStream.stderr.on('data', (d) => { stderrData += d.toString(); });
@@ -147,7 +147,7 @@ async function runBackup() {
             }
         });
         if (removed > 0) console.log(`🗑️  Rotated ${removed} backups.`);
-        
+
         return result;
     } catch (error) {
         console.error('❌ Backup Engine Failed:', error.message);
