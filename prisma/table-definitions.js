@@ -511,63 +511,11 @@ module.exports = [
         ]
     },
     {
-        "name": "9. List of SHOs and DSPs who appeared in court today (for deposition or other matter)",
-        "slug": "sho-dsp-appeared",
-        "description": "List of SHOs and DSPs who appeared in court today",
-        "singleRow": false,
-        "sortOrder": 9,
-        "columns": [
-            {
-                "name": "Name of SHO/ DSP",
-                "slug": "officer_name",
-                "dataType": "text",
-                "enumOptions": null,
-                "isRequired": true,
-                "sortOrder": 0
-            },
-            {
-                "name": "Rank",
-                "slug": "rank",
-                "dataType": "enum",
-                "enumOptions": [
-                    "SHO",
-                    "DSP/ASP/Addl SP"
-                ],
-                "isRequired": true,
-                "sortOrder": 1
-            },
-            {
-                "name": "Place of Posting",
-                "slug": "posting_place",
-                "dataType": "text",
-                "enumOptions": null,
-                "isRequired": true,
-                "sortOrder": 2
-            },
-            {
-                "name": "Reason",
-                "slug": "reason",
-                "dataType": "text",
-                "enumOptions": null,
-                "isRequired": true,
-                "sortOrder": 3
-            },
-            {
-                "name": "Remarks",
-                "slug": "remarks",
-                "dataType": "text",
-                "enumOptions": null,
-                "isRequired": false,
-                "sortOrder": 4
-            }
-        ]
-    },
-    {
-        "name": "10. Deposition of police officials",
+        "name": "9. Deposition of police officials",
         "slug": "police-deposition",
         "description": "Deposition of police officials — aggregate counts per court per day",
         "singleRow": true,
-        "sortOrder": 10,
+        "sortOrder": 9,
         "columns": [
             {
                 "name": "Supposed to Appear",
@@ -612,11 +560,109 @@ module.exports = [
         ]
     },
     {
-        "name": "11. VC of prisoners",
+        "name": "10. Deposition of other govt officials",
+        "slug": "other-govt-deposition",
+        "description": "Deposition of other government officials — aggregate counts per court per day",
+        "singleRow": true,
+        "sortOrder": 10,
+        "columns": [
+            {
+                "name": "Supposed to Appear",
+                "slug": "supposed_to_appear_govt",
+                "dataType": "number",
+                "enumOptions": null,
+                "isRequired": true,
+                "sortOrder": 0
+            },
+            {
+                "name": "Appeared Physically",
+                "slug": "appeared_physically_govt",
+                "dataType": "number",
+                "enumOptions": null,
+                "isRequired": true,
+                "sortOrder": 1
+            },
+            {
+                "name": "Examined Physically",
+                "slug": "examined_physically_govt",
+                "dataType": "number",
+                "enumOptions": null,
+                "isRequired": true,
+                "sortOrder": 2
+            },
+            {
+                "name": "Examined via VC",
+                "slug": "examined_via_vc_govt",
+                "dataType": "number",
+                "enumOptions": null,
+                "isRequired": true,
+                "sortOrder": 3
+            },
+            {
+                "name": "Absent (Unauthorized/No Request)",
+                "slug": "absent_unauthorized_govt",
+                "dataType": "number",
+                "enumOptions": null,
+                "isRequired": true,
+                "sortOrder": 4
+            }
+        ]
+    },
+    {
+        "name": "11. Deposition of private individuals (public)",
+        "slug": "private-deposition",
+        "description": "Deposition of private individuals/public — aggregate counts per court per day",
+        "singleRow": true,
+        "sortOrder": 11,
+        "columns": [
+            {
+                "name": "Supposed to Appear",
+                "slug": "supposed_to_appear_pvt",
+                "dataType": "number",
+                "enumOptions": null,
+                "isRequired": true,
+                "sortOrder": 0
+            },
+            {
+                "name": "Appeared Physically",
+                "slug": "appeared_physically_pvt",
+                "dataType": "number",
+                "enumOptions": null,
+                "isRequired": true,
+                "sortOrder": 1
+            },
+            {
+                "name": "Examined Physically",
+                "slug": "examined_physically_pvt",
+                "dataType": "number",
+                "enumOptions": null,
+                "isRequired": true,
+                "sortOrder": 2
+            },
+            {
+                "name": "Examined via VC",
+                "slug": "examined_via_vc_pvt",
+                "dataType": "number",
+                "enumOptions": null,
+                "isRequired": true,
+                "sortOrder": 3
+            },
+            {
+                "name": "Absent (Unauthorized/No Request)",
+                "slug": "absent_unauthorized_pvt",
+                "dataType": "number",
+                "enumOptions": null,
+                "isRequired": true,
+                "sortOrder": 4
+            }
+        ]
+    },
+    {
+        "name": "12. VC of prisoners",
         "slug": "vc-prisoners",
         "description": "VC of prisoners — aggregate counts per court per day",
         "singleRow": true,
-        "sortOrder": 11,
+        "sortOrder": 12,
         "columns": [
             {
                 "name": "Produced Physically",
@@ -637,11 +683,11 @@ module.exports = [
         ]
     },
     {
-        "name": "12. Test Identification Parade of accused persons conducted today",
+        "name": "13. Test Identification Parade of accused persons conducted today",
         "slug": "tips-conducted",
         "description": "TIPs conducted today",
         "singleRow": false,
-        "sortOrder": 12,
+        "sortOrder": 13,
         "columns": [
             {
                 "name": "FIR Number",
@@ -678,11 +724,11 @@ module.exports = [
         ]
     },
     {
-        "name": "13. Pairvi for private witness",
+        "name": "14. Pairvi for private witness",
         "slug": "pairvi-witness",
         "description": "Pairvi for private witness — aggregate counts per court per day",
         "singleRow": true,
-        "sortOrder": 13,
+        "sortOrder": 14,
         "columns": [
             {
                 "name": "Witnesses Examined",
@@ -703,11 +749,11 @@ module.exports = [
         ]
     },
     {
-        "name": "14. Any Gangster/Notorious Criminal physically appearing in Court the next day",
+        "name": "15. Any Gangster/Notorious Criminal physically appearing in Court the next day",
         "slug": "gangster-next-day",
         "description": "Any Gangster/Notorious Criminal appearing in Court the next day",
         "singleRow": false,
-        "sortOrder": 14,
+        "sortOrder": 15,
         "columns": [
             {
                 "name": "Gangster & Gang Details",
@@ -771,11 +817,11 @@ module.exports = [
         ]
     },
     {
-        "name": "15. Any Crime against Property offender physically appearing in court the next day",
+        "name": "16. Any Crime against Property offender physically appearing in court the next day",
         "slug": "property-offender-next-day",
         "description": "Any Crime against Property offender appearing in court the next day",
         "singleRow": false,
-        "sortOrder": 15,
+        "sortOrder": 16,
         "columns": [
             {
                 "name": "Details of Accused",
@@ -839,11 +885,11 @@ module.exports = [
         ]
     },
     {
-        "name": "16. Fresh Bail Applications listed for tomorrow",
+        "name": "17. Fresh Bail Applications listed for tomorrow",
         "slug": "bail-applications-tomorrow",
         "description": "Bail Applications listed for tomorrow",
         "singleRow": false,
-        "sortOrder": 16,
+        "sortOrder": 17,
         "columns": [
             {
                 "name": "Name of Accused",
@@ -899,11 +945,11 @@ module.exports = [
         ]
     },
     {
-        "name": "17. NBW Arrest Warrants issued today",
+        "name": "18. NBW Arrest Warrants issued today",
         "slug": "nbw-arrest-warrants",
         "description": "NBW Arrest Warrants issued today",
         "singleRow": false,
-        "sortOrder": 17,
+        "sortOrder": 18,
         "columns": [
             {
                 "name": "Name of Accused",
@@ -956,109 +1002,11 @@ module.exports = [
         ]
     },
     {
-        "name": "10. Deposition of other govt officials",
-        "slug": "other-govt-deposition",
-        "description": "Deposition of other government officials — aggregate counts per court per day",
-        "singleRow": true,
-        "sortOrder": 18,
-        "columns": [
-            {
-                "name": "Supposed to Appear",
-                "slug": "supposed_to_appear_govt",
-                "dataType": "number",
-                "enumOptions": null,
-                "isRequired": true,
-                "sortOrder": 0
-            },
-            {
-                "name": "Appeared Physically",
-                "slug": "appeared_physically_govt",
-                "dataType": "number",
-                "enumOptions": null,
-                "isRequired": true,
-                "sortOrder": 1
-            },
-            {
-                "name": "Examined Physically",
-                "slug": "examined_physically_govt",
-                "dataType": "number",
-                "enumOptions": null,
-                "isRequired": true,
-                "sortOrder": 2
-            },
-            {
-                "name": "Examined via VC",
-                "slug": "examined_via_vc_govt",
-                "dataType": "number",
-                "enumOptions": null,
-                "isRequired": true,
-                "sortOrder": 3
-            },
-            {
-                "name": "Absent (Unauthorized/No Request)",
-                "slug": "absent_unauthorized_govt",
-                "dataType": "number",
-                "enumOptions": null,
-                "isRequired": true,
-                "sortOrder": 4
-            }
-        ]
-    },
-    {
-        "name": "11. Deposition of private individuals (public)",
-        "slug": "private-deposition",
-        "description": "Deposition of private individuals/public — aggregate counts per court per day",
-        "singleRow": true,
-        "sortOrder": 19,
-        "columns": [
-            {
-                "name": "Supposed to Appear",
-                "slug": "supposed_to_appear_pvt",
-                "dataType": "number",
-                "enumOptions": null,
-                "isRequired": true,
-                "sortOrder": 0
-            },
-            {
-                "name": "Appeared Physically",
-                "slug": "appeared_physically_pvt",
-                "dataType": "number",
-                "enumOptions": null,
-                "isRequired": true,
-                "sortOrder": 1
-            },
-            {
-                "name": "Examined Physically",
-                "slug": "examined_physically_pvt",
-                "dataType": "number",
-                "enumOptions": null,
-                "isRequired": true,
-                "sortOrder": 2
-            },
-            {
-                "name": "Examined via VC",
-                "slug": "examined_via_vc_pvt",
-                "dataType": "number",
-                "enumOptions": null,
-                "isRequired": true,
-                "sortOrder": 3
-            },
-            {
-                "name": "Absent (Unauthorized/No Request)",
-                "slug": "absent_unauthorized_pvt",
-                "dataType": "number",
-                "enumOptions": null,
-                "isRequired": true,
-                "sortOrder": 4
-            }
-        ]
-    },
-    {
         "name": "19. List of the accused who surrendered in court",
         "slug": "accused-surrendered",
         "description": "List of accused persons who surrendered in court today",
         "singleRow": false,
-        "sortOrder": 20,
+        "sortOrder": 19,
         "columns": [
             {
                 "name": "Name of Accused",
@@ -1119,7 +1067,7 @@ module.exports = [
         "slug": "adverse-orders-police",
         "description": "Details of adverse orders passed against police officials by the court",
         "singleRow": false,
-        "sortOrder": 21,
+        "sortOrder": 20,
         "columns": [
             {
                 "name": "FIR Number",
@@ -1176,7 +1124,7 @@ module.exports = [
         "slug": "police-apps-dismissed",
         "description": "Details of applications filed by police officials that were dismissed by the court",
         "singleRow": false,
-        "sortOrder": 22,
+        "sortOrder": 21,
         "columns": [
             {
                 "name": "FIR Number",
