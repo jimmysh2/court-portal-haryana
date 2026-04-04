@@ -18,8 +18,8 @@ RUN cd client && npm run build
 # ─────────────────────────────────────────────────────────────
 FROM node:20-alpine AS production
 
-# System deps: pg client (backup/restore), gzip, openssl (Prisma)
-RUN apk add --no-cache postgresql-client gzip openssl
+# System deps: pg client (backup/restore), gzip, curl (for healthcheck), openssl (Prisma)
+RUN apk add --no-cache postgresql-client gzip curl openssl
 
 WORKDIR /app
 
@@ -49,6 +49,10 @@ RUN mkdir -p /app/backups /app/uploads
 EXPOSE 3000
 
 ENV NODE_ENV=production
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+  CMD curl -f http://localhost:3000/api/health || exit 1
 
 # Run migrations + seed on first boot, then start the server
 CMD ["sh", "-c", "npx prisma migrate deploy && node prisma/seed-production.js && node server/index.js"]

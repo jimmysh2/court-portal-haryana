@@ -51,6 +51,7 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+
 // ─── Serve Frontend (Production) ─────────────────────
 if (process.env.NODE_ENV === 'production') {
   app.use(express.static(path.join(__dirname, '..', 'client', 'dist')));
@@ -69,9 +70,11 @@ refreshBackupJob();
 initDailyJobs();
 
 // ─── Start Server ────────────────────────────────────
-app.listen(PORT, () => {
-  console.log(`🚀 Court Portal API running on port ${PORT}`);
-});
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`🚀 Court Portal API running on port ${PORT}`);
+  });
+}
 
 module.exports = app;
 

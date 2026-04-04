@@ -11,3 +11,8 @@ backups/
 *-df14c1b8eb5e.json
 
 uploads/
+.vercel
+tmp/
+.vs/
+*.txt
+inspect.json
