@@ -108,68 +108,11 @@ module.exports = [
         ]
     },
     {
-        "name": "3. Decision on any application filed by police officials",
-        "slug": "police-applications",
-        "description": "Decision on any application filed by police officials",
-        "singleRow": false,
-        "sortOrder": 3,
-        "columns": [
-            {
-                "name": "Application Type",
-                "slug": "application_type",
-                "dataType": "enum",
-                "enumOptions": [
-                    "Case Property Disposal",
-                    "Bail Cancellation",
-                    "Other"
-                ],
-                "isRequired": true,
-                "sortOrder": 0
-            },
-            {
-                "name": "Date of Application",
-                "slug": "application_date",
-                "dataType": "date",
-                "enumOptions": null,
-                "isRequired": true,
-                "sortOrder": 1
-            },
-            {
-                "name": "Decision",
-                "slug": "decision",
-                "dataType": "enum",
-                "enumOptions": [
-                    "Allowed",
-                    "Dismissed",
-                    "Abated"
-                ],
-                "isRequired": true,
-                "sortOrder": 2
-            },
-            {
-                "name": "Reasons for Dismissal",
-                "slug": "dismissal_reasons",
-                "dataType": "text",
-                "enumOptions": null,
-                "isRequired": false,
-                "sortOrder": 3
-            },
-            {
-                "name": "Remarks",
-                "slug": "remarks",
-                "dataType": "text",
-                "enumOptions": null,
-                "isRequired": false,
-                "sortOrder": 4
-            }
-        ]
-    },
-    {
-        "name": "4. List of accused whose bail bonds were furnished after grant of bail",
+        "name": "3. List of accused granted bail (along with surety / Identifier, Photos Etc)",
         "slug": "bail-granted",
         "description": "List of accused granted bail (along with surety/identifier, photos etc.)",
         "singleRow": false,
-        "sortOrder": 4,
+        "sortOrder": 3,
         "columns": [
             {
                 "name": "Name of Accused",
@@ -301,11 +244,11 @@ module.exports = [
         ]
     },
     {
-        "name": "5. List of declared POs/PPs/BJs",
+        "name": "4. List of declared POs/PPs/BJs",
         "slug": "po-pp-bj",
         "description": "List of declared POs/PPs/BJs",
         "singleRow": false,
-        "sortOrder": 5,
+        "sortOrder": 4,
         "columns": [
             {
                 "name": "Name of Accused",
@@ -361,11 +304,11 @@ module.exports = [
         ]
     },
     {
-        "name": "6. Value of Property attached (85 BNSS & 107 BNSS)",
+        "name": "5. Value of Property attached (85 BNSS & 107 BNSS)",
         "slug": "property-attached",
         "description": "Detail of Property attached (85 BNSS & 107 BNSS)",
         "singleRow": false,
-        "sortOrder": 6,
+        "sortOrder": 5,
         "columns": [
             {
                 "name": "Name of Accused",
@@ -437,11 +380,11 @@ module.exports = [
         ]
     },
     {
-        "name": "7. Applications/Complaints/Istgasa filed against Police Officials",
+        "name": "6. Applications/Complaints/Istgasa filed against Police Officials",
         "slug": "complaints-against-police",
         "description": "Applications/Complaints/Istgasa filed against Police Officials",
         "singleRow": false,
-        "sortOrder": 7,
+        "sortOrder": 6,
         "columns": [
             {
                 "name": "Details of Applicant",
@@ -470,11 +413,11 @@ module.exports = [
         ]
     },
     {
-        "name": "8. FIR Registration under 156(3) CrPC",
+        "name": "7. FIR Registration under 156(3) CrPC",
         "slug": "fir-156-3",
         "description": "FIR Registration under 156(3) CrPC",
         "singleRow": false,
-        "sortOrder": 8,
+        "sortOrder": 7,
         "columns": [
             {
                 "name": "Details of Applicant",
@@ -507,6 +450,58 @@ module.exports = [
                 "enumOptions": null,
                 "isRequired": true,
                 "sortOrder": 3
+            }
+        ]
+    },
+    {
+        "name": "8. List of SHOs and DSPs who appeared in court today (for deposition or other matter)",
+        "slug": "sho-dsp-appeared",
+        "description": "List of SHOs and DSPs who appeared in court today",
+        "singleRow": false,
+        "sortOrder": 8,
+        "columns": [
+            {
+                "name": "Name of SHO/ DSP",
+                "slug": "officer_name",
+                "dataType": "text",
+                "enumOptions": null,
+                "isRequired": true,
+                "sortOrder": 0
+            },
+            {
+                "name": "Rank",
+                "slug": "rank",
+                "dataType": "enum",
+                "enumOptions": [
+                    "SHO",
+                    "DSP/ASP/Addl SP"
+                ],
+                "isRequired": true,
+                "sortOrder": 1
+            },
+            {
+                "name": "Place of Posting",
+                "slug": "posting_place",
+                "dataType": "text",
+                "enumOptions": null,
+                "isRequired": true,
+                "sortOrder": 2
+            },
+            {
+                "name": "Reason",
+                "slug": "reason",
+                "dataType": "text",
+                "enumOptions": null,
+                "isRequired": true,
+                "sortOrder": 3
+            },
+            {
+                "name": "Remarks",
+                "slug": "remarks",
+                "dataType": "text",
+                "enumOptions": null,
+                "isRequired": false,
+                "sortOrder": 4
             }
         ]
     },
@@ -683,7 +678,7 @@ module.exports = [
         ]
     },
     {
-        "name": "13. Test Identification Parade of accused persons conducted today",
+        "name": "13. TIPs conducted today",
         "slug": "tips-conducted",
         "description": "TIPs conducted today",
         "singleRow": false,
@@ -749,7 +744,7 @@ module.exports = [
         ]
     },
     {
-        "name": "15. Any Gangster/Notorious Criminal physically appearing in Court the next day",
+        "name": "15. Any Gangster/Notorious Criminal appearing in Court the next day",
         "slug": "gangster-next-day",
         "description": "Any Gangster/Notorious Criminal appearing in Court the next day",
         "singleRow": false,
@@ -817,7 +812,7 @@ module.exports = [
         ]
     },
     {
-        "name": "16. Any Crime against Property offender physically appearing in court the next day",
+        "name": "16. Any Crime against Property offender appearing in court the next day",
         "slug": "property-offender-next-day",
         "description": "Any Crime against Property offender appearing in court the next day",
         "singleRow": false,
@@ -1120,7 +1115,7 @@ module.exports = [
         ]
     },
     {
-        "name": "21. Details of applications filed by police officials: DISMISSED by the court",
+        "name": "21. Police apps DISMISSED (Bail Cancel, Case prop, Remand)",
         "slug": "police-apps-dismissed",
         "description": "Details of applications filed by police officials that were dismissed by the court",
         "singleRow": false,
