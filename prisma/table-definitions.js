@@ -108,7 +108,7 @@ module.exports = [
         ]
     },
     {
-        "name": "3. Decision on any application filed by police officials",
+        "name": "Decision on any application filed by police officials",
         "slug": "police-applications",
         "description": "Decision on any application filed by police officials",
         "singleRow": false,
@@ -165,7 +165,7 @@ module.exports = [
         ]
     },
     {
-        "name": "4. List of accused whose bail bonds were furnished after grant of bail",
+        "name": "3. List of accused granted bail (along with surety/ Identifier, Photos Etc)",
         "slug": "bail-granted",
         "description": "List of accused granted bail (along with surety/identifier, photos etc.)",
         "singleRow": false,
@@ -228,7 +228,7 @@ module.exports = [
                 "slug": "surety_name",
                 "dataType": "text",
                 "enumOptions": null,
-                "isRequired": false,
+                "isRequired": true,
                 "sortOrder": 6
             },
             {
@@ -260,7 +260,7 @@ module.exports = [
                 "slug": "identifier_name",
                 "dataType": "text",
                 "enumOptions": null,
-                "isRequired": false,
+                "isRequired": true,
                 "sortOrder": 10
             },
             {
@@ -295,13 +295,13 @@ module.exports = [
                     "Yes",
                     "No"
                 ],
-                "isRequired": false,
+                "isRequired": true,
                 "sortOrder": 14
             }
         ]
     },
     {
-        "name": "5. List of declared POs/PPs/BJs",
+        "name": "4. List of declared POs/PPs/BJs",
         "slug": "po-pp-bj",
         "description": "List of declared POs/PPs/BJs",
         "singleRow": false,
@@ -361,7 +361,7 @@ module.exports = [
         ]
     },
     {
-        "name": "6. Value of Property attached (85 BNSS & 107 BNSS)",
+        "name": "5. Value of Property attached (85 BNSS & 107 BNSS)",
         "slug": "property-attached",
         "description": "Detail of Property attached (85 BNSS & 107 BNSS)",
         "singleRow": false,
@@ -437,7 +437,7 @@ module.exports = [
         ]
     },
     {
-        "name": "7. Applications/Complaints/Istgasa filed against Police Officials",
+        "name": "6. Applications/Complaints/Istgasa filed against Police Officials",
         "slug": "complaints-against-police",
         "description": "Applications/Complaints/Istgasa filed against Police Officials",
         "singleRow": false,
@@ -470,7 +470,7 @@ module.exports = [
         ]
     },
     {
-        "name": "8. FIR Registration under 156(3) CrPC",
+        "name": "7. FIR Registration under 156(3) CrPC",
         "slug": "fir-156-3",
         "description": "FIR Registration under 156(3) CrPC",
         "singleRow": false,
@@ -511,7 +511,7 @@ module.exports = [
         ]
     },
     {
-        "name": "9. List of SHOs and DSPs who appeared in court today (for deposition or other matter)",
+        "name": "8. List of SHOs and DSPs who appeared in court today (for deposition or other matter)",
         "slug": "sho-dsp-appeared",
         "description": "List of SHOs and DSPs who appeared in court today",
         "singleRow": false,
@@ -563,7 +563,7 @@ module.exports = [
         ]
     },
     {
-        "name": "10. Deposition of police officials",
+        "name": "9. Deposition of police officials",
         "slug": "police-deposition",
         "description": "Deposition of police officials — aggregate counts per court per day",
         "singleRow": true,
@@ -612,11 +612,109 @@ module.exports = [
         ]
     },
     {
-        "name": "11. VC of prisoners",
+        "name": "10. Deposition of other govt officials",
+        "slug": "deposition-govt-officials",
+        "description": "Deposition of other govt officials — aggregate counts per court per day",
+        "singleRow": true,
+        "sortOrder": 11,
+        "columns": [
+            {
+                "name": "Supposed to appear",
+                "slug": "supposed_to_appear",
+                "dataType": "number",
+                "enumOptions": null,
+                "isRequired": true,
+                "sortOrder": 0
+            },
+            {
+                "name": "Informed on phone",
+                "slug": "informed_on_phone",
+                "dataType": "number",
+                "enumOptions": null,
+                "isRequired": true,
+                "sortOrder": 1
+            },
+            {
+                "name": "Appeared physically",
+                "slug": "appeared_physically",
+                "dataType": "number",
+                "enumOptions": null,
+                "isRequired": true,
+                "sortOrder": 2
+            },
+            {
+                "name": "Examined physically",
+                "slug": "examined_physically",
+                "dataType": "number",
+                "enumOptions": null,
+                "isRequired": true,
+                "sortOrder": 3
+            },
+            {
+                "name": "Examined through VC",
+                "slug": "examined_through_vc",
+                "dataType": "number",
+                "enumOptions": null,
+                "isRequired": true,
+                "sortOrder": 4
+            }
+        ]
+    },
+    {
+        "name": "11. Deposition of private individuals (public)",
+        "slug": "deposition-private",
+        "description": "Deposition of private individuals (public) — aggregate counts per court per day",
+        "singleRow": true,
+        "sortOrder": 12,
+        "columns": [
+            {
+                "name": "Supposed to appear",
+                "slug": "supposed_to_appear",
+                "dataType": "number",
+                "enumOptions": null,
+                "isRequired": true,
+                "sortOrder": 0
+            },
+            {
+                "name": "Informed on phone",
+                "slug": "informed_on_phone",
+                "dataType": "number",
+                "enumOptions": null,
+                "isRequired": true,
+                "sortOrder": 1
+            },
+            {
+                "name": "Appeared physically",
+                "slug": "appeared_physically",
+                "dataType": "number",
+                "enumOptions": null,
+                "isRequired": true,
+                "sortOrder": 2
+            },
+            {
+                "name": "Examined physically",
+                "slug": "examined_physically",
+                "dataType": "number",
+                "enumOptions": null,
+                "isRequired": true,
+                "sortOrder": 3
+            },
+            {
+                "name": "Examined through VC",
+                "slug": "examined_through_vc",
+                "dataType": "number",
+                "enumOptions": null,
+                "isRequired": true,
+                "sortOrder": 4
+            }
+        ]
+    },
+    {
+        "name": "12. VC of prisoners",
         "slug": "vc-prisoners",
         "description": "VC of prisoners — aggregate counts per court per day",
         "singleRow": true,
-        "sortOrder": 11,
+        "sortOrder": 13,
         "columns": [
             {
                 "name": "Produced Physically",
@@ -637,11 +735,11 @@ module.exports = [
         ]
     },
     {
-        "name": "12. Test Identification Parade of accused persons conducted today",
+        "name": "13. TIPs conducted today",
         "slug": "tips-conducted",
         "description": "TIPs conducted today",
         "singleRow": false,
-        "sortOrder": 12,
+        "sortOrder": 14,
         "columns": [
             {
                 "name": "FIR Number",
@@ -678,11 +776,11 @@ module.exports = [
         ]
     },
     {
-        "name": "13. Pairvi for private witness",
+        "name": "14. Pairvi for private witness",
         "slug": "pairvi-witness",
         "description": "Pairvi for private witness — aggregate counts per court per day",
         "singleRow": true,
-        "sortOrder": 13,
+        "sortOrder": 15,
         "columns": [
             {
                 "name": "Witnesses Examined",
@@ -703,11 +801,11 @@ module.exports = [
         ]
     },
     {
-        "name": "14. Any Gangster/Notorious Criminal physically appearing in Court the next day",
+        "name": "15. Any Gangster/Notorious Criminal appearing in Court the next day",
         "slug": "gangster-next-day",
         "description": "Any Gangster/Notorious Criminal appearing in Court the next day",
         "singleRow": false,
-        "sortOrder": 14,
+        "sortOrder": 16,
         "columns": [
             {
                 "name": "Gangster & Gang Details",
@@ -771,11 +869,11 @@ module.exports = [
         ]
     },
     {
-        "name": "15. Any Crime against Property offender physically appearing in court the next day",
+        "name": "16. Any Crime against Property offender appearing in court the next day",
         "slug": "property-offender-next-day",
         "description": "Any Crime against Property offender appearing in court the next day",
         "singleRow": false,
-        "sortOrder": 15,
+        "sortOrder": 17,
         "columns": [
             {
                 "name": "Details of Accused",
@@ -839,11 +937,11 @@ module.exports = [
         ]
     },
     {
-        "name": "16. Fresh Bail Applications listed for tomorrow",
+        "name": "17. Fresh Bail Applications listed for tomorrow",
         "slug": "bail-applications-tomorrow",
         "description": "Bail Applications listed for tomorrow",
         "singleRow": false,
-        "sortOrder": 16,
+        "sortOrder": 18,
         "columns": [
             {
                 "name": "Name of Accused",
@@ -899,11 +997,11 @@ module.exports = [
         ]
     },
     {
-        "name": "17. NBW Arrest Warrants issued today",
+        "name": "18. NBW Arrest Warrants issued today",
         "slug": "nbw-arrest-warrants",
         "description": "NBW Arrest Warrants issued today",
         "singleRow": false,
-        "sortOrder": 17,
+        "sortOrder": 19,
         "columns": [
             {
                 "name": "Name of Accused",
@@ -952,6 +1050,129 @@ module.exports = [
                 "enumOptions": null,
                 "isRequired": true,
                 "sortOrder": 5
+            }
+        ]
+    },
+    {
+        "name": "19. List of the accused who surrendered in court",
+        "slug": "accused-surrendered",
+        "description": "List of the accused who surrendered in court",
+        "singleRow": false,
+        "sortOrder": 20,
+        "columns": [
+            {
+                "name": "Name of Accused",
+                "slug": "accused_name",
+                "dataType": "text",
+                "enumOptions": null,
+                "isRequired": true,
+                "sortOrder": 0
+            },
+            {
+                "name": "FIR No., Date & U/s",
+                "slug": "fir_details",
+                "dataType": "text",
+                "enumOptions": null,
+                "isRequired": true,
+                "sortOrder": 1
+            },
+            {
+                "name": "Police Station",
+                "slug": "police_station",
+                "dataType": "text",
+                "enumOptions": null,
+                "isRequired": true,
+                "sortOrder": 2
+            },
+            {
+                "name": "Status of Accused",
+                "slug": "status",
+                "dataType": "enum",
+                "enumOptions": [
+                    "Granted Regular Bail",
+                    "Sent to Judicial Custody",
+                    "Sent to Police Custody"
+                ],
+                "isRequired": true,
+                "sortOrder": 3
+            }
+        ]
+    },
+    {
+        "name": "20. Details of adverse order passed against police officials",
+        "slug": "adverse-order-police",
+        "description": "Details of adverse order passed against police officials",
+        "singleRow": false,
+        "sortOrder": 21,
+        "columns": [
+            {
+                "name": "Case Details",
+                "slug": "case_details",
+                "dataType": "text",
+                "enumOptions": null,
+                "isRequired": true,
+                "sortOrder": 0
+            },
+            {
+                "name": "Police Station (PS)",
+                "slug": "police_station",
+                "dataType": "text",
+                "enumOptions": null,
+                "isRequired": true,
+                "sortOrder": 1
+            },
+            {
+                "name": "Category",
+                "slug": "category",
+                "dataType": "enum",
+                "enumOptions": [
+                    "Arnesh Kumar Violation",
+                    "Ground of Arrest Violation (47 BNSS)",
+                    "Fail to submit replies",
+                    "Summon/Warrant report not submitted",
+                    "Unable to execute BW/NBW",
+                    "Detention for more than 24 Hrs",
+                    "Misbehaviour"
+                ],
+                "isRequired": true,
+                "sortOrder": 2
+            }
+        ]
+    },
+    {
+        "name": "21. Details of applications filed by police officials DISMISSED by the court",
+        "slug": "applications-dismissed",
+        "description": "Details of applications filed by police officials DISMISSED by the court",
+        "singleRow": false,
+        "sortOrder": 22,
+        "columns": [
+            {
+                "name": "Case Details",
+                "slug": "case_details",
+                "dataType": "text",
+                "enumOptions": null,
+                "isRequired": true,
+                "sortOrder": 0
+            },
+            {
+                "name": "Police Station (PS)",
+                "slug": "police_station",
+                "dataType": "text",
+                "enumOptions": null,
+                "isRequired": true,
+                "sortOrder": 1
+            },
+            {
+                "name": "Category",
+                "slug": "category",
+                "dataType": "enum",
+                "enumOptions": [
+                    "Bail Cancellation",
+                    "Disposal of case property",
+                    "Remand from judicial custody"
+                ],
+                "isRequired": true,
+                "sortOrder": 2
             }
         ]
     }

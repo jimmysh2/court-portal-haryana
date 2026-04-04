@@ -30,6 +30,7 @@ services:
     environment:
       NODE_ENV: production
       DATABASE_URL: postgresql://${DB_USER:-court_user}:${DB_PASSWORD:-changeme}@db:5432/${DB_NAME:-court_portal}?schema=public
+      DIRECT_URL: postgresql://${DB_USER:-court_user}:${DB_PASSWORD:-changeme}@db:5432/${DB_NAME:-court_portal}?schema=public
     volumes:
       - ./backups:/app/backups
       - ./uploads:/app/uploads
