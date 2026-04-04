@@ -107,7 +107,6 @@ function App() {
             <Route path="/district/alerts" element={<AlertsPage />} />
             <Route path="/district/grievances" element={<GrievancesPage />} />
             <Route path="/district/reports" element={<ReportsPage />} />
-            <Route path="/district/reports/ai-assistant" element={<AiAssistant />} />
             <Route path="/district/change-password" element={<ChangePassword />} />
           </Route>
 

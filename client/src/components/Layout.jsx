@@ -164,14 +164,14 @@ export default function Layout() {
                 </div>
 
                 <nav className="sidebar-nav">
-                    {config.sections.map((section) => (
-                        <div className="nav-section" key={section.label}>
+                    {config.sections.map((section, sIdx) => (
+                        <div className="nav-section" key={`section-${sIdx}`}>
                             <div className="nav-section-label">{section.label}</div>
-                            {section.items.map((item) => (
+                            {section.items.map((item, iIdx) => (
                                 <NavLink
-                                    key={item.to}
+                                    key={`nav-${sIdx}-${iIdx}`}
                                     to={item.to}
-                                    end={item.to === `/${user?.role === 'developer' ? 'dev' : user?.role?.replace('_', '-')}`}
+                                    end={item.to === '/dev' || item.to === '/state' || item.to === '/district' || item.to === '/naib/dashboard' || item.to === '/viewer'}
                                     className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
                                     onClick={() => setSidebarOpen(false)}
                                 >

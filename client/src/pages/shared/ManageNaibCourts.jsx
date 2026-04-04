@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { useLanguage } from '../../context/LanguageContext';
 import api from '../../utils/api';
 
 export default function ManageNaibCourts() {
+    const { t } = useLanguage();
     const { user } = useAuth();
     const [naibCourts, setNaibCourts] = useState([]);
     const [districts, setDistricts] = useState([]);
@@ -34,8 +36,10 @@ export default function ManageNaibCourts() {
                 if (!body.password) delete body.password;
                 delete body.username; // can't change username
                 await api.put(`/naib-courts/${editItem.id}`, body);
+                alert(t('tableUpdated'));
             } else {
                 await api.post('/naib-courts', body);
+                alert(t('tableCreated'));
             }
             setShowForm(false); setEditItem(null);
             setForm({ username: '', password: '', name: '', districtId: '', phone: '' });
@@ -53,7 +57,7 @@ export default function ManageNaibCourts() {
     };
 
     const handleDelete = async (id) => {
-        if (!confirm('Are you sure you want to delete this Naib Court?')) return;
+        if (!confirm(t('confirmDeleteNaibCourt'))) return;
         try {
             await api.delete(`/naib-courts/${id}`);
             load();
@@ -63,16 +67,16 @@ export default function ManageNaibCourts() {
     return (
         <div>
             <div className="page-header">
-                <h2>Manage Naib Courts</h2>
+                <h2>{t('manageNaibCourts')}</h2>
                 <button className="btn btn-primary" onClick={() => { setShowForm(true); setEditItem(null); setForm({ username: '', password: '', name: '', districtId: user.districtId || filterDistrict || '', phone: '' }); }}>
-                    + Add Naib Court
+                    + {t('addNaibCourt')}
                 </button>
             </div>
 
             {canTransfer && (
                 <div className="mb-xl">
                     <select className="form-select" style={{ maxWidth: 300 }} value={filterDistrict} onChange={e => setFilterDistrict(e.target.value)}>
-                        <option value="">All Districts</option>
+                        <option value="">{t('allDistricts')}</option>
                         {districts.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
                     </select>
                 </div>
@@ -80,39 +84,39 @@ export default function ManageNaibCourts() {
 
             {showForm && (
                 <div className="card mb-xl">
-                    <h3 className="card-title mb-lg">{editItem ? 'Edit' : 'Add'} Naib Court</h3>
+                    <h3 className="card-title mb-lg">{editItem ? t('editNaibCourt') : t('addNaibCourt')}</h3>
                     {error && <div className="form-error mb-lg">{error}</div>}
                     <form onSubmit={handleSubmit}>
                         <div className="form-row">
                             {!editItem && (
                                 <div className="form-group">
-                                    <label className="form-label">Username</label>
+                                    <label className="form-label">{t('username')}</label>
                                     <input className="form-input" value={form.username} onChange={e => setForm({ ...form, username: e.target.value })} required />
                                 </div>
                             )}
                             <div className="form-group">
-                                <label className="form-label">{editItem ? 'New Password (leave blank to keep)' : 'Password'}</label>
+                                <label className="form-label">{editItem ? t('newPasswordPlaceholder') : t('password')}</label>
                                 <input className="form-input" type="password" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} required={!editItem} />
                             </div>
                             <div className="form-group">
-                                <label className="form-label">Full Name</label>
+                                <label className="form-label">{t('fullName')}</label>
                                 <input className="form-input" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} required />
                             </div>
                             <div className="form-group">
-                                <label className="form-label">District</label>
+                                <label className="form-label">{t('district')}</label>
                                 <select className="form-select" value={form.districtId} onChange={e => setForm({ ...form, districtId: e.target.value })} required>
-                                    <option value="">Select District</option>
+                                    <option value="">{t('selectDistrict')}</option>
                                     {districts.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
                                 </select>
                             </div>
                             <div className="form-group">
-                                <label className="form-label">Phone</label>
+                                <label className="form-label">{t('phone')}</label>
                                 <input className="form-input" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} />
                             </div>
                         </div>
                         <div className="flex gap-md">
-                            <button className="btn btn-primary" type="submit">Save</button>
-                            <button className="btn btn-secondary" type="button" onClick={() => setShowForm(false)}>Cancel</button>
+                            <button className="btn btn-primary" type="submit">{t('save')}</button>
+                            <button className="btn btn-secondary" type="button" onClick={() => setShowForm(false)}>{t('cancel')}</button>
                         </div>
                     </form>
                 </div>
@@ -121,38 +125,41 @@ export default function ManageNaibCourts() {
             <div className="data-table-wrapper">
                 <table className="data-table">
                     <thead>
-                        <tr><th>S.No.</th><th>Username</th><th>Name</th><th>District</th><th>Last Court</th><th>Actions</th></tr>
+                        <tr><th>{t('serialNo')}</th><th>{t('username')}</th><th>{t('nameLabel')}</th><th>{t('district')}</th><th>{t('lastCourt')}</th><th>{t('actions')}</th></tr>
                     </thead>
                     <tbody>
                         {naibCourts.map((n, idx) => (
                             <tr key={n.id}>
-                                <td data-label="S.No.">{idx + 1}</td>
-                                <td data-label="Username">{n.username}</td>
-                                <td data-label="Name">{n.name}</td>
-                                <td data-label="District">{n.district?.name || '—'}</td>
-                                <td data-label="Last Court">{n.lastSelectedCourt?.name || <span className="text-muted">None</span>}</td>
-                                <td data-label="Actions">
+                                <td data-label={t('serialNo')}>{idx + 1}</td>
+                                <td data-label={t('username')}>{n.username}</td>
+                                <td data-label={t('fullName')}>{n.name}</td>
+                                <td data-label={t('district')}>{n.district?.name || '—'}</td>
+                                <td data-label={t('lastCourt')}>{n.lastSelectedCourt?.name || <span className="text-muted">{t('none')}</span>}</td>
+                                <td data-label={t('actions')}>
                                     <div className="flex gap-sm" style={{ flexWrap: 'wrap' }}>
-                                        <button className="btn btn-secondary btn-sm" onClick={() => { setEditItem(n); setForm({ username: n.username, password: '', name: n.name, districtId: n.districtId || '', phone: n.phone || '' }); setShowForm(true); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>Edit</button>
-                                        <button className="btn btn-danger btn-sm" onClick={() => handleDelete(n.id)}>Delete</button>
+                                        <button className="btn btn-secondary btn-sm" onClick={() => { setEditItem(n); setForm({ username: n.username, password: '', name: n.name, districtId: n.districtId || '', phone: n.phone || '' }); setShowForm(true); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>{t('edit')}</button>
+                                        <button className="btn btn-danger btn-sm" onClick={() => handleDelete(n.id)}>{t('delete')}</button>
                                         {canTransfer && (
                                             showTransfer === n.id ? (
                                                 <div className="flex gap-sm">
                                                     <select className="form-select" style={{ minWidth: 120 }} value={transferTo} onChange={e => setTransferTo(e.target.value)}>
-                                                        <option value="">To District...</option>
+                                                        <option value="">{t('toDistrict')}</option>
                                                         {districts.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
                                                     </select>
-                                                    <button className="btn btn-primary btn-sm" onClick={() => handleTransfer(n.id)} disabled={!transferTo}>Go</button>
+                                                    <button className="btn btn-primary btn-sm" onClick={() => handleTransfer(n.id)} disabled={!transferTo}>{t('go')}</button>
                                                     <button className="btn btn-secondary btn-sm" onClick={() => setShowTransfer(null)}>✕</button>
                                                 </div>
                                             ) : (
-                                                <button className="btn btn-secondary btn-sm" onClick={() => setShowTransfer(n.id)}>Transfer</button>
+                                                <button className="btn btn-secondary btn-sm" onClick={() => setShowTransfer(n.id)}>{t('transfer')}</button>
                                             )
                                         )}
                                     </div>
                                 </td>
                             </tr>
                         ))}
+                        {naibCourts.length === 0 && (
+                            <tr><td colSpan="6" className="text-center p-lg">{t('noEntries')}</td></tr>
+                        )}
                     </tbody>
                 </table>
             </div>
