@@ -467,6 +467,30 @@ async function main() {
     console.log(`  Courts    : ${courtsCreated} upserted, ${courtsDeleted} deleted`);
     console.log(`  Magistrates: ${magistratesCreated} created`);
     console.log(`  Naib Users: ${usersCreated} created/updated`);
+
+    // ─── Phase 6: Post-Seed Self-Healing (Reset Sequences) ────────────────────
+    console.log('\n📡 Phase 6: Resetting database sequences...');
+    const tablesRaw = await prisma.$queryRaw`
+        SELECT table_name 
+        FROM information_schema.tables 
+        WHERE table_schema = 'public' AND table_type = 'BASE TABLE'
+    `;
+
+    for (const { table_name } of tablesRaw) {
+        if (table_name.startsWith('_')) continue;
+        try {
+            await prisma.$executeRawUnsafe(`
+                SELECT setval(
+                    pg_get_serial_sequence('"${table_name}"', 'id'), 
+                    COALESCE(MAX(id), 1)
+                ) FROM "${table_name}"
+            `);
+        } catch (err) {
+            // Ignore tables without an 'id' column or sequence
+        }
+    }
+    console.log('✅ Sequences reset successfully.');
+
     console.log('\n✅ Seeding completed successfully!');
 }
 
