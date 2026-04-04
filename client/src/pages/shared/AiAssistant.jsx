@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { useLanguage } from '../../context/LanguageContext';
 import api from '../../utils/api';
 
 // ── Unique conversation ID per session ──
@@ -7,6 +8,7 @@ const SESSION_ID = crypto.randomUUID();
 
 export default function AiAssistant() {
     const { user } = useAuth();
+    const { t, lang } = useLanguage();
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState('');
     const [loading, setLoading] = useState(false);
@@ -22,7 +24,14 @@ export default function AiAssistant() {
     useEffect(() => { scrollToBottom(); }, [messages, loading]);
 
     // ── Suggestions for the welcome screen ──
-    const suggestions = [
+    const suggestions = lang === 'hi' ? [
+        "मुझे घोषित पीओ, पीपी और बीजे की सूची दिखाएं, जो पुलिस स्टेशन द्वारा समूहीकृत हो।",
+        "इस महीने 156(3) CrPC के तहत पंजीकृत प्राथमिकी (FIR) का विवरण क्या है?",
+        "सभी जिलों में आज जारी किए गए सभी एनबीडब्ल्यू (NBW) गिरफ्तारी वारंट की सूची दिखाएं।",
+        "कुल संपत्ति मूल्य सहित 85/107 BNSS के तहत कुर्क की गई संपत्ति का विवरण दिखाएं।",
+        "पुलिस अधिकारियों के बयान का सारांश दिखाएं, जिसमें यह दिखाया गया हो कि किसने शारीरिक रूप से गवाही दी और कौन अनुपस्थित रहा।",
+        "कल अदालत में कौन से गैंगस्टर या कुख्यात अपराधी पेश हो रहे हैं?"
+    ] : [
         "Show me the list of declared POs, PPs, and BJs, grouped by police station.",
         "What are the details of FIRs registered under 156(3) CrPC this month?",
         "List all NBW arrest warrants issued today across all districts.",
@@ -49,7 +58,7 @@ export default function AiAssistant() {
 
             const aiMsg = {
                 role: 'assistant',
-                content: res.explanation || res.text || 'No response received.',
+                content: res.explanation || res.text || (lang === 'hi' ? 'कोई प्रतिक्रिया प्राप्त नहीं हुई।' : 'No response received.'),
                 sql: res.sql || null,
                 data: res.data || res.results || null,
                 visualization: res.visualization || 'none',
@@ -60,13 +69,13 @@ export default function AiAssistant() {
         } catch (err) {
             setMessages(prev => [...prev, {
                 role: 'assistant',
-                content: 'Sorry, something went wrong. Please try again.',
+                content: lang === 'hi' ? 'क्षमा करें, कुछ गलत हो गया। कृपया पुन: प्रयास करें।' : 'Sorry, something went wrong. Please try again.',
                 visualization: 'none'
             }]);
         } finally {
             setLoading(false);
         }
-    }, [input, loading]);
+    }, [input, loading, lang]);
 
     // ── Voice recording: click to start, click to stop ──
     const toggleRecording = async () => {
@@ -83,7 +92,7 @@ export default function AiAssistant() {
             recorder.ondataavailable = (e) => audioChunksRef.current.push(e.data);
             recorder.onstop = async () => {
                 const blob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-                stream.getTracks().forEach(t => t.stop());
+                stream.getTracks().forEach(t_track => t_track.stop());
                 setLoading(true);
                 try {
                     const formData = new FormData();
@@ -143,7 +152,7 @@ export default function AiAssistant() {
     const exportPDF = (data, title, idx) => {
         setExportOpen(null);
         const { jsPDF } = window.jspdf || {};
-        if (!jsPDF) { alert('PDF library not loaded yet. Please wait a moment and try again.'); return; }
+        if (!jsPDF) { alert(t('pdfLibraryNotLoaded') || 'PDF library not loaded yet.'); return; }
         const doc = new jsPDF({ orientation: data[0] && Object.keys(data[0]).length > 5 ? 'landscape' : 'portrait' });
         const label = title || `AI Query Result ${idx + 1}`;
         doc.setFontSize(14);
@@ -169,9 +178,9 @@ export default function AiAssistant() {
     const renderWelcome = () => (
         <div style={styles.welcomeContainer}>
             <div style={styles.welcomeIcon}>🏛️</div>
-            <h2 style={styles.welcomeTitle}>Court Data Intelligence</h2>
+            <h2 style={styles.welcomeTitle}>{t('aiAssistantTitle')}</h2>
             <p style={styles.welcomeSubtitle}>
-                Ask me anything about your court data — I'll query, analyze, and visualize it for you.
+                {t('aiAssistantSubtitle')}
             </p>
             <div style={styles.suggestionsGrid}>
                 {suggestions.map((s, i) => (
@@ -208,9 +217,9 @@ export default function AiAssistant() {
                                     {m.sql && (
                                         <div style={styles.sqlBlock}>
                                             <div style={styles.sqlHeader}>
-                                                <span style={styles.sqlLabel}>SQL Query</span>
+                                                <span style={styles.sqlLabel}>{t('sqlQuery')}</span>
                                                 <button onClick={() => copySql(m.sql, i)} style={styles.copyBtn}>
-                                                    {sqlCopied === i ? '✅ Copied' : '📋 Copy'}
+                                                    {sqlCopied === i ? '✅ ' + (lang === 'hi' ? 'कॉपी किया गया' : 'Copied') : '📋 ' + (lang === 'hi' ? 'कॉपी करें' : 'Copy')}
                                                 </button>
                                             </div>
                                             <pre style={styles.sqlCode}>{m.sql}</pre>
@@ -224,6 +233,7 @@ export default function AiAssistant() {
                                                 data={m.data}
                                                 visualization={m.visualization}
                                                 chartConfig={m.chart_config}
+                                                t={t}
                                             />
                                             {/* Export button */}
                                             <div style={styles.exportWrapper}>
@@ -232,7 +242,7 @@ export default function AiAssistant() {
                                                     style={styles.exportBtn}
                                                     title="Export data"
                                                 >
-                                                    ↓ Export
+                                                    ↓ {lang === 'hi' ? 'निर्यात' : 'Export'}
                                                 </button>
                                                 {exportOpen === i && (
                                                     <div style={styles.exportDropdown}>
@@ -242,7 +252,7 @@ export default function AiAssistant() {
                                                             onMouseOver={e => e.currentTarget.style.background = 'rgba(99,102,241,0.15)'}
                                                             onMouseOut={e => e.currentTarget.style.background = 'transparent'}
                                                         >
-                                                            <span>📊</span> Export to Excel
+                                                            <span>📊</span> {t('exportExcel')}
                                                         </button>
                                                         <button
                                                             style={styles.exportOption}
@@ -250,7 +260,7 @@ export default function AiAssistant() {
                                                             onMouseOver={e => e.currentTarget.style.background = 'rgba(99,102,241,0.15)'}
                                                             onMouseOut={e => e.currentTarget.style.background = 'transparent'}
                                                         >
-                                                            <span>📄</span> Export to PDF
+                                                            <span>📄</span> {t('exportToPDF')}
                                                         </button>
                                                     </div>
                                                 )}
@@ -268,7 +278,7 @@ export default function AiAssistant() {
                         <div style={styles.aiAvatar}>AI</div>
                         <div style={styles.loadingBubble}>
                             <div style={styles.dotPulse}><span /><span /><span /></div>
-                            <span style={{ marginLeft: '12px', color: 'var(--color-text-secondary)' }}>Analyzing...</span>
+                            <span style={{ marginLeft: '12px', color: 'var(--color-text-secondary)' }}>{t('analyzing')}</span>
                         </div>
                     </div>
                 )}
@@ -292,7 +302,7 @@ export default function AiAssistant() {
                     value={input}
                     onChange={e => setInput(e.target.value)}
                     onKeyDown={e => e.key === 'Enter' && !e.shiftKey && handleSend()}
-                    placeholder={isRecording ? '🎧 Listening...' : 'Ask about courts, FIRs, districts, trends...'}
+                    placeholder={isRecording ? (lang === 'hi' ? '🎧 सुन रहा हूँ...' : '🎧 Listening...') : (lang === 'hi' ? 'अदालतों, प्राथमिकी, जिलों, प्रवृत्तियों के बारे में पूछें...' : 'Ask about courts, FIRs, districts, trends...')}
                     disabled={loading}
                 />
 
@@ -327,7 +337,7 @@ export default function AiAssistant() {
 // ═══════════════════════════════════════════════════════════
 // ── Visualization Renderer ──
 // ═══════════════════════════════════════════════════════════
-function VisualizationRenderer({ data, visualization, chartConfig }) {
+function VisualizationRenderer({ data, visualization, chartConfig, t }) {
     if (!data || data.length === 0) return null;
 
     switch (visualization) {
@@ -340,14 +350,14 @@ function VisualizationRenderer({ data, visualization, chartConfig }) {
         case 'line_chart':
             return <ChartViz data={data} type="line" config={chartConfig} />;
         case 'table':
-            return <DataTable data={data} />;
+            return <DataTable data={data} t={t} />;
         case 'map':
             return <MapViz data={data} />;
         default:
             if (data.length === 1 && Object.keys(data[0]).length <= 2) {
                 return <StatCard data={data} config={chartConfig} />;
             }
-            return <DataTable data={data} />;
+            return <DataTable data={data} t={t} />;
     }
 }
 
@@ -367,7 +377,7 @@ function StatCard({ data, config }) {
 }
 
 // ── Data Table ──
-function DataTable({ data }) {
+function DataTable({ data, t }) {
     const keys = Object.keys(data[0]);
     return (
         <div style={styles.tableWrapper}>
@@ -375,7 +385,7 @@ function DataTable({ data }) {
                 <table style={styles.table}>
                     <thead>
                         <tr>
-                            <th style={{ ...styles.th, width: '50px', textAlign: 'center' }}>S.No</th>
+                            <th style={{ ...styles.th, width: '50px', textAlign: 'center' }}>{t('serialNo')}</th>
                             {keys.map(k => (
                                 <th key={k} style={styles.th}>{k.replace(/_/g, ' ').toUpperCase()}</th>
                             ))}
@@ -396,7 +406,7 @@ function DataTable({ data }) {
             <div style={styles.tableNote}>
                 {data.length > 100 
                     ? `Showing first 100 of ${data.length} total rows` 
-                    : `Total Rows: ${data.length}`}
+                    : `${t('totalTables') || 'Total'}: ${data.length}`}
             </div>
         </div>
     );

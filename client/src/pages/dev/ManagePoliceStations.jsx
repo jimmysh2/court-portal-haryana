@@ -29,7 +29,7 @@ export default function ManagePoliceStations() {
             setDistrict(d.district);
         } catch (err) {
             console.error('Failed to load district:', err);
-            setError('District not found');
+            setError(t('districtNotFound'));
         }
     };
 
@@ -56,10 +56,10 @@ export default function ManagePoliceStations() {
         try {
             if (editItem) {
                 await api.put(`/districts/${districtId}/police-stations/${editItem.id}`, form);
-                alert('Police station updated successfully');
+                alert(t('tableUpdated'));
             } else {
                 await api.post(`/districts/${districtId}/police-stations`, form);
-                alert('Police station added successfully');
+                alert(t('tableCreated'));
             }
             setShowForm(false);
             setEditItem(null);
@@ -78,7 +78,7 @@ export default function ManagePoliceStations() {
     };
 
     const handleDelete = async (id) => {
-        if (!confirm('Are you sure you want to delete this police station?')) return;
+        if (!confirm(t('confirmDeletePoliceStation'))) return;
         try {
             await api.delete(`/districts/${districtId}/police-stations/${id}`);
             loadStations();
@@ -87,7 +87,7 @@ export default function ManagePoliceStations() {
         }
     };
 
-    if (loading && !district) return <div className="text-center p-xl">Loading...</div>;
+    if (loading && !district) return <div className="text-center p-xl">{t('loading')}</div>;
 
     return (
         <div>
@@ -95,40 +95,40 @@ export default function ManagePoliceStations() {
                 <div>
                     {!isReadOnly && (
                         <button className="btn btn-secondary btn-sm mb-sm" onClick={() => navigate(`/${user?.role === 'developer' ? 'dev' : 'state'}/districts`)}>
-                            ← Back to Districts
+                            ← {t('backToDistricts')}
                         </button>
                     )}
-                    <h2>🚔 {isReadOnly ? t('policeStations') : 'Manage Police Stations'}: {district?.name}</h2>
+                    <h2>🚔 {isReadOnly ? t('policeStations') : t('managePoliceStations')}: {district?.name}</h2>
                 </div>
                 {!isReadOnly && (
                     <button 
                         className="btn btn-primary" 
                         onClick={() => { setShowForm(true); setEditItem(null); setForm({ name: '' }); }}
                     >
-                        + Add Police Station
+                        + {t('addPoliceStation')}
                     </button>
                 )}
             </div>
 
             {showForm && !isReadOnly && (
                 <div className="card mb-xl">
-                    <h3 className="card-title mb-lg">{editItem ? 'Edit Police Station' : 'Add Police Station'}</h3>
+                    <h3 className="card-title mb-lg">{editItem ? t('editPoliceStation') : t('addPoliceStation')}</h3>
                     {error && <div className="form-error mb-lg">{error}</div>}
                     <form onSubmit={handleSubmit}>
                         <div className="form-group">
-                            <label className="form-label">Police Station Name</label>
+                            <label className="form-label">{t('policeStationName')}</label>
                             <input 
                                 className="form-input" 
                                 value={form.name} 
                                 onChange={e => setForm({ ...form, name: e.target.value })} 
-                                placeholder="e.g. PS Civil Lines" 
+                                placeholder={t('policeStationPlaceholder')} 
                                 required 
                             />
                         </div>
                         <div className="flex gap-md">
-                            <button className="btn btn-primary" type="submit">Save</button>
+                            <button className="btn btn-primary" type="submit">{t('save')}</button>
                             <button className="btn btn-secondary" type="button" onClick={() => { setShowForm(false); setEditItem(null); }}>
-                                Cancel
+                                {t('cancel')}
                             </button>
                         </div>
                     </form>
@@ -140,21 +140,21 @@ export default function ManagePoliceStations() {
                     <table className="data-table">
                         <thead>
                             <tr>
-                                <th style={{ width: '80px' }}>S.No</th>
-                                <th>Police Station Name</th>
-                                {!isReadOnly && <th style={{ width: '200px' }}>Actions</th>}
+                                <th style={{ width: '80px' }}>{t('serialNo')}</th>
+                                <th>{t('policeStationName')}</th>
+                                {!isReadOnly && <th style={{ width: '200px' }}>{t('actions')}</th>}
                             </tr>
                         </thead>
                         <tbody>
                             {policeStations.map((ps, idx) => (
                                 <tr key={ps.id}>
-                                    <td data-label="S.No">{idx + 1}</td>
-                                    <td data-label="Name">{ps.name}</td>
+                                    <td data-label={t('serialNo')}>{idx + 1}</td>
+                                    <td data-label={t('nameLabel')}>{ps.name}</td>
                                     {!isReadOnly && (
-                                        <td data-label="Actions">
+                                        <td data-label={t('actions')}>
                                             <div className="flex gap-sm">
-                                                <button className="btn btn-secondary btn-sm" onClick={() => handleEdit(ps)}>Edit</button>
-                                                <button className="btn btn-danger btn-sm" onClick={() => handleDelete(ps.id)}>Delete</button>
+                                                <button className="btn btn-secondary btn-sm" onClick={() => handleEdit(ps)}>{t('edit')}</button>
+                                                <button className="btn btn-danger btn-sm" onClick={() => handleDelete(ps.id)}>{t('delete')}</button>
                                             </div>
                                         </td>
                                     )}
@@ -162,7 +162,7 @@ export default function ManagePoliceStations() {
                             ))}
                             {policeStations.length === 0 && !loading && (
                                 <tr>
-                                    <td colSpan={isReadOnly ? 2 : 3} className="text-center text-muted">No police stations found for this district.</td>
+                                    <td colSpan={isReadOnly ? 2 : 3} className="text-center text-muted p-lg">{t('noEntries')}</td>
                                 </tr>
                             )}
                         </tbody>

@@ -157,13 +157,14 @@ export default function GrievancesPage() {
 
     const statusBadge = (status) => {
         const map = { 
-            open: 'badge-warning', 
-            in_progress: 'badge-primary', 
-            escalated: 'badge-danger', 
-            resolved: 'badge-success',
-            cancelled: 'badge-secondary'
+            open: { class: 'badge-warning', label: t('open') || 'OPEN' }, 
+            in_progress: { class: 'badge-primary', label: t('inProgress') || 'IN PROGRESS' }, 
+            escalated: { class: 'badge-danger', label: t('escalated') || 'ESCALATED' }, 
+            resolved: { class: 'badge-success', label: t('resolved') || 'RESOLVED' },
+            cancelled: { class: 'badge-secondary', label: t('cancelled') || 'CANCELLED' }
         };
-        return <span className={`badge ${map[status] || 'badge-secondary'}`}>{status.replace('_', ' ')}</span>;
+        const config = map[status] || { class: 'badge-secondary', label: status };
+        return <span className={`badge ${config.class}`}>{config.label}</span>;
     };
 
     const filteredGrievances = grievances.filter(g => {
@@ -184,15 +185,15 @@ export default function GrievancesPage() {
                     {error && <div className="form-error mb-lg">{error}</div>}
                     <form onSubmit={handleSubmit}>
                         <div className="form-group">
-                            <label className="form-label">{t('subject') || 'Subject'}</label>
+                            <label className="form-label">{t('subject')}</label>
                             <input className="form-input" value={form.subject} onChange={e => setForm({ ...form, subject: e.target.value })} required />
                         </div>
                         <div className="form-group">
-                            <label className="form-label">{t('description') || 'Description'}</label>
+                            <label className="form-label">{t('description')}</label>
                             <textarea className="form-textarea" rows={4} value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} required />
                         </div>
                         <div className="form-group">
-                            <label className="form-label">Attachments (Images/PDFs only, Max 5 files, 10MB each)</label>
+                            <label className="form-label">{t('attachments')} (Images/PDFs only, Max 5 files, 10MB each)</label>
                             <input 
                                 type="file" 
                                 className="form-input" 
@@ -249,7 +250,7 @@ export default function GrievancesPage() {
                             <div style={{ flex: '1 1 200px', minWidth: 0 }}>
                                 <div style={{ fontWeight: 600, wordBreak: 'break-word' }}>{g.subject}</div>
                                 <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-muted)', marginTop: '4px', wordBreak: 'break-word' }}>
-                                    By {g.raisedByUser?.name} • {g.district?.name || 'State level'} • {new Date(g.createdAt).toLocaleDateString('en-IN')}
+                                    By {g.raisedByUser?.name} • {g.district?.name || t('stateLevel')} • {new Date(g.createdAt).toLocaleDateString('en-IN')}
                                 </div>
                             </div>
                             <div className="flex gap-sm" style={{ flexWrap: 'wrap' }}>
@@ -265,13 +266,12 @@ export default function GrievancesPage() {
                                 {/* Attachments */}
                                 {g.attachments?.length > 0 && (
                                     <div style={{ marginBottom: 'var(--space-lg)' }}>
-                                        <h4 style={{ fontSize: 'var(--font-size-sm)', marginBottom: 'var(--space-sm)' }}>Attachments</h4>
+                                        <h4 style={{ fontSize: 'var(--font-size-sm)', marginBottom: 'var(--space-sm)' }}>{t('attachments')}</h4>
                                         <div className="flex gap-md flex-wrap">
                                             {g.attachments.map(att => (
                                                 <a 
                                                     key={att.id} 
                                                     href={`${(import.meta.env.VITE_API_URL || '').replace(/\/api\/v1\/?$/, '')}${att.filePath}`} 
-
                                                     target="_blank" 
                                                     rel="noreferrer"
                                                     style={{ 
@@ -335,7 +335,7 @@ export default function GrievancesPage() {
                                 {['resolved', 'cancelled'].indexOf(g.status) === -1 && (
                                     <div className="mb-lg" style={{ background: 'var(--color-bg)', padding: 'var(--space-md)', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)' }}>
                                         <div className="flex gap-md mb-sm">
-                                            <input className="form-input" style={{ flex: 1, minWidth: 0 }} placeholder="Type your comment..." value={activeGrievance === g.id ? commentText : ''} onChange={e => setCommentText(e.target.value)} />
+                                            <input className="form-input" style={{ flex: 1, minWidth: 0 }} placeholder={t('commentPlaceholder') || 'Type your comment...'} value={activeGrievance === g.id ? commentText : ''} onChange={e => setCommentText(e.target.value)} />
                                         </div>
                                         <div className="flex gap-md" style={{ alignItems: 'flex-start', justifyContent: 'space-between' }}>
                                             <div style={{ flex: 1 }}>
@@ -364,7 +364,7 @@ export default function GrievancesPage() {
                                                     </ul>
                                                 )}
                                             </div>
-                                            <button className="btn btn-primary" onClick={() => handleComment(g.id)}>Send / Submit</button>
+                                            <button className="btn btn-primary" onClick={() => handleComment(g.id)}>{t('submit')}</button>
                                         </div>
                                     </div>
                                 )}
@@ -378,34 +378,34 @@ export default function GrievancesPage() {
                                             {['developer', 'state_admin', 'district_admin'].includes(user.role) && (
                                                 <>
                                                     {/* District admin can escalate district level to state */}
-                                                    {user.role === 'district_admin' && g.currentLevel === 'district' && <button className="btn btn-secondary btn-sm" onClick={() => handleEscalate(g.id)}>⬆️ Escalate to State</button>}
+                                                    {user.role === 'district_admin' && g.currentLevel === 'district' && <button className="btn btn-secondary btn-sm" onClick={() => handleEscalate(g.id)}>⬆️ {t('escalateToState')}</button>}
                                                     {/* State admin can escalate state level to developer */}
-                                                    {user.role === 'state_admin' && g.currentLevel === 'state' && <button className="btn btn-secondary btn-sm" onClick={() => handleEscalate(g.id)}>⬆️ Escalate to Developer</button>}
+                                                    {user.role === 'state_admin' && g.currentLevel === 'state' && <button className="btn btn-secondary btn-sm" onClick={() => handleEscalate(g.id)}>⬆️ {t('escalateToDeveloper')}</button>}
                                                     {/* Developer can escalate district to state, or state to developer */}
-                                                    {user.role === 'developer' && g.currentLevel !== 'developer' && <button className="btn btn-secondary btn-sm" onClick={() => handleEscalate(g.id)}>⬆️ Escalate</button>}
+                                                    {user.role === 'developer' && g.currentLevel !== 'developer' && <button className="btn btn-secondary btn-sm" onClick={() => handleEscalate(g.id)}>⬆️ {t('escalate')}</button>}
 
                                                     {/* De-escalate logic */}
-                                                    {user.role === 'state_admin' && g.currentLevel === 'developer' && <button className="btn btn-secondary btn-sm" onClick={() => handleDeEscalate(g.id)}>⬇️ Pull Back to State</button>}
-                                                    {user.role === 'district_admin' && g.currentLevel === 'state' && <button className="btn btn-secondary btn-sm" onClick={() => handleDeEscalate(g.id)}>⬇️ Pull Back to District</button>}
-                                                    {user.role === 'developer' && g.currentLevel !== 'district' && <button className="btn btn-secondary btn-sm" onClick={() => handleDeEscalate(g.id)}>⬇️ De-escalate</button>}
+                                                    {user.role === 'state_admin' && g.currentLevel === 'developer' && <button className="btn btn-secondary btn-sm" onClick={() => handleDeEscalate(g.id)}>⬇️ {t('pullBackToState')}</button>}
+                                                    {user.role === 'district_admin' && g.currentLevel === 'state' && <button className="btn btn-secondary btn-sm" onClick={() => handleDeEscalate(g.id)}>⬇️ {t('pullBackToDistrict')}</button>}
+                                                    {user.role === 'developer' && g.currentLevel !== 'district' && <button className="btn btn-secondary btn-sm" onClick={() => handleDeEscalate(g.id)}>⬇️ {t('deEscalate')}</button>}
 
                                                     {/* Resolve - restricted by level? (usually anyone handling should be able to resolve) */}
                                                     {/* If it's at their level, they can resolve */}
                                                     {((user.role === 'district_admin' && g.currentLevel === 'district') || 
                                                      (user.role === 'state_admin' && g.currentLevel === 'state') || 
                                                      (user.role === 'developer')) && (
-                                                        <button className="btn btn-primary btn-sm" onClick={() => handleResolve(g.id)}>✅ Resolve</button>
+                                                        <button className="btn btn-primary btn-sm" onClick={() => handleResolve(g.id)}>✅ {t('resolve')}</button>
                                                     )}
                                                 </>
                                             )}
                                             
                                             {/* Cancel only for owner */}
-                                            {isOwner(g) && <button className="btn btn-danger btn-sm" onClick={() => handleCancel(g.id)}>🚫 Cancel Ticket</button>}
+                                            {isOwner(g) && <button className="btn btn-danger btn-sm" onClick={() => handleCancel(g.id)}>🚫 {t('cancelTicket')}</button>}
                                         </>
                                     ) : (
                                         <>
                                             {/* Closed tab - only owner can reopen */}
-                                            {isOwner(g) && <button className="btn btn-secondary btn-sm" onClick={() => handleReopen(g.id)}>🔄 Reopen Ticket</button>}
+                                            {isOwner(g) && <button className="btn btn-secondary btn-sm" onClick={() => handleReopen(g.id)}>🔄 {t('reopenTicket')}</button>}
                                         </>
                                     )}
                                 </div>
@@ -417,8 +417,8 @@ export default function GrievancesPage() {
                 {filteredGrievances.length === 0 && (
                     <div className="empty-state">
                         <div className="icon">🎫</div>
-                        <h3>No {activeTab} tickets</h3>
-                        <p>{activeTab === 'open' ? 'Everything is clear!' : 'No closed tickets found.'}</p>
+                        <h3>{t('noTickets') || 'No tickets'}</h3>
+                        <p>{activeTab === 'open' ? t('everythingClear') : t('noClosedTickets')}</p>
                     </div>
                 )}
             </div>

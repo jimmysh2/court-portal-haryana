@@ -97,7 +97,7 @@ export default function ManageDistricts() {
                                 <td data-label={t('actions')}>
                                     <div className="flex gap-sm">
                                         <button className="btn btn-secondary btn-sm" onClick={() => navigate(`/${user?.role === 'developer' ? 'dev' : 'state'}/districts/${d.id}/police-stations`)}>
-                                            🏢 Stations
+                                            🏢 {t('stations')}
                                         </button>
                                         <button className="btn btn-secondary btn-sm" onClick={() => handleEdit(d)}>{t('edit')}</button>
                                         <button className="btn btn-danger btn-sm" onClick={() => handleDelete(d.id)}>{t('delete')}</button>

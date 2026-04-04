@@ -109,8 +109,8 @@ export default function ManageMagistrates() {
                             </div>
                             <div className="form-group">
                                 <label className="form-label">{t('district')}</label>
-                                <select className="form-select" value={form.districtId} onChange={e => setForm({ ...form, districtId: e.target.value })}>
-                                    <option value="">{t('noDistrict')}</option>
+                                <select className="form-select" value={form.districtId} onChange={e => setForm({ ...form, districtId: e.target.value })} required>
+                                    <option value="">{t('selectDistrict')}</option>
                                     {districts.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
                                 </select>
                             </div>
