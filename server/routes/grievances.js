@@ -4,16 +4,27 @@ const { authenticate, requireRole } = require('../middleware/auth');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-const { uploadFile } = require('../services/supabaseStorage');
 
 const router = express.Router();
 
-// Storage is now handled by Supabase in memory, no local directory needed.
-// (Local directory creation is disabled for Vercel compatibility)
+// Ensure upload directory exists
+const uploadDir = path.join(__dirname, '..', '..', 'uploads', 'grievances');
+if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+}
 
-// Configure multer for memory storage
-const upload = multer({
-    storage: multer.memoryStorage(),
+// Configure multer storage
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, uploadDir);
+    },
+    filename: (req, file, cb) => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, uniqueSuffix + path.extname(file.originalname));
+    }
+});
+const upload = multer({ 
+    storage,
     limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit per file
     fileFilter: (req, file, cb) => {
         // Accept images and pdfs
@@ -70,18 +81,12 @@ router.post('/', authenticate, upload.array('files', 5), async (req, res, next) 
         if (req.user.role === 'district_admin') currentLevel = 'state';
         if (req.user.role === 'state_admin' || req.user.role === 'developer') currentLevel = 'developer';
 
-        const attachmentData = [];
-        if (req.files && req.files.length > 0) {
-            for (const file of req.files) {
-                const uploaded = await uploadFile(file, `grievances/${req.user.id}`);
-                attachmentData.push({
-                    fileName: uploaded.name,
-                    filePath: uploaded.path, // Store Public URL here
-                    mimeType: uploaded.mimeType,
-                    fileSize: uploaded.size,
-                });
-            }
-        }
+        const attachmentData = req.files ? req.files.map(file => ({
+            fileName: file.originalname,
+            filePath: `/uploads/grievances/${file.filename}`,
+            mimeType: file.mimetype,
+            fileSize: file.size,
+        })) : [];
 
         const grievance = await prisma.grievance.create({
             data: {
@@ -129,14 +134,14 @@ router.put('/:id', authenticate, async (req, res, next) => {
     try {
         const { status, assignedTo } = req.body;
         const grievanceId = parseInt(req.params.id);
-
+        
         const existing = await prisma.grievance.findUnique({ where: { id: grievanceId } });
         if (!existing) return res.status(404).json({ error: 'Grievance not found' });
 
         // Basic permission check: only admins or creator
         const isAdmin = ['developer', 'state_admin', 'district_admin'].includes(req.user.role);
         const isOwner = existing.raisedBy === req.user.id;
-
+        
         if (!isAdmin && !isOwner) {
             return res.status(403).json({ error: 'Forbidden' });
         }
@@ -172,19 +177,13 @@ router.post('/:id/comments', authenticate, upload.array('files', 5), async (req,
 
         if (!grievance) return res.status(404).json({ error: 'Grievance not found' });
 
-        const attachmentData = [];
-        if (req.files && req.files.length > 0) {
-            for (const file of req.files) {
-                const uploaded = await uploadFile(file, `grievances/comments/${req.user.id}`);
-                attachmentData.push({
-                    grievanceId,
-                    fileName: uploaded.name,
-                    filePath: uploaded.path, // Store Public URL here
-                    mimeType: uploaded.mimeType,
-                    fileSize: uploaded.size,
-                });
-            }
-        }
+        const attachmentData = req.files ? req.files.map(file => ({
+            grievanceId,
+            fileName: file.originalname,
+            filePath: `/uploads/grievances/${file.filename}`,
+            mimeType: file.mimetype,
+            fileSize: file.size,
+        })) : [];
 
         const comment = await prisma.grievanceComment.create({
             data: {
@@ -195,7 +194,7 @@ router.post('/:id/comments', authenticate, upload.array('files', 5), async (req,
                     create: attachmentData
                 }
             },
-            include: {
+            include: { 
                 user: { select: { id: true, name: true, role: true } },
                 attachments: true
             },
@@ -216,7 +215,7 @@ router.post('/:id/comments', authenticate, upload.array('files', 5), async (req,
         });
 
         const userIdsToAlert = new Set();
-
+        
         // 1. Notify the original complainant
         if (grievance.raisedBy !== req.user.id) {
             userIdsToAlert.add(grievance.raisedBy);
@@ -225,7 +224,7 @@ router.post('/:id/comments', authenticate, upload.array('files', 5), async (req,
         // 2. Notify the chain
         chainUsers.forEach(u => {
             if (u.id === req.user.id) return; // exclude commenter
-
+            
             if (u.role === 'district_admin') {
                 if (u.districtId === grievance.districtId) {
                     userIdsToAlert.add(u.id);
@@ -352,7 +351,7 @@ router.post('/:id/cancel', authenticate, async (req, res, next) => {
     try {
         const grievanceId = parseInt(req.params.id);
         const grievance = await prisma.grievance.findUnique({ where: { id: grievanceId } });
-
+        
         if (!grievance) return res.status(404).json({ error: 'Grievance not found' });
         if (grievance.raisedBy !== req.user.id) return res.status(403).json({ error: 'Only the creator can cancel a ticket' });
 
@@ -369,7 +368,7 @@ router.post('/:id/reopen', authenticate, async (req, res, next) => {
     try {
         const grievanceId = parseInt(req.params.id);
         const grievance = await prisma.grievance.findUnique({ where: { id: grievanceId } });
-
+        
         if (!grievance) return res.status(404).json({ error: 'Grievance not found' });
         if (grievance.raisedBy !== req.user.id) return res.status(403).json({ error: 'Only the creator can reopen a ticket' });
 
@@ -378,6 +377,22 @@ router.post('/:id/reopen', authenticate, async (req, res, next) => {
             data: { status: 'open', resolvedAt: null },
         });
         res.json({ grievance: updated });
+    } catch (err) { next(err); }
+});
+
+// DELETE /api/v1/grievances/comments/:commentId
+router.delete('/comments/:commentId', authenticate, requireRole('developer'), async (req, res, next) => {
+    try {
+        const commentId = parseInt(req.params.commentId);
+        const comment = await prisma.grievanceComment.findUnique({ where: { id: commentId } });
+        
+        if (!comment) return res.status(404).json({ error: 'Comment not found' });
+
+        await prisma.grievanceComment.delete({
+            where: { id: commentId }
+        });
+        
+        res.json({ message: 'Comment deleted successfully' });
     } catch (err) { next(err); }
 });
 
