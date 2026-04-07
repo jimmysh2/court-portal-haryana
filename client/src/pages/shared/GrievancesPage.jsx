@@ -95,7 +95,7 @@ export default function GrievancesPage() {
             const formData = new FormData();
             if (commentText.trim()) formData.append('body', commentText);
             else formData.append('body', 'Attached file(s)'); // Fallback if only sending file
-            
+
             commentFiles.forEach(file => {
                 formData.append('files', file);
             });
@@ -164,10 +164,10 @@ export default function GrievancesPage() {
     };
 
     const statusBadge = (status) => {
-        const map = { 
-            open: 'badge-warning', 
-            in_progress: 'badge-primary', 
-            escalated: 'badge-danger', 
+        const map = {
+            open: 'badge-warning',
+            in_progress: 'badge-primary',
+            escalated: 'badge-danger',
             resolved: 'badge-success',
             cancelled: 'badge-secondary'
         };
@@ -201,10 +201,10 @@ export default function GrievancesPage() {
                         </div>
                         <div className="form-group">
                             <label className="form-label">Attachments (Images/PDFs only, Max 5 files, 10MB each)</label>
-                            <input 
-                                type="file" 
-                                className="form-input" 
-                                multiple 
+                            <input
+                                type="file"
+                                className="form-input"
+                                multiple
                                 accept="image/*,application/pdf"
                                 onChange={(e) => handleFileChange(e, false)}
                             />
@@ -213,8 +213,8 @@ export default function GrievancesPage() {
                                     {files.map((f, i) => (
                                         <li key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
                                             <span>{f.name} ({(f.size / 1024 / 1024).toFixed(2)} MB)</span>
-                                            <button 
-                                                type="button" 
+                                            <button
+                                                type="button"
                                                 onClick={() => removeFile(i, false)}
                                                 style={{ background: 'transparent', border: 'none', color: 'var(--color-danger)', cursor: 'pointer', padding: '0 4px', fontSize: '14px', fontWeight: 'bold' }}
                                             >
@@ -234,19 +234,19 @@ export default function GrievancesPage() {
             )}
 
             <div className="tabs mb-lg">
-                <button 
-                  className={`tab-btn ${activeTab === 'open' ? 'active' : ''}`} 
-                  onClick={() => setActiveTab('open')}
+                <button
+                    className={`tab-btn ${activeTab === 'open' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('open')}
                 >
-                  {t('openTickets')}
-                  <span className="count-badge">{grievances.filter(g => !['resolved', 'cancelled'].includes(g.status)).length}</span>
+                    {t('openTickets')}
+                    <span className="count-badge">{grievances.filter(g => !['resolved', 'cancelled'].includes(g.status)).length}</span>
                 </button>
-                <button 
-                  className={`tab-btn ${activeTab === 'closed' ? 'active' : ''}`} 
-                  onClick={() => setActiveTab('closed')}
+                <button
+                    className={`tab-btn ${activeTab === 'closed' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('closed')}
                 >
-                  {t('closedTickets')}
-                  <span className="count-badge">{grievances.filter(g => ['resolved', 'cancelled'].includes(g.status)).length}</span>
+                    {t('closedTickets')}
+                    <span className="count-badge">{grievances.filter(g => ['resolved', 'cancelled'].includes(g.status)).length}</span>
                 </button>
             </div>
 
@@ -276,20 +276,19 @@ export default function GrievancesPage() {
                                         <h4 style={{ fontSize: 'var(--font-size-sm)', marginBottom: 'var(--space-sm)' }}>Attachments</h4>
                                         <div className="flex gap-md flex-wrap">
                                             {g.attachments.map(att => (
-                                                <a 
-                                                    key={att.id} 
-                                                    href={`${(import.meta.env.VITE_API_URL || '').replace(/\/api\/v1\/?$/, '')}${att.filePath}`} 
-
-                                                    target="_blank" 
+                                                <a
+                                                    key={att.id}
+                                                    href={att.filePath.startsWith('http') ? att.filePath : `${(import.meta.env.VITE_API_URL || '').replace(/\/api\/v1\/?$/, '')}${att.filePath}`}
+                                                    target="_blank"
                                                     rel="noreferrer"
-                                                    style={{ 
-                                                        display: 'inline-flex', alignItems: 'center', gap: '8px', 
-                                                        padding: '4px 8px', background: 'var(--color-bg-hover)', 
+                                                    style={{
+                                                        display: 'inline-flex', alignItems: 'center', gap: '8px',
+                                                        padding: '4px 8px', background: 'var(--color-bg-hover)',
                                                         borderRadius: 'var(--radius-sm)', textDecoration: 'none',
                                                         fontSize: '12px', color: 'var(--color-primary)'
                                                     }}
                                                 >
-                                                    {att.mimeType.startsWith('image/') ? '🖼️' : '📄'} 
+                                                    {att.mimeType.startsWith('image/') ? '🖼️' : '📄'}
                                                     <span style={{ maxWidth: '150px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                                         {att.fileName}
                                                     </span>
@@ -309,8 +308,8 @@ export default function GrievancesPage() {
                                                         <strong>{c.user?.name}</strong> ({c.user?.role}) • {new Date(c.createdAt).toLocaleString('en-IN')}
                                                     </div>
                                                     {user.role === 'developer' && (
-                                                        <button 
-                                                            className="btn btn-danger btn-sm" 
+                                                        <button
+                                                            className="btn btn-danger btn-sm"
                                                             style={{ padding: '2px 6px', fontSize: '10px' }}
                                                             onClick={(e) => { e.stopPropagation(); handleDeleteComment(c.id); }}
                                                             title={t('deleteComment')}
@@ -320,24 +319,24 @@ export default function GrievancesPage() {
                                                     )}
                                                 </div>
                                                 <div style={{ wordBreak: 'break-word', whiteSpace: 'pre-wrap' }}>{c.body}</div>
-                                                
+
                                                 {/* Comment Attachments */}
                                                 {c.attachments?.length > 0 && (
                                                     <div className="flex gap-md flex-wrap mt-sm">
                                                         {c.attachments.map(att => (
-                                                            <a 
-                                                                key={att.id} 
-                                                                href={`${(import.meta.env.VITE_API_URL || '').replace(/\/api\/v1\/?$/, '')}${att.filePath}`} 
-                                                                target="_blank" 
+                                                            <a
+                                                                key={att.id}
+                                                                href={att.filePath.startsWith('http') ? att.filePath : `${(import.meta.env.VITE_API_URL || '').replace(/\/api\/v1\/?$/, '')}${att.filePath}`}
+                                                                target="_blank"
                                                                 rel="noreferrer"
-                                                                style={{ 
-                                                                    display: 'inline-flex', alignItems: 'center', gap: '8px', 
-                                                                    padding: '4px 8px', background: 'var(--color-bg-hover)', 
+                                                                style={{
+                                                                    display: 'inline-flex', alignItems: 'center', gap: '8px',
+                                                                    padding: '4px 8px', background: 'var(--color-bg-hover)',
                                                                     borderRadius: 'var(--radius-sm)', textDecoration: 'none',
                                                                     fontSize: '12px', color: 'var(--color-primary)'
                                                                 }}
                                                             >
-                                                                {att.mimeType.startsWith('image/') ? '🖼️' : '📄'} 
+                                                                {att.mimeType.startsWith('image/') ? '🖼️' : '📄'}
                                                                 <span style={{ maxWidth: '150px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                                                     {att.fileName}
                                                                 </span>
@@ -359,11 +358,11 @@ export default function GrievancesPage() {
                                         </div>
                                         <div className="flex gap-md" style={{ alignItems: 'flex-start', justifyContent: 'space-between' }}>
                                             <div style={{ flex: 1 }}>
-                                                <input 
-                                                    type="file" 
-                                                    className="form-input" 
+                                                <input
+                                                    type="file"
+                                                    className="form-input"
                                                     style={{ padding: '4px' }}
-                                                    multiple 
+                                                    multiple
                                                     accept="image/*,application/pdf"
                                                     onChange={(e) => handleFileChange(e, true)}
                                                 />
@@ -372,8 +371,8 @@ export default function GrievancesPage() {
                                                         {commentFiles.map((f, i) => (
                                                             <li key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
                                                                 <span>{f.name} ({(f.size / 1024 / 1024).toFixed(2)} MB)</span>
-                                                                <button 
-                                                                    type="button" 
+                                                                <button
+                                                                    type="button"
                                                                     onClick={() => removeFile(i, true)}
                                                                     style={{ background: 'transparent', border: 'none', color: 'var(--color-danger)', cursor: 'pointer', padding: '0 4px', fontSize: '14px', fontWeight: 'bold' }}
                                                                 >
@@ -411,14 +410,14 @@ export default function GrievancesPage() {
 
                                                     {/* Resolve - restricted by level? (usually anyone handling should be able to resolve) */}
                                                     {/* If it's at their level, they can resolve */}
-                                                    {((user.role === 'district_admin' && g.currentLevel === 'district') || 
-                                                     (user.role === 'state_admin' && g.currentLevel === 'state') || 
-                                                     (user.role === 'developer')) && (
-                                                        <button className="btn btn-primary btn-sm" onClick={() => handleResolve(g.id)}>✅ Resolve</button>
-                                                    )}
+                                                    {((user.role === 'district_admin' && g.currentLevel === 'district') ||
+                                                        (user.role === 'state_admin' && g.currentLevel === 'state') ||
+                                                        (user.role === 'developer')) && (
+                                                            <button className="btn btn-primary btn-sm" onClick={() => handleResolve(g.id)}>✅ Resolve</button>
+                                                        )}
                                                 </>
                                             )}
-                                            
+
                                             {/* Cancel only for owner */}
                                             {isOwner(g) && <button className="btn btn-danger btn-sm" onClick={() => handleCancel(g.id)}>🚫 Cancel Ticket</button>}
                                         </>

@@ -52,6 +52,9 @@ app.get('/api/health', (req, res) => {
 });
 
 
+// ─── Serve Static Files ──────────────────────────────
+app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
+
 // ─── Serve Frontend (Production) ─────────────────────
 if (process.env.NODE_ENV === 'production') {
   app.use(express.static(path.join(__dirname, '..', 'client', 'dist')));
@@ -61,7 +64,6 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 // ─── Error Handler ───────────────────────────────────
-app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 app.use(errorHandler);
 
 // ─── Background Jobs ──────────────────────────────────
