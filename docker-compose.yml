@@ -4,7 +4,7 @@ services:
     restart: always
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: Hosting@123
+      POSTGRES_PASSWORD: 123456
       POSTGRES_DB: court_portal
     ports:
       - "5432:5432"
@@ -29,7 +29,7 @@ services:
       db:
         condition: service_healthy
     environment:
-      - DATABASE_URL=postgresql://postgres:Hosting@123@db:5432/court_portal
+      - DATABASE_URL=postgresql://postgres:123456@db:5432/court_portal
 
 volumes:
   postgres_data:
