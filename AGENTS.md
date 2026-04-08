@@ -127,15 +127,7 @@ These files must NEVER be manually edited:
 
 **Under no circumstances** should your local `.env` file point to the production database (`master` branch). Only the deployment environment on Vercel handling the `master` branch is authorized to point to the `master` database.
 
-When working on a feature branch locally, you MUST ensure that the `DATABASE_URL` in your `.env` points either to:
-1. A perfectly isolated local PostgreSQL instance.
-2. The specific Supabase feature Database branch synchronized with your feature branch.
-
-To automatically capture the connection URL for your respective database branch during development, run the following command:
-```bash
-npx supabase --experimental branches get <your-feature-branch-name> -o env
-```
-Extract the connection string output from this command and place it into the `DATABASE_URL` inside your `.env` file before proceeding with Prisma migrations or running the server.
+When working on a feature branch locally, you MUST ensure that the `DATABASE_URL` in your `.env` points to a perfectly isolated local PostgreSQL database.
 
 ---
 
