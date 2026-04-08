@@ -1,7 +1,6 @@
 // ─── AUTO-GENERATED: Single Source of Truth for Table Definitions ───────────
 // This file is automatically updated whenever a table or column is modified
-// via the Developer Dashboard. Do NOT edit manually.
-// To make structural changes: use the Manage Data Entry Tables UI.
+// via the Developer Dashboard. You may also edit it manually if needed.
 
 module.exports = [
     {

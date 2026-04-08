@@ -50,36 +50,15 @@ async function syncTableDefinitions(prisma) {
         // 1. Sync prisma/table-definitions.js
         const fileContent = `// ─── AUTO-GENERATED: Single Source of Truth for Table Definitions ───────────
 // This file is automatically updated whenever a table or column is modified
-// via the Developer Dashboard. Do NOT edit manually.
-// To make structural changes: use the Manage Data Entry Tables UI.
+// via the Developer Dashboard. You may also edit it manually if needed.
 
 module.exports = ${JSON.stringify(tables, null, 4)};
 `;
         fs.writeFileSync(TABLE_DEFS_PATH, fileContent, 'utf8');
         console.log('✅ [AUTO-SYNC] prisma/table-definitions.js updated.');
 
-        // 2. Sync prisma/seed-production.js and server/routes/system.js
-        const tablesJs = JSON.stringify(tables, null, 8).replace(/"([^"]+)":/g, '$1:');
-        
-        [SEED_FILE_PATH, SYSTEM_ROUTE_PATH].forEach(filePath => {
-            if (fs.existsSync(filePath)) {
-                let content = fs.readFileSync(filePath, 'utf8');
-                const startMarker = 'const tables = [';
-                const followMarker = filePath.includes('seed-production.js') 
-                    ? "console.log('📋 Syncing data entry tables...');"
-                    : "    console.log('📋 Syncing data entry tables...');";
-                
-                const startIndex = content.indexOf(startMarker);
-                const followIndex = content.indexOf(followMarker);
-
-                if (startIndex !== -1 && followIndex !== -1) {
-                    const newArray = `const tables = ${tablesJs};\n\n    `;
-                    content = content.substring(0, startIndex) + newArray + content.substring(followIndex);
-                    fs.writeFileSync(filePath, content);
-                    console.log(`✅ [AUTO-SYNC] ${path.basename(filePath)} updated.`);
-                }
-            }
-        });
+        // Seed scripts now dynamically require('./table-definitions.js'), 
+        // so we NO LONGER need to manually string-replace them here.
 
     } catch (err) {
         console.error('⚠️ [AUTO-SYNC] Table sync failed:', err.message);

@@ -4,16 +4,15 @@ const { authenticate, requireRole } = require('../middleware/auth');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-const { uploadFile } = require('../services/supabaseStorage');
 
 const router = express.Router();
 
-// Storage is now handled by Supabase in memory, no local directory needed.
-// (Local directory creation is disabled for Vercel compatibility)
+const { uploadFile } = require('../services/supabaseStorage');
 
-// Configure multer for memory storage
+// Configure multer storage
+const storage = multer.memoryStorage();
 const upload = multer({
-    storage: multer.memoryStorage(),
+    storage,
     limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit per file
     fileFilter: (req, file, cb) => {
         // Accept images and pdfs
@@ -73,10 +72,10 @@ router.post('/', authenticate, upload.array('files', 5), async (req, res, next) 
         const attachmentData = [];
         if (req.files && req.files.length > 0) {
             for (const file of req.files) {
-                const uploaded = await uploadFile(file, `grievances/${req.user.id}`);
+                const uploaded = await uploadFile(file, 'grievances');
                 attachmentData.push({
                     fileName: uploaded.name,
-                    filePath: uploaded.path, // Store Public URL here
+                    filePath: uploaded.path,
                     mimeType: uploaded.mimeType,
                     fileSize: uploaded.size,
                 });
@@ -175,11 +174,11 @@ router.post('/:id/comments', authenticate, upload.array('files', 5), async (req,
         const attachmentData = [];
         if (req.files && req.files.length > 0) {
             for (const file of req.files) {
-                const uploaded = await uploadFile(file, `grievances/comments/${req.user.id}`);
+                const uploaded = await uploadFile(file, 'grievances');
                 attachmentData.push({
                     grievanceId,
                     fileName: uploaded.name,
-                    filePath: uploaded.path, // Store Public URL here
+                    filePath: uploaded.path,
                     mimeType: uploaded.mimeType,
                     fileSize: uploaded.size,
                 });
@@ -378,6 +377,22 @@ router.post('/:id/reopen', authenticate, async (req, res, next) => {
             data: { status: 'open', resolvedAt: null },
         });
         res.json({ grievance: updated });
+    } catch (err) { next(err); }
+});
+
+// DELETE /api/v1/grievances/comments/:commentId
+router.delete('/comments/:commentId', authenticate, requireRole('developer'), async (req, res, next) => {
+    try {
+        const commentId = parseInt(req.params.commentId);
+        const comment = await prisma.grievanceComment.findUnique({ where: { id: commentId } });
+
+        if (!comment) return res.status(404).json({ error: 'Comment not found' });
+
+        await prisma.grievanceComment.delete({
+            where: { id: commentId }
+        });
+
+        res.json({ message: 'Comment deleted successfully' });
     } catch (err) { next(err); }
 });
 
