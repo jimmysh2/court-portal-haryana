@@ -30,10 +30,15 @@ IF NOT EXIST ".env" (
 )
 echo [OK] .env file loaded.
 
-:: 3. Pull latest code (if inside git repo)
+:: 3. Pull latest code (only on master branch, skip on feature branches)
 IF EXIST ".git" (
-    echo [INFO] Pulling latest code from GitHub...
-    git pull origin master
+    FOR /F "tokens=*" %%b IN ('git rev-parse --abbrev-ref HEAD 2^>nul') DO SET CURRENT_BRANCH=%%b
+    IF "!CURRENT_BRANCH!"=="master" (
+        echo [INFO] Pulling latest code from GitHub...
+        git pull --ff-only origin master
+    ) ELSE (
+        echo [INFO] On branch '!CURRENT_BRANCH!' - skipping git pull to avoid merge conflicts.
+    )
 )
 
 :: 4. Ensure required directories exist
