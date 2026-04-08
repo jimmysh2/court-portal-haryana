@@ -1,7 +1,6 @@
-﻿// ΓöÇΓöÇΓöÇ AUTO-GENERATED: Single Source of Truth for Table Definitions ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+// ─── AUTO-GENERATED: Single Source of Truth for Table Definitions ───────────
 // This file is automatically updated whenever a table or column is modified
-// via the Developer Dashboard. Do NOT edit manually.
-// To make structural changes: use the Manage Data Entry Tables UI.
+// via the Developer Dashboard. You may also edit it manually if needed.
 
 module.exports = [
     {
@@ -108,7 +107,7 @@ module.exports = [
         ]
     },
     {
-        "name": "Decision on any application filed by police officials",
+        "name": "3. Decision on any application filed by police officials",
         "slug": "police-applications",
         "description": "Decision on any application filed by police officials",
         "singleRow": false,
@@ -165,7 +164,7 @@ module.exports = [
         ]
     },
     {
-        "name": "3. List of accused granted bail (along with surety/ Identifier, Photos Etc)",
+        "name": "4. List of accused whose bail bonds were furnished after grant of bail",
         "slug": "bail-granted",
         "description": "List of accused granted bail (along with surety/identifier, photos etc.)",
         "singleRow": false,
@@ -228,7 +227,7 @@ module.exports = [
                 "slug": "surety_name",
                 "dataType": "text",
                 "enumOptions": null,
-                "isRequired": true,
+                "isRequired": false,
                 "sortOrder": 6
             },
             {
@@ -260,7 +259,7 @@ module.exports = [
                 "slug": "identifier_name",
                 "dataType": "text",
                 "enumOptions": null,
-                "isRequired": true,
+                "isRequired": false,
                 "sortOrder": 10
             },
             {
@@ -295,13 +294,13 @@ module.exports = [
                     "Yes",
                     "No"
                 ],
-                "isRequired": true,
+                "isRequired": false,
                 "sortOrder": 14
             }
         ]
     },
     {
-        "name": "4. List of declared POs/PPs/BJs",
+        "name": "5. List of declared POs/PPs/BJs",
         "slug": "po-pp-bj",
         "description": "List of declared POs/PPs/BJs",
         "singleRow": false,
@@ -361,7 +360,7 @@ module.exports = [
         ]
     },
     {
-        "name": "5. Value of Property attached (85 BNSS & 107 BNSS)",
+        "name": "6. Value of Property attached (85 BNSS & 107 BNSS)",
         "slug": "property-attached",
         "description": "Detail of Property attached (85 BNSS & 107 BNSS)",
         "singleRow": false,
@@ -437,7 +436,7 @@ module.exports = [
         ]
     },
     {
-        "name": "6. Applications/Complaints/Istgasa filed against Police Officials",
+        "name": "7. Applications/Complaints/Istgasa filed against Police Officials",
         "slug": "complaints-against-police",
         "description": "Applications/Complaints/Istgasa filed against Police Officials",
         "singleRow": false,
@@ -470,7 +469,7 @@ module.exports = [
         ]
     },
     {
-        "name": "7. FIR Registration under 156(3) CrPC",
+        "name": "8. FIR Registration under 156(3) CrPC",
         "slug": "fir-156-3",
         "description": "FIR Registration under 156(3) CrPC",
         "singleRow": false,
@@ -511,7 +510,7 @@ module.exports = [
         ]
     },
     {
-        "name": "8. List of SHOs and DSPs who appeared in court today (for deposition or other matter)",
+        "name": "9. List of SHOs and DSPs who appeared in court today (for deposition or other matter)",
         "slug": "sho-dsp-appeared",
         "description": "List of SHOs and DSPs who appeared in court today",
         "singleRow": false,
@@ -563,7 +562,7 @@ module.exports = [
         ]
     },
     {
-        "name": "9. Deposition of police officials",
+        "name": "10. Deposition of police officials",
         "slug": "police-deposition",
         "description": "Deposition of police officials ΓÇö aggregate counts per court per day",
         "singleRow": true,
@@ -612,7 +611,7 @@ module.exports = [
         ]
     },
     {
-        "name": "10. Deposition of other govt officials",
+        "name": "11. Deposition of other govt officials",
         "slug": "deposition-govt-officials",
         "description": "Deposition of other govt officials ΓÇö aggregate counts per court per day",
         "singleRow": true,
@@ -661,7 +660,7 @@ module.exports = [
         ]
     },
     {
-        "name": "11. Deposition of private individuals (public)",
+        "name": "12. Deposition of private individuals (public)",
         "slug": "deposition-private",
         "description": "Deposition of private individuals (public) ΓÇö aggregate counts per court per day",
         "singleRow": true,
@@ -710,7 +709,7 @@ module.exports = [
         ]
     },
     {
-        "name": "12. VC of prisoners",
+        "name": "13. VC of prisoners",
         "slug": "vc-prisoners",
         "description": "VC of prisoners ΓÇö aggregate counts per court per day",
         "singleRow": true,
@@ -735,7 +734,7 @@ module.exports = [
         ]
     },
     {
-        "name": "13. TIPs conducted today",
+        "name": "14. Test Identification Parade (TIP) of accused persons conducted today",
         "slug": "tips-conducted",
         "description": "TIPs conducted today",
         "singleRow": false,
@@ -776,7 +775,7 @@ module.exports = [
         ]
     },
     {
-        "name": "14. Pairvi for private witness",
+        "name": "15. Pairvi for private witness",
         "slug": "pairvi-witness",
         "description": "Pairvi for private witness ΓÇö aggregate counts per court per day",
         "singleRow": true,
@@ -801,7 +800,7 @@ module.exports = [
         ]
     },
     {
-        "name": "15. Any Gangster/Notorious Criminal appearing in Court the next day",
+        "name": "16. Any Gangster/Notorious Criminal appearing physically in Court the next day",
         "slug": "gangster-next-day",
         "description": "Any Gangster/Notorious Criminal appearing in Court the next day",
         "singleRow": false,
@@ -869,7 +868,7 @@ module.exports = [
         ]
     },
     {
-        "name": "16. Any Crime against Property offender appearing in court the next day",
+        "name": "17. Any Crime against Property offender appearing physically in court the next day",
         "slug": "property-offender-next-day",
         "description": "Any Crime against Property offender appearing in court the next day",
         "singleRow": false,
@@ -937,7 +936,7 @@ module.exports = [
         ]
     },
     {
-        "name": "17. Fresh Bail Applications listed for tomorrow",
+        "name": "18. Fresh Bail Applications listed for tomorrow",
         "slug": "bail-applications-tomorrow",
         "description": "Bail Applications listed for tomorrow",
         "singleRow": false,
@@ -997,7 +996,7 @@ module.exports = [
         ]
     },
     {
-        "name": "18. NBW Arrest Warrants issued today",
+        "name": "19. NBW Arrest Warrants issued today",
         "slug": "nbw-arrest-warrants",
         "description": "NBW Arrest Warrants issued today",
         "singleRow": false,
@@ -1054,7 +1053,7 @@ module.exports = [
         ]
     },
     {
-        "name": "19. List of the accused who surrendered in court",
+        "name": "20. List of the accused who surrendered in court",
         "slug": "accused-surrendered",
         "description": "List of the accused who surrendered in court",
         "singleRow": false,
@@ -1069,12 +1068,28 @@ module.exports = [
                 "sortOrder": 0
             },
             {
-                "name": "FIR No., Date & U/s",
-                "slug": "fir_details",
+                "name": "FIR Number",
+                "slug": "fir_no",
                 "dataType": "text",
                 "enumOptions": null,
                 "isRequired": true,
                 "sortOrder": 1
+            },
+            {
+                "name": "FIR Year",
+                "slug": "fir_year",
+                "dataType": "year",
+                "enumOptions": null,
+                "isRequired": true,
+                "sortOrder": 2
+            },
+            {
+                "name": "Sections (U/s)",
+                "slug": "sections",
+                "dataType": "text",
+                "enumOptions": null,
+                "isRequired": true,
+                "sortOrder": 3
             },
             {
                 "name": "Police Station",
@@ -1082,7 +1097,7 @@ module.exports = [
                 "dataType": "text",
                 "enumOptions": null,
                 "isRequired": true,
-                "sortOrder": 2
+                "sortOrder": 4
             },
             {
                 "name": "Status of Accused",
@@ -1094,12 +1109,12 @@ module.exports = [
                     "Sent to Police Custody"
                 ],
                 "isRequired": true,
-                "sortOrder": 3
+                "sortOrder": 5
             }
         ]
     },
     {
-        "name": "20. Details of adverse order passed against police officials",
+        "name": "21. Details of adverse order passed against police officials",
         "slug": "adverse-order-police",
         "description": "Details of adverse order passed against police officials",
         "singleRow": false,
@@ -1140,7 +1155,7 @@ module.exports = [
         ]
     },
     {
-        "name": "21. Details of applications filed by police officials DISMISSED by the court",
+        "name": "22. Details of applications filed by police officials DISMISSED by the court",
         "slug": "applications-dismissed",
         "description": "Details of applications filed by police officials DISMISSED by the court",
         "singleRow": false,
