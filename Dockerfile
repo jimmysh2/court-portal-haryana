@@ -39,6 +39,8 @@ COPY ["TESTING COURT EXCEL FILE/", "./TESTING COURT EXCEL FILE/"]
 
 # ── Pre-built frontend from builder stage ─────────────────
 COPY --from=builder /build/client/dist ./client/dist
+# Copy built frontend from stage 1
+COPY --from=frontend-builder /app/client/dist ./client/dist
 
 # ── Generate Prisma client inside the production image ────
 RUN npx prisma generate
