@@ -4,7 +4,7 @@ FROM node:20-alpine AS frontend-builder
 WORKDIR /app/client
 
 COPY client/package*.json ./
-RUN npm install
+RUN npm ci
 
 COPY client ./
 RUN npm run build
@@ -13,7 +13,7 @@ RUN npm run build
 FROM node:20-alpine AS production
 
 # Install system dependencies
-RUN apk add --no-cache postgresql-client gzip curl
+RUN apk add --no-cache postgresql-client gzip curl openssl python3 make g++ gcc libc-dev
 
 # Set working directory
 WORKDIR /app
@@ -22,7 +22,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install root dependencies only (production)
-RUN npm install --omit=dev
+RUN npm install --omit=dev --ignore-scripts
 
 # Copy prisma folder
 COPY prisma ./prisma
