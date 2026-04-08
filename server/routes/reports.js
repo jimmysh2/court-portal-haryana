@@ -31,6 +31,7 @@ router.post('/ai-assistant/transcript', authenticate, upload.single('file'), asy
         formData.append('file', fs.createReadStream(req.file.path));
         formData.append('model', 'whisper-large-v3');
         formData.append('response_format', 'text');
+        if (req.body.language) formData.append('language', req.body.language);
 
         const response = await axios.post('https://api.groq.com/openai/v1/audio/transcriptions', formData, {
             headers: {

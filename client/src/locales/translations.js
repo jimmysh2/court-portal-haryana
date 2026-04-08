@@ -145,6 +145,10 @@ export const translations = {
         bailJumpers: "Bail Jumpers",
         totalValueProperty: "Total Value of Property",
         select: "Select...",
+        voiceLanguage: "Voice Search Language",
+        english: "English",
+        hindi: "Hindi",
+        punjabi: "Punjabi",
     },
     hi: {
         // Navigation Labels
@@ -360,6 +364,10 @@ export const translations = {
         "accused_status": "अभियुक्त की स्थिति",
         "jail_name": "जेल का नाम",
         "accused_details": "अभियुक्त का विवरण",
-        "next_date": "अगली तिथि",
+        next_date: "अगली तिथि",
+        voiceLanguage: "आवाज खोज भाषा",
+        english: "अंग्रेजी",
+        hindi: "हिंदी",
+        punjabi: "पंजाबी",
     }
 };

@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { useLanguage } from '../../context/LanguageContext';
 import api from '../../utils/api';
 
 // ── Unique conversation ID per session ──
@@ -7,10 +8,12 @@ const SESSION_ID = crypto.randomUUID();
 
 export default function AiAssistant() {
     const { user } = useAuth();
+    const { t } = useLanguage();
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState('');
     const [loading, setLoading] = useState(false);
     const [isRecording, setIsRecording] = useState(false);
+    const [voiceLang, setVoiceLang] = useState('hi');
     const [sqlCopied, setSqlCopied] = useState(null);
     const [exportOpen, setExportOpen] = useState(null);
     const mediaRecorderRef = useRef(null);
@@ -88,6 +91,7 @@ export default function AiAssistant() {
                 try {
                     const formData = new FormData();
                     formData.append('file', blob, 'voice.webm');
+                    formData.append('language', voiceLang);
                     const resp = await api.post('/reports/ai-assistant/transcript', formData);
                     if (resp.text && resp.text.trim().length > 1) {
                         handleSend(resp.text);
@@ -285,6 +289,23 @@ export default function AiAssistant() {
                 }}>
                     {isRecording ? '⏹' : '🎤'}
                 </button>
+
+                <div style={styles.langToggle}>
+                    {['hi', 'en', 'pa'].map(lang => (
+                        <button
+                            key={lang}
+                            onClick={() => setVoiceLang(lang)}
+                            style={{
+                                ...styles.langBtn,
+                                background: voiceLang === lang ? 'rgba(56,139,253,0.15)' : 'transparent',
+                                color: voiceLang === lang ? '#388bfd' : '#94a3b8',
+                                borderColor: voiceLang === lang ? '#388bfd' : 'transparent'
+                            }}
+                        >
+                            {lang.toUpperCase()}
+                        </button>
+                    ))}
+                </div>
 
                 <input
                     ref={inputRef}
@@ -703,6 +724,16 @@ const styles = {
         fontSize: '18px', fontWeight: 700,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         flexShrink: 0, transition: 'all 0.3s ease'
+    },
+    langToggle: {
+        display: 'flex', gap: '4px', background: '#0f172a',
+        padding: '4px', borderRadius: '10px',
+        border: '1px solid rgba(148,163,184,0.1)'
+    },
+    langBtn: {
+        padding: '6px 10px', borderRadius: '7px', border: '1px solid transparent',
+        fontSize: '11px', fontWeight: 700, cursor: 'pointer',
+        transition: 'all 0.2s ease', fontFamily: 'Inter'
     },
 
     // Export
