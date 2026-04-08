@@ -757,43 +757,75 @@ export default function ReportsPage() {
                                         </div>
                                     </div>
 
-                                    <div className="data-table-wrapper" style={{ overflowX: 'auto', width: 'fit-content', maxWidth: '100%' }}>
-                                        <table className="data-table" style={{ width: 'auto' }}>
-                                            <thead>
-                                                <tr>
-                                                    <th>Sr. No.</th>
-                                                    <th>{rowHeaderLabel}</th>
-                                                    {tableColumns.map((col, idx) => (
-                                                        <th key={idx}>{col.header}</th>
+                                    {tableBlock.tableSlug !== 'trials-disposed' && (
+                                        <div className="data-table-wrapper" style={{ overflowX: 'auto', width: 'fit-content', maxWidth: '100%' }}>
+                                            <table className="data-table" style={{ width: 'auto' }}>
+                                                <thead>
+                                                    <tr>
+                                                        <th>Sr. No.</th>
+                                                        <th>{rowHeaderLabel}</th>
+                                                        {tableColumns.map((col, idx) => (
+                                                            <th key={idx}>{col.header}</th>
+                                                        ))}
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {groupedData.map((row, idx) => (
+                                                        <tr key={idx}>
+                                                            <td>{idx + 1}</td>
+                                                            <td style={{ fontWeight: 'bold' }}>{row.label}</td>
+                                                            {tableColumns.map((col, cIdx) => (
+                                                                <td key={cIdx}>
+                                                                    {col.renderCell(row.entries, (modalEntries) => openAggregateModal(`Details for ${row.label} - ${col.header}`, modalEntries))}
+                                                                </td>
+                                                            ))}
+                                                        </tr>
                                                     ))}
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {groupedData.map((row, idx) => (
-                                                    <tr key={idx}>
-                                                        <td>{idx + 1}</td>
-                                                        <td style={{ fontWeight: 'bold' }}>{row.label}</td>
-                                                        {tableColumns.map((col, cIdx) => (
-                                                            <td key={cIdx}>
-                                                                {col.renderCell(row.entries, (modalEntries) => openAggregateModal(`Details for ${row.label} - ${col.header}`, modalEntries))}
-                                                            </td>
-                                                        ))}
+                                                    {/* Total Row */}
+                                                    {groupedData.length > 0 && (
+                                                        <tr style={{ background: 'var(--color-surface-hover)', fontWeight: 'bold' }}>
+                                                            <td colSpan="2" style={{ textAlign: 'right' }}>OVERALL TOTAL:</td>
+                                                            {tableColumns.map((col, cIdx) => (
+                                                                <td key={cIdx}>
+                                                                    {col.renderCell(rawEntries, (modalEntries) => openAggregateModal(`Overall Total - ${col.header}`, modalEntries))}
+                                                                </td>
+                                                            ))}
+                                                        </tr>
+                                                    )}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    )}
+
+                                    {/* Detailed raw entries table specifically for trials-disposed */}
+                                    {tableBlock.tableSlug === 'trials-disposed' && groupedData.length > 0 && (
+                                        <div className="data-table-wrapper mt-lg" style={{ overflowX: 'auto', width: 'fit-content', maxWidth: '100%' }}>
+                                            <table className="data-table" style={{ width: 'auto' }}>
+                                                <thead>
+                                                    <tr>
+                                                        <th>{rowHeaderLabel}</th>
+                                                        <th>FIR No., Date & U/s</th>
+                                                        <th>Police Station</th>
+                                                        <th>Name of Accused</th>
                                                     </tr>
-                                                ))}
-                                                {/* Total Row */}
-                                                {groupedData.length > 0 && (
-                                                    <tr style={{ background: 'var(--color-surface-hover)', fontWeight: 'bold' }}>
-                                                        <td colSpan="2" style={{ textAlign: 'right' }}>OVERALL TOTAL:</td>
-                                                        {tableColumns.map((col, cIdx) => (
-                                                            <td key={cIdx}>
-                                                                {col.renderCell(rawEntries, (modalEntries) => openAggregateModal(`Overall Total - ${col.header}`, modalEntries))}
-                                                            </td>
-                                                        ))}
-                                                    </tr>
-                                                )}
-                                            </tbody>
-                                        </table>
-                                    </div>
+                                                </thead>
+                                                <tbody>
+                                                    {groupedData.map((row) => (
+                                                        row.entries.map((entry, eIdx) => (
+                                                            <tr key={`${row.label}-${eIdx}`}>
+                                                                {eIdx === 0 ? (
+                                                                    <td rowSpan={row.entries.length} style={{ fontWeight: 'bold', verticalAlign: 'top' }}>{row.label}</td>
+                                                                ) : null}
+                                                                <td>{`${entry.values?.fir_no || '---'}, ${entry.values?.fir_year || '---'} U/s ${entry.values?.sections || '---'}`}</td>
+                                                                <td>{entry.values?.police_station || '---'}</td>
+                                                                <td>{entry.values?.accused_name || '---'}</td>
+                                                            </tr>
+                                                        ))
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    )}
                                 </div>
                             );
                         })}
