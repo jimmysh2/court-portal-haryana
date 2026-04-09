@@ -156,8 +156,8 @@ export const translations = {
         "fir-156-3": "8. FIR Registration under 156(3) CrPC",
         "sho-dsp-appeared": "9. List of SHOs and DSPs who appeared in court today (for deposition or other matter)",
         "police-deposition": "10. Deposition of police officials",
-        "deposition-govt-officials": "11. Deposition of other govt officials",
-        "deposition-private": "12. Deposition of private individuals (public)",
+        "other-govt-deposition": "11. Deposition of other govt officials",
+        "private-deposition": "12. Deposition of private individuals (public)",
         "vc-prisoners": "13. VC of prisoners",
         "tips-conducted": "14. Test Identification Parade (TIP) of accused persons conducted today",
         "pairvi-witness": "15. Pairvi for private witness",
@@ -166,8 +166,8 @@ export const translations = {
         "bail-applications-tomorrow": "18. Fresh Bail Applications listed for tomorrow",
         "nbw-arrest-warrants": "19. NBW Arrest Warrants issued today",
         "accused-surrendered": "20. List of the accused who surrendered in court",
-        "adverse-order-police": "21. Details of adverse order passed against police officials",
-        "applications-dismissed": "22. Details of applications filed by police officials DISMISSED by the court",
+        "adverse-orders-police": "21. Details of adverse order passed against police officials",
+        "police-apps-dismissed": "22. Details of applications filed by police officials DISMISSED by the court",
     },
     hi: {
         // Navigation Labels
@@ -327,8 +327,8 @@ export const translations = {
         "fir-156-3": "8. 156(3) CrPC αñòαÑç αññαñ╣αññ αñ¬αÑìαñ░αñ╛αñÑαñ«αñ┐αñòαÑÇ αñ¬αñéαñ£αÑÇαñòαñ░αñú",
         "sho-dsp-appeared": "9. αñåαñ£ αñàαñªαñ╛αñ▓αññ αñ«αÑçαñé αñëαñ¬αñ╕αÑìαñÑαñ┐αññ αñ╣αÑïαñ¿αÑç αñ╡αñ╛αñ▓αÑç αñÅαñ╕αñÅαñÜαñô αñöαñ░ αñíαÑÇαñÅαñ╕αñ¬αÑÇ αñòαÑÇ αñ╕αÑéαñÜαÑÇ",
         "police-deposition": "10. αñ¬αÑüαñ▓αñ┐αñ╕ αñàαñºαñ┐αñòαñ╛αñ░αñ┐αñ»αÑïαñé αñòαÑÇ αñùαñ╡αñ╛αñ╣αÑÇ",
-        "deposition-govt-officials": "11. αñàαñ¿αÑìαñ» αñ╕αñ░αñòαñ╛αñ░αÑÇ αñàαñºαñ┐αñòαñ╛αñ░αñ┐αñ»αÑïαñé αñòαÑÇ αñùαñ╡αñ╛αñ╣αÑÇ",
-        "deposition-private": "12. αñ¿αñ┐αñ£αÑÇ αñ╡αÑìαñ»αñòαÑìαññαñ┐αñ»αÑïαñé/αñ¬αñ¼αÑìαñ▓αñ┐αñò αñòαÑÇ αñùαñ╡αñ╛αñ╣αÑÇ",
+        "other-govt-deposition": "11. αñàαñ¿αÑìαñ» αñ╕αñ░αñòαñ╛αñ░αÑÇ αñàαñºαñ┐αñòαñ╛αñ░αñ┐αñ»αÑïαñé αñòαÑÇ αñùαñ╡αñ╛αñ╣αÑÇ",
+        "private-deposition": "12. αñ¿αñ┐αñ£αÑÇ αñ╡αÑìαñ»αñòαÑìαññαñ┐αñ»αÑïαñé/αñ¬αñ¼αÑìαñ▓αñ┐αñò αñòαÑÇ αñùαñ╡αñ╛αñ╣αÑÇ",
         "vc-prisoners": "13. αñ¼αñéαñªαñ┐αñ»αÑïαñé αñòαÑÇ αñ╡αÑÇαñíαñ┐αñ»αÑï αñòαÑëαñ¿αÑìαñ½αÑìαñ░αÑçαñéαñ╕αñ┐αñéαñù",
         "tips-conducted": "14. αñåαñ£ αñåαñ»αÑïαñ£αñ┐αññ αñàαñ¡αñ┐αñ»αÑüαñòαÑìαññαÑïαñé αñòαÑÇ αñ¬αñ╣αñÜαñ╛αñ¿ αñ¬αñ░αÑçαñí",
         "pairvi-witness": "15. αñ¿αñ┐αñ£αÑÇ αñùαñ╡αñ╛αñ╣ αñòαÑç αñ▓αñ┐αñÅ αñ¬αÑêαñ░αñ╡αÑÇ",
@@ -337,8 +337,8 @@ export const translations = {
         "bail-applications-tomorrow": "18. αñòαñ▓ αñòαÑç αñ▓αñ┐αñÅ αñ╕αÑéαñÜαÑÇαñ¼αñªαÑìαñº αñ¿αñÅ αñ£αñ«αñ╛αñ¿αññ αñåαñ╡αÑçαñªαñ¿",
         "nbw-arrest-warrants": "19. αñåαñ£ αñ£αñ╛αñ░αÑÇ αñòαñ┐αñÅ αñùαñÅ αñùαÑêαñ░-αñ£αñ«αñ╛αñ¿αññαÑÇ αñ╡αñ╛αñ░αñéαñƒ (NBW)",
         "accused-surrendered": "20. αñåαññαÑìαñ«αñ╕αñ«αñ░αÑìαñ¬αñú αñòαñ░αñ¿αÑç αñ╡αñ╛αñ▓αÑç αñàαñ¡αñ┐αñ»αÑüαñòαÑìαññαÑïαñé αñòαÑÇ αñ╕αÑéαñÜαÑÇ",
-        "adverse-order-police": "21. αñ¬αÑüαñ▓αñ┐αñ╕ αñàαñºαñ┐αñòαñ╛αñ░αñ┐αñ»αÑïαñé αñòαÑç αñûαñ┐αñ▓αñ╛αñ½ αñ¬αñ╛αñ░αñ┐αññ αñ¬αÑìαñ░αññαñ┐αñòαÑéαñ▓ αñåαñªαÑçαñ╢ αñòαñ╛ αñ╡αñ┐αñ╡αñ░αñú",
-        "applications-dismissed": "22. αñàαñªαñ╛αñ▓αññ αñªαÑìαñ╡αñ╛αñ░αñ╛ αñûαñ╛αñ░αñ┐αñ£ αñòαñ┐αñÅ αñùαñÅ αñ¬αÑüαñ▓αñ┐αñ╕ αñàαñºαñ┐αñòαñ╛αñ░αñ┐αñ»αÑïαñé αñòαÑç αñåαñ╡αÑçαñªαñ¿αÑïαñé αñòαñ╛ αñ╡αñ┐αñ╡αñ░αñú",
+        "adverse-orders-police": "21. αñ¬αÑüαñ▓αñ┐αñ╕ αñàαñºαñ┐αñòαñ╛αñ░αñ┐αñ»αÑïαñé αñòαÑç αñûαñ┐αñ▓αñ╛αñ½ αñ¬αñ╛αñ░αñ┐αññ αñ¬αÑìαñ░αññαñ┐αñòαÑéαñ▓ αñåαñªαÑçαñ╢ αñòαñ╛ αñ╡αñ┐αñ╡αñ░αñú",
+        "police-apps-dismissed": "22. αñàαñªαñ╛αñ▓αññ αñªαÑìαñ╡αñ╛αñ░αñ╛ αñûαñ╛αñ░αñ┐αñ£ αñòαñ┐αñÅ αñùαñÅ αñ¬αÑüαñ▓αñ┐αñ╕ αñàαñºαñ┐αñòαñ╛αñ░αñ┐αñ»αÑïαñé αñòαÑç αñåαñ╡αÑçαñªαñ¿αÑïαñé αñòαñ╛ αñ╡αñ┐αñ╡αñ░αñú",
 
         // Column Headings (Keyed by slug)
         "fir_no": "αñ¬αÑìαñ░αñ╛αñÑαñ«αñ┐αñòαÑÇ αñ╕αñéαñûαÑìαñ»αñ╛",

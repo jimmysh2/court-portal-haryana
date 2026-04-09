@@ -612,7 +612,7 @@ module.exports = [
     },
     {
         "name": "11. Deposition of other govt officials",
-        "slug": "deposition-govt-officials",
+        "slug": "other-govt-deposition",
         "description": "Deposition of other govt officials ΓÇö aggregate counts per court per day",
         "singleRow": true,
         "sortOrder": 11,
@@ -661,7 +661,7 @@ module.exports = [
     },
     {
         "name": "12. Deposition of private individuals (public)",
-        "slug": "deposition-private",
+        "slug": "private-deposition",
         "description": "Deposition of private individuals (public) ΓÇö aggregate counts per court per day",
         "singleRow": true,
         "sortOrder": 12,
@@ -1115,7 +1115,7 @@ module.exports = [
     },
     {
         "name": "21. Details of adverse order passed against police officials",
-        "slug": "adverse-order-police",
+        "slug": "adverse-orders-police",
         "description": "Details of adverse order passed against police officials",
         "singleRow": false,
         "sortOrder": 21,
@@ -1156,7 +1156,7 @@ module.exports = [
     },
     {
         "name": "22. Details of applications filed by police officials DISMISSED by the court",
-        "slug": "applications-dismissed",
+        "slug": "police-apps-dismissed",
         "description": "Details of applications filed by police officials DISMISSED by the court",
         "singleRow": false,
         "sortOrder": 22,
