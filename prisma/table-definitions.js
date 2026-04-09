@@ -1,7 +1,3 @@
-﻿// ΓöÇΓöÇΓöÇ AUTO-GENERATED: Single Source of Truth for Table Definitions ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
-// This file is automatically updated whenever a table or column is modified
-// via the Developer Dashboard. You may also edit it manually if needed.
-
 module.exports = [
     {
         "name": "1. List of trials disposed/completed today",
@@ -618,7 +614,7 @@ module.exports = [
         "sortOrder": 11,
         "columns": [
             {
-                "name": "Supposed to appear",
+                "name": "Supposed to Appear",
                 "slug": "supposed_to_appear",
                 "dataType": "number",
                 "enumOptions": null,
@@ -626,32 +622,32 @@ module.exports = [
                 "sortOrder": 0
             },
             {
-                "name": "Absent (Unauthorized/No Request)",
-                "slug": "absent_unauthorized",
+                "name": "Appeared Physically",
+                "slug": "appeared_physically",
                 "dataType": "number",
                 "enumOptions": null,
                 "isRequired": true,
                 "sortOrder": 1
             },
             {
-                "name": "Appeared physically",
-                "slug": "appeared_physically",
+                "name": "Examined Physically",
+                "slug": "examined_physically",
                 "dataType": "number",
                 "enumOptions": null,
                 "isRequired": true,
                 "sortOrder": 2
             },
             {
-                "name": "Examined physically",
-                "slug": "examined_physically",
+                "name": "Examined via VC",
+                "slug": "examined_via_vc",
                 "dataType": "number",
                 "enumOptions": null,
                 "isRequired": true,
                 "sortOrder": 3
             },
             {
-                "name": "Examined through VC",
-                "slug": "examined_through_vc",
+                "name": "Absent (Unauthorized/No Request)",
+                "slug": "absent_unauthorized",
                 "dataType": "number",
                 "enumOptions": null,
                 "isRequired": true,
@@ -667,7 +663,7 @@ module.exports = [
         "sortOrder": 12,
         "columns": [
             {
-                "name": "Supposed to appear",
+                "name": "Supposed to Appear",
                 "slug": "supposed_to_appear",
                 "dataType": "number",
                 "enumOptions": null,
@@ -675,32 +671,32 @@ module.exports = [
                 "sortOrder": 0
             },
             {
-                "name": "Absent (Unauthorized/No Request)",
-                "slug": "absent_unauthorized",
+                "name": "Appeared Physically",
+                "slug": "appeared_physically",
                 "dataType": "number",
                 "enumOptions": null,
                 "isRequired": true,
                 "sortOrder": 1
             },
             {
-                "name": "Appeared physically",
-                "slug": "appeared_physically",
+                "name": "Examined Physically",
+                "slug": "examined_physically",
                 "dataType": "number",
                 "enumOptions": null,
                 "isRequired": true,
                 "sortOrder": 2
             },
             {
-                "name": "Examined physically",
-                "slug": "examined_physically",
+                "name": "Examined via VC",
+                "slug": "examined_via_vc",
                 "dataType": "number",
                 "enumOptions": null,
                 "isRequired": true,
                 "sortOrder": 3
             },
             {
-                "name": "Examined through VC",
-                "slug": "examined_through_vc",
+                "name": "Absent (Unauthorized/No Request)",
+                "slug": "absent_unauthorized",
                 "dataType": "number",
                 "enumOptions": null,
                 "isRequired": true,
