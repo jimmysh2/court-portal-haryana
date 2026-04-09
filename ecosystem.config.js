@@ -36,6 +36,23 @@ module.exports = {
 
             // Windows compatibility
             interpreter: 'node',
+        },
+        {
+            name: 'auto-updater',
+            script: 'scripts/auto-updater.js',
+            cwd: './',
+
+            // Auto-restart settings
+            watch: false,
+            restart_delay: 5000,
+
+            // Logging
+            log_date_format: 'YYYY-MM-DD HH:mm:ss',
+            out_file: './logs/updater-out.log',
+            error_file: './logs/updater-error.log',
+            merge_logs: true,
+
+            interpreter: 'node',
         }
     ]
 };
