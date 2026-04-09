@@ -107,68 +107,11 @@ module.exports = [
         ]
     },
     {
-        "name": "3. Decision on any application filed by police officials",
-        "slug": "police-applications",
-        "description": "Decision on any application filed by police officials",
-        "singleRow": false,
-        "sortOrder": 3,
-        "columns": [
-            {
-                "name": "Application Type",
-                "slug": "application_type",
-                "dataType": "enum",
-                "enumOptions": [
-                    "Case Property Disposal",
-                    "Bail Cancellation",
-                    "Other"
-                ],
-                "isRequired": true,
-                "sortOrder": 0
-            },
-            {
-                "name": "Date of Application",
-                "slug": "application_date",
-                "dataType": "date",
-                "enumOptions": null,
-                "isRequired": true,
-                "sortOrder": 1
-            },
-            {
-                "name": "Decision",
-                "slug": "decision",
-                "dataType": "enum",
-                "enumOptions": [
-                    "Allowed",
-                    "Dismissed",
-                    "Abated"
-                ],
-                "isRequired": true,
-                "sortOrder": 2
-            },
-            {
-                "name": "Reasons for Dismissal",
-                "slug": "dismissal_reasons",
-                "dataType": "text",
-                "enumOptions": null,
-                "isRequired": false,
-                "sortOrder": 3
-            },
-            {
-                "name": "Remarks",
-                "slug": "remarks",
-                "dataType": "text",
-                "enumOptions": null,
-                "isRequired": false,
-                "sortOrder": 4
-            }
-        ]
-    },
-    {
-        "name": "4. List of accused whose bail bonds were furnished after grant of bail",
+        "name": "3. List of accused granted bail (along with surety/ Identifier, Photos Etc)",
         "slug": "bail-granted",
         "description": "List of accused granted bail (along with surety/identifier, photos etc.)",
         "singleRow": false,
-        "sortOrder": 4,
+        "sortOrder": 3,
         "columns": [
             {
                 "name": "Name of Accused",
@@ -296,6 +239,63 @@ module.exports = [
                 ],
                 "isRequired": false,
                 "sortOrder": 14
+            }
+        ]
+    },
+    {
+        "name": "4. Decision on any application filed by police officials",
+        "slug": "police-applications",
+        "description": "Decision on any application filed by police officials",
+        "singleRow": false,
+        "sortOrder": 4,
+        "columns": [
+            {
+                "name": "Application Type",
+                "slug": "application_type",
+                "dataType": "enum",
+                "enumOptions": [
+                    "Case Property Disposal",
+                    "Bail Cancellation",
+                    "Other"
+                ],
+                "isRequired": true,
+                "sortOrder": 0
+            },
+            {
+                "name": "Date of Application",
+                "slug": "application_date",
+                "dataType": "date",
+                "enumOptions": null,
+                "isRequired": true,
+                "sortOrder": 1
+            },
+            {
+                "name": "Decision",
+                "slug": "decision",
+                "dataType": "enum",
+                "enumOptions": [
+                    "Allowed",
+                    "Dismissed",
+                    "Abated"
+                ],
+                "isRequired": true,
+                "sortOrder": 2
+            },
+            {
+                "name": "Reasons for Dismissal",
+                "slug": "dismissal_reasons",
+                "dataType": "text",
+                "enumOptions": null,
+                "isRequired": false,
+                "sortOrder": 3
+            },
+            {
+                "name": "Remarks",
+                "slug": "remarks",
+                "dataType": "text",
+                "enumOptions": null,
+                "isRequired": false,
+                "sortOrder": 4
             }
         ]
     },
