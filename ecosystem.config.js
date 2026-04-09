@@ -38,9 +38,14 @@ module.exports = {
             interpreter: 'node',
         },
         {
-            name: 'auto-updater',
-            script: 'scripts/auto-updater.js',
+            name: 'github-webhook',
+            script: 'scripts/webhook-listener.js',
             cwd: './',
+
+            // Environment (Webhooks usually run on 4000)
+            env: {
+                WEBHOOK_PORT: 4000
+            },
 
             // Auto-restart settings
             watch: false,
@@ -48,8 +53,8 @@ module.exports = {
 
             // Logging
             log_date_format: 'YYYY-MM-DD HH:mm:ss',
-            out_file: './logs/updater-out.log',
-            error_file: './logs/updater-error.log',
+            out_file: './logs/webhook-out.log',
+            error_file: './logs/webhook-error.log',
             merge_logs: true,
 
             interpreter: 'node',
