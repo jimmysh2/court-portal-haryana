@@ -1,4 +1,4 @@
-// ─── AUTO-GENERATED: Single Source of Truth for Table Definitions ───────────
+﻿// ΓöÇΓöÇΓöÇ AUTO-GENERATED: Single Source of Truth for Table Definitions ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
 // This file is automatically updated whenever a table or column is modified
 // via the Developer Dashboard. You may also edit it manually if needed.
 
@@ -107,11 +107,68 @@ module.exports = [
         ]
     },
     {
-        "name": "3. List of accused granted bail (along with surety/ Identifier, Photos Etc)",
+        "name": "3. Decision on any application filed by police officials",
+        "slug": "police-applications",
+        "description": "Decision on any application filed by police officials",
+        "singleRow": false,
+        "sortOrder": 3,
+        "columns": [
+            {
+                "name": "Application Type",
+                "slug": "application_type",
+                "dataType": "enum",
+                "enumOptions": [
+                    "Case Property Disposal",
+                    "Bail Cancellation",
+                    "Other"
+                ],
+                "isRequired": true,
+                "sortOrder": 0
+            },
+            {
+                "name": "Date of Application",
+                "slug": "application_date",
+                "dataType": "date",
+                "enumOptions": null,
+                "isRequired": true,
+                "sortOrder": 1
+            },
+            {
+                "name": "Decision",
+                "slug": "decision",
+                "dataType": "enum",
+                "enumOptions": [
+                    "Allowed",
+                    "Dismissed",
+                    "Abated"
+                ],
+                "isRequired": true,
+                "sortOrder": 2
+            },
+            {
+                "name": "Reasons for Dismissal",
+                "slug": "dismissal_reasons",
+                "dataType": "text",
+                "enumOptions": null,
+                "isRequired": false,
+                "sortOrder": 3
+            },
+            {
+                "name": "Remarks",
+                "slug": "remarks",
+                "dataType": "text",
+                "enumOptions": null,
+                "isRequired": false,
+                "sortOrder": 4
+            }
+        ]
+    },
+    {
+        "name": "4. List of accused whose bail bonds were furnished after grant of bail",
         "slug": "bail-granted",
         "description": "List of accused granted bail (along with surety/identifier, photos etc.)",
         "singleRow": false,
-        "sortOrder": 3,
+        "sortOrder": 4,
         "columns": [
             {
                 "name": "Name of Accused",
@@ -239,63 +296,6 @@ module.exports = [
                 ],
                 "isRequired": false,
                 "sortOrder": 14
-            }
-        ]
-    },
-    {
-        "name": "4. Decision on any application filed by police officials",
-        "slug": "police-applications",
-        "description": "Decision on any application filed by police officials",
-        "singleRow": false,
-        "sortOrder": 4,
-        "columns": [
-            {
-                "name": "Application Type",
-                "slug": "application_type",
-                "dataType": "enum",
-                "enumOptions": [
-                    "Case Property Disposal",
-                    "Bail Cancellation",
-                    "Other"
-                ],
-                "isRequired": true,
-                "sortOrder": 0
-            },
-            {
-                "name": "Date of Application",
-                "slug": "application_date",
-                "dataType": "date",
-                "enumOptions": null,
-                "isRequired": true,
-                "sortOrder": 1
-            },
-            {
-                "name": "Decision",
-                "slug": "decision",
-                "dataType": "enum",
-                "enumOptions": [
-                    "Allowed",
-                    "Dismissed",
-                    "Abated"
-                ],
-                "isRequired": true,
-                "sortOrder": 2
-            },
-            {
-                "name": "Reasons for Dismissal",
-                "slug": "dismissal_reasons",
-                "dataType": "text",
-                "enumOptions": null,
-                "isRequired": false,
-                "sortOrder": 3
-            },
-            {
-                "name": "Remarks",
-                "slug": "remarks",
-                "dataType": "text",
-                "enumOptions": null,
-                "isRequired": false,
-                "sortOrder": 4
             }
         ]
     },
@@ -564,7 +564,7 @@ module.exports = [
     {
         "name": "10. Deposition of police officials",
         "slug": "police-deposition",
-        "description": "Deposition of police officials ΓÇö aggregate counts per court per day",
+        "description": "Deposition of police officials ╬ô├ç├╢ aggregate counts per court per day",
         "singleRow": true,
         "sortOrder": 10,
         "columns": [
@@ -612,8 +612,8 @@ module.exports = [
     },
     {
         "name": "11. Deposition of other govt officials",
-        "slug": "other-govt-deposition",
-        "description": "Deposition of other govt officials ΓÇö aggregate counts per court per day",
+        "slug": "deposition-govt-officials",
+        "description": "Deposition of other govt officials ╬ô├ç├╢ aggregate counts per court per day",
         "singleRow": true,
         "sortOrder": 11,
         "columns": [
@@ -661,8 +661,8 @@ module.exports = [
     },
     {
         "name": "12. Deposition of private individuals (public)",
-        "slug": "private-deposition",
-        "description": "Deposition of private individuals (public) ΓÇö aggregate counts per court per day",
+        "slug": "deposition-private",
+        "description": "Deposition of private individuals (public) ╬ô├ç├╢ aggregate counts per court per day",
         "singleRow": true,
         "sortOrder": 12,
         "columns": [
@@ -711,7 +711,7 @@ module.exports = [
     {
         "name": "13. VC of prisoners",
         "slug": "vc-prisoners",
-        "description": "VC of prisoners ΓÇö aggregate counts per court per day",
+        "description": "VC of prisoners ╬ô├ç├╢ aggregate counts per court per day",
         "singleRow": true,
         "sortOrder": 13,
         "columns": [
@@ -777,7 +777,7 @@ module.exports = [
     {
         "name": "15. Pairvi for private witness",
         "slug": "pairvi-witness",
-        "description": "Pairvi for private witness ΓÇö aggregate counts per court per day",
+        "description": "Pairvi for private witness ╬ô├ç├╢ aggregate counts per court per day",
         "singleRow": true,
         "sortOrder": 15,
         "columns": [
@@ -1115,7 +1115,7 @@ module.exports = [
     },
     {
         "name": "21. Details of adverse order passed against police officials",
-        "slug": "adverse-orders-police",
+        "slug": "adverse-order-police",
         "description": "Details of adverse order passed against police officials",
         "singleRow": false,
         "sortOrder": 21,
@@ -1156,7 +1156,7 @@ module.exports = [
     },
     {
         "name": "22. Details of applications filed by police officials DISMISSED by the court",
-        "slug": "police-apps-dismissed",
+        "slug": "applications-dismissed",
         "description": "Details of applications filed by police officials DISMISSED by the court",
         "singleRow": false,
         "sortOrder": 22,
