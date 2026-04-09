@@ -315,10 +315,101 @@ export default function NaibDataEntry() {
                         <option value="false">{t('no') || 'No'}</option>
                     </select>
                 );
-            default:
+            default: {
+                // ── Slug-based input validation for text fields ──────────────
+
+                // Name of Accused → alphabets + spaces only
+                if (col.slug === 'accused_name') {
+                    return (
+                        <input
+                            className="form-input"
+                            type="text"
+                            value={value}
+                            placeholder="Enter name (alphabets only)"
+                            onChange={e => {
+                                const clean = e.target.value.replace(/[^a-zA-Z\s]/g, '');
+                                setFormValues({ ...formValues, [col.slug]: clean });
+                            }}
+                        />
+                    );
+                }
+
+                // FIR Year → digits only, max 4 chars
+                if (col.slug === 'fir_year') {
+                    return (
+                        <input
+                            className="form-input"
+                            type="text"
+                            inputMode="numeric"
+                            maxLength={4}
+                            value={value}
+                            placeholder="YYYY"
+                            onChange={e => {
+                                const clean = e.target.value.replace(/[^0-9]/g, '').slice(0, 4);
+                                setFormValues({ ...formValues, [col.slug]: clean });
+                            }}
+                            onKeyDown={e => {
+                                const nav = ['Backspace', 'Delete', 'Tab', 'ArrowLeft', 'ArrowRight', 'Home', 'End'];
+                                if (!nav.includes(e.key) && !/^\d$/.test(e.key)) e.preventDefault();
+                            }}
+                        />
+                    );
+                }
+
+                // FIR Number → alphanumeric + / - space
+                if (col.slug === 'fir_no') {
+                    return (
+                        <input
+                            className="form-input"
+                            type="text"
+                            value={value}
+                            placeholder="e.g. 123 or 123/A"
+                            onChange={e => {
+                                const clean = e.target.value.replace(/[^a-zA-Z0-9\/\-\s]/g, '');
+                                setFormValues({ ...formValues, [col.slug]: clean });
+                            }}
+                        />
+                    );
+                }
+
+                // Sections (U/s) → alphanumeric + legal notation chars
+                if (['sections', 'complaint_sections', 'bnss_section'].includes(col.slug)) {
+                    return (
+                        <input
+                            className="form-input"
+                            type="text"
+                            value={value}
+                            placeholder="e.g. 302, 307/34 IPC"
+                            onChange={e => {
+                                const clean = e.target.value.replace(/[^a-zA-Z0-9\/\-\s,.()]/g, '');
+                                setFormValues({ ...formValues, [col.slug]: clean });
+                            }}
+                        />
+                    );
+                }
+
+                // Police Station text fallback → alphabets + spaces only
+                // (normally rendered as dropdown above when policeStations list is loaded)
+                if (col.slug === 'police_station') {
+                    return (
+                        <input
+                            className="form-input"
+                            type="text"
+                            value={value}
+                            placeholder="Enter police station name"
+                            onChange={e => {
+                                const clean = e.target.value.replace(/[^a-zA-Z\s]/g, '');
+                                setFormValues({ ...formValues, [col.slug]: clean });
+                            }}
+                        />
+                    );
+                }
+
+                // Default: plain text (no restriction)
                 return (
                     <input className="form-input" type="text" value={value} onChange={e => setFormValues({ ...formValues, [col.slug]: e.target.value })} />
                 );
+            }
         }
     };
 
