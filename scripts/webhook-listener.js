@@ -11,6 +11,11 @@ const { exec } = require('child_process');
 
 const PORT = process.env.WEBHOOK_PORT || 4000;
 const SECRET = process.env.GITHUB_WEBHOOK_SECRET || '';
+
+// ⚠️ Temporarily change this to 'Lalit-deployBr' just for your VM testing!
+// CHANGE IT BACK to 'master' before you merge your PR!
+const TARGET_BRANCH = 'master';
+
 let isDeploying = false;
 
 function log(msg) {
@@ -56,9 +61,9 @@ const server = http.createServer((req, res) => {
             return res.end('Bad Request: Invalid JSON');
         }
 
-        // 3. Ensure it's a push to the 'master' branch
-        if (req.headers['x-github-event'] === 'push' && payload.ref === 'refs/heads/master') {
-            log('✅ Valid GitHub push to master detected. Acknowledging webhook...');
+        // 3. Ensure it's a push to the correct branch
+        if (req.headers['x-github-event'] === 'push' && payload.ref === `refs/heads/${TARGET_BRANCH}`) {
+            log(`✅ Valid GitHub push to ${TARGET_BRANCH} detected. Acknowledging webhook...`);
             res.statusCode = 200;
             res.end('Deployment triggered successfully.');
 

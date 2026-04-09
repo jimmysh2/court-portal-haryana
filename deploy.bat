@@ -38,12 +38,16 @@ if not exist ".env" (
 )
 echo  OK
 
-REM ── 2. Pull latest from master ────────────────────────────
+REM ── 2. Pull latest code ───────────────────────────────────
 echo.
-echo [2/7] Pulling latest code from origin/master...
-git fetch origin master
-git checkout master
-git pull origin master
+echo [2/7] Pulling latest code from origin...
+
+REM ⚠️ Change to Lalit-deployBr for testing, but revert before merging!
+set TARGET_BRANCH=master
+
+git fetch origin %TARGET_BRANCH%
+git checkout %TARGET_BRANCH%
+git pull origin %TARGET_BRANCH%
 if errorlevel 1 (
     echo  ERROR: Git pull failed. Check network and repo access.
     pause & exit /b 1
