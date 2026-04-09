@@ -626,8 +626,8 @@ module.exports = [
                 "sortOrder": 0
             },
             {
-                "name": "Informed on phone",
-                "slug": "informed_on_phone",
+                "name": "Absent (Unauthorized/No Request)",
+                "slug": "absent_unauthorized",
                 "dataType": "number",
                 "enumOptions": null,
                 "isRequired": true,
@@ -675,8 +675,8 @@ module.exports = [
                 "sortOrder": 0
             },
             {
-                "name": "Informed on phone",
-                "slug": "informed_on_phone",
+                "name": "Absent (Unauthorized/No Request)",
+                "slug": "absent_unauthorized",
                 "dataType": "number",
                 "enumOptions": null,
                 "isRequired": true,
