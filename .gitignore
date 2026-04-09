@@ -4,12 +4,17 @@ client/node_modules/
 # Environment secrets - NEVER commit these
 .env
 .env.docker
+.env.server
 .env.local
 .env.*.local
 
-# Keep the example template
+# Keep examples/templates
 !.env.example
+!.env.server.example
 
+# Runtime artifacts
+logs/
+_backup/
 dist/
 client/dist/
 *.log
