@@ -9,6 +9,8 @@ const { exec } = require('child_process');
 // Triggered ONLY by GitHub, uses zero CPU when idle.
 // ============================================================
 
+require('dotenv').config();
+
 const PORT = process.env.WEBHOOK_PORT || 4000;
 const SECRET = process.env.GITHUB_WEBHOOK_SECRET || '';
 
