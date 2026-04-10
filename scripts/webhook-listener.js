@@ -12,9 +12,7 @@ const { exec } = require('child_process');
 const PORT = process.env.WEBHOOK_PORT || 4000;
 const SECRET = process.env.GITHUB_WEBHOOK_SECRET || '';
 
-// ⚠️ Temporarily changed to 'Lalit-deployBr' for your VM testing!
-// CHANGE IT BACK to 'master' before you merge your PR!
-const TARGET_BRANCH = 'Lalit-deployBr';
+const TARGET_BRANCH = 'master';
 
 let isDeploying = false;
 

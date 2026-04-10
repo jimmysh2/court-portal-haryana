@@ -51,8 +51,8 @@ REM ── 3. Pull latest code ────────────────�
 echo.
 echo [3/7] Pulling latest code from origin...
 
-REM ⚠️ Temporarily changed to Lalit-deployBr for testing, but revert before merging!
-set TARGET_BRANCH=Lalit-deployBr
+REM Target Production Branch
+set TARGET_BRANCH=master
 
 git fetch origin %TARGET_BRANCH%
 git checkout %TARGET_BRANCH%
