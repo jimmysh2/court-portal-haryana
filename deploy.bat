@@ -80,7 +80,9 @@ REM ── 5. Build frontend ─────────────────
 echo.
 echo [5/7] Building frontend...
 cd client
+set "NODE_ENV=development"
 call npm install
+set "NODE_ENV=production"
 call npm run build
 if errorlevel 1 ( cd .. & echo  ERROR: Frontend build failed & goto :rollback )
 cd ..
