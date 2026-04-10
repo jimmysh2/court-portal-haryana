@@ -66,6 +66,9 @@ echo  OK - Backup saved to _backup\
 REM ── 4. Install dependencies ───────────────────────────────
 echo.
 echo [4/7] Installing dependencies...
+echo  (Stopping server temporarily to release Windows File Locks)
+pm2 stop court-portal >nul 2>&1
+
 call npm install --omit=dev
 if errorlevel 1 ( echo  ERROR: npm install failed & goto :rollback )
 
@@ -167,5 +170,4 @@ if errorlevel 1 (
     echo  Portal: http://localhost:3000
 )
 echo.
-pause
 exit /b 1
