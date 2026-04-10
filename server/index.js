@@ -1,4 +1,5 @@
 require('dotenv').config();
+throw new Error("🚀 THE BOMB HAS DROPPED - INITIATE ROLLBACK DEFENSES 🚀");
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
