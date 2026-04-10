@@ -20,8 +20,6 @@ const systemRoutes = require('./routes/system');
 
 const { errorHandler } = require('./middleware/errorHandler');
 
-CRASH_THE_SERVER_TO_TEST_ROLLBACK_MECHANISM();
-
 const app = express();
 const PORT = process.env.PORT || 3000;
 
