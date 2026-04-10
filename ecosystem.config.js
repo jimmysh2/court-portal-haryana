@@ -13,8 +13,7 @@ module.exports = {
 
             // Environment
             env: {
-                NODE_ENV: 'production',
-                PORT: 3000,
+                NODE_ENV: 'production'
             },
 
             // Auto-restart settings
@@ -42,9 +41,8 @@ module.exports = {
             script: 'scripts/webhook-listener.js',
             cwd: './',
 
-            // Environment (Webhooks usually run on 4000)
+            // Environment
             env: {
-                WEBHOOK_PORT: 4000
             },
 
             // Auto-restart settings

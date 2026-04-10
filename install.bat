@@ -52,6 +52,11 @@ REM ── Copy .env.server to .env ──────────────�
 echo  Copying .env.server to .env...
 copy /Y .env.server .env >nul
 echo  OK
+set "APP_PORT=3000"
+for /f "usebackq tokens=1,2 delims==" %%A in (".env") do (
+    if "%%A"=="PORT" set APP_PORT=%%B
+)
+echo  OK - App port detected as !APP_PORT!
 
 REM ── Step 1: Check Node.js ─────────────────────────────────
 echo.
@@ -176,10 +181,10 @@ REM ── Health Check ──────────────────�
 echo.
 echo  Running health check...
 timeout /t 5 /nobreak >nul
-curl -sf http://localhost:3000/api/health >nul 2>&1
+curl -sf http://localhost:!APP_PORT!/api/health >nul 2>&1
 if errorlevel 1 (
     echo  WARNING: Health check failed. App may still be starting.
-    echo  Wait 10 seconds and check: http://localhost:3000
+    echo  Wait 10 seconds and check: http://localhost:!APP_PORT!
 ) else (
     echo  OK - Application is running!
 )
@@ -190,7 +195,7 @@ echo  ================================================
 echo    Installation COMPLETE!
 echo  ================================================
 echo.
-echo   Access the portal: http://localhost:3000
+echo   Access the portal: http://localhost:!APP_PORT!
 echo.
 echo   Default admin login:
 echo     Username: admin

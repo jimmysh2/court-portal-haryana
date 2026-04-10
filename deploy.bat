@@ -36,7 +36,11 @@ if not exist ".env" (
     echo  ERROR: .env file missing. Copy .env.server to .env first.
     exit /b 1
 )
-echo  OK
+set "APP_PORT=3000"
+for /f "usebackq tokens=1,2 delims==" %%A in (".env") do (
+    if "%%A"=="PORT" set APP_PORT=%%B
+)
+echo  OK - App port detected as !APP_PORT!
 
 REM ── 2. Backup current build for rollback ─────────────────
 echo.
@@ -113,7 +117,7 @@ ping 127.0.0.1 -n 16 >nul
 set RETRIES=5
 :health_loop
 if !RETRIES! == 0 goto :health_failed
-curl -sf http://localhost:3000/api/health >nul 2>&1
+curl -sf http://localhost:!APP_PORT!/api/health >nul 2>&1
 if not errorlevel 1 goto :health_done
 set /a RETRIES=!RETRIES!-1
 echo  ... Not ready. Retrying (!RETRIES! left)
@@ -133,7 +137,7 @@ echo  ================================================
 echo    Deployment SUCCESSFUL!
 echo  ================================================
 echo.
-echo   Portal: http://localhost:3000
+echo   Portal: http://localhost:!APP_PORT!
 echo.
 echo   Commands:
 echo     Status : pm2 status
@@ -162,12 +166,12 @@ xcopy /e /q /y /i _backup\server server >nul 2>&1
 echo  Restarting with previous build...
 call pm2 restart court-portal
 ping 127.0.0.1 -n 11 >nul
-curl -sf http://localhost:3000/api/health >nul 2>&1
+curl -sf http://localhost:!APP_PORT!/api/health >nul 2>&1
 if errorlevel 1 (
     echo  CRITICAL: Rollback also failed! Run: pm2 logs court-portal
 ) else (
     echo  Rollback SUCCESSFUL - Previous version is live.
-    echo  Portal: http://localhost:3000
+    echo  Portal: http://localhost:!APP_PORT!
 )
 echo.
 exit /b 1
