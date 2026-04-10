@@ -47,7 +47,7 @@ set TARGET_BRANCH=Lalit-deployBr
 
 git fetch origin %TARGET_BRANCH%
 git checkout %TARGET_BRANCH%
-git pull origin %TARGET_BRANCH%
+git reset --hard origin/%TARGET_BRANCH%
 if errorlevel 1 (
     echo  ERROR: Git pull failed. Check network and repo access.
     exit /b 1
