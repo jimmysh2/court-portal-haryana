@@ -1,5 +1,4 @@
 require('dotenv').config();
-throw new Error("INTENTIONAL WEBHOOK ROLLBACK TEST CRASH");
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');

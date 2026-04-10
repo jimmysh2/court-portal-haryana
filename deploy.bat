@@ -108,7 +108,7 @@ call pm2 save >nul 2>&1
 REM ── Health Check ──────────────────────────────────────────
 echo.
 echo  Running health check (waiting 15 seconds)...
-timeout /t 15 /nobreak >nul
+ping 127.0.0.1 -n 16 >nul
 
 set RETRIES=5
 :health_loop
@@ -117,7 +117,7 @@ curl -sf http://localhost:3000/api/health >nul 2>&1
 if not errorlevel 1 goto :health_done
 set /a RETRIES=!RETRIES!-1
 echo  ... Not ready. Retrying (!RETRIES! left)
-timeout /t 8 /nobreak >nul
+ping 127.0.0.1 -n 9 >nul
 goto :health_loop
 
 :health_failed
@@ -161,7 +161,7 @@ xcopy /e /q /y /i _backup\server server >nul 2>&1
 
 echo  Restarting with previous build...
 call pm2 restart court-portal
-timeout /t 10 /nobreak >nul
+ping 127.0.0.1 -n 11 >nul
 curl -sf http://localhost:3000/api/health >nul 2>&1
 if errorlevel 1 (
     echo  CRITICAL: Rollback also failed! Run: pm2 logs court-portal
