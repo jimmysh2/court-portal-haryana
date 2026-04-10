@@ -29,7 +29,6 @@ exit /b %errorLevel%
 # ==============================================================================
 $ErrorActionPreference = "Stop"
 
-$Branch     = "master"
 $RepoUrl    = "https://github.com/jimmysh2/court-portal-haryana.git"
 $InstallDir = "C:\court-portal-haryana"
 
@@ -81,6 +80,9 @@ Write-Host ""
 # --- STEP 1: Interactive Prompts ----------------------------------------------
 Write-Step "1" "Configuration Setup"
 
+$Branch = Read-Host "Enter Git Branch to deploy (Leave blank for default: master)"
+if ([string]::IsNullOrWhiteSpace($Branch)) { $Branch = "master" }
+
 $DbPassword = ""
 while ([string]::IsNullOrWhiteSpace($DbPassword)) {
     $secure     = Read-Host "Enter PostgreSQL Password (to be set for postgres user)" -AsSecureString
@@ -90,8 +92,8 @@ while ([string]::IsNullOrWhiteSpace($DbPassword)) {
     if ([string]::IsNullOrWhiteSpace($DbPassword)) { Write-Host "Password cannot be empty!" -ForegroundColor Yellow }
 }
 
-$AppPort = Read-Host "Enter Backend App Port (Leave blank for default: 3000)"
-if ([string]::IsNullOrWhiteSpace($AppPort)) { $AppPort = "3000" }
+$AppPort = Read-Host "Enter Backend App Port (Leave blank for default: 4000)"
+if ([string]::IsNullOrWhiteSpace($AppPort)) { $AppPort = "4000" }
 
 $WebhookPort = Read-Host "Enter GitHub Webhook Port (Leave blank for default: 4001)"
 if ([string]::IsNullOrWhiteSpace($WebhookPort)) { $WebhookPort = "4001" }
