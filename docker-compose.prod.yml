@@ -1,0 +1,26 @@
+version: '3.8'
+
+# ============================================================
+# Court Portal - Docker Compose (PRODUCTION - Govt Server)
+# App runs in Docker. Database is Supabase (production).
+# Requires .env.docker file on the server with real credentials.
+#
+# Deploy with:   deploy.bat  (it picks this file for production)
+# ============================================================
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: court-portal-app:latest
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env.docker # Created manually on server, never committed to git
+    volumes:
+      - ./backups:/app/backups
+      - ./uploads:/app/uploads
+
+volumes: {}

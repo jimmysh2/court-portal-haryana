@@ -1,4 +1,10 @@
-# Stage 1: Build Frontend
+# ============================================================
+# Court Portal - Dockerfile
+# Multi-stage build: builds frontend, then packages everything
+# into a lean production image.
+# ============================================================
+
+# ── Stage 1: Build Frontend ──────────────────────────────────
 FROM node:20-alpine AS frontend-builder
 
 WORKDIR /app/client
@@ -9,31 +15,30 @@ RUN npm install
 COPY client ./
 RUN npm run build
 
-# Stage 2: Production Runtime
+
+# ── Stage 2: Production Runtime ──────────────────────────────
 FROM node:20-alpine AS production
 
-# Install system dependencies
+# Install system dependencies (pg client for health check, curl for healthcheck CMD)
 RUN apk add --no-cache postgresql-client gzip curl
 
-# Set working directory
 WORKDIR /app
 
-# Copy root package files
+# Copy root package files and install ONLY production deps
 COPY package*.json ./
-
-# Install root dependencies only (production)
 RUN npm install --omit=dev
 
-# Copy prisma folder
+# Copy Prisma schema (needed for generate + migrate)
 COPY prisma ./prisma
 
-# Copy server folder
-COPY server ./server
+# Generate Prisma client (uses schema, no DB connection needed here)
+RUN npx prisma generate
 
-# Copy scripts folder
+# Copy server + scripts
+COPY server ./server
 COPY scripts ./scripts
 
-# Copy data files for seeding
+# Copy static seed data
 COPY ["TESTING COURT EXCEL FILE", "./TESTING COURT EXCEL FILE"]
 COPY Disrtrict_PS.csv ./
 COPY Police_Stations_Haryana.xlsx ./
@@ -41,18 +46,16 @@ COPY Police_Stations_Haryana.xlsx ./
 # Copy built frontend from stage 1
 COPY --from=frontend-builder /app/client/dist ./client/dist
 
-# Generate Prisma client
-RUN npx prisma generate
+# Create uploads and backups directories
+RUN mkdir -p /app/uploads /app/backups
 
-# Expose the API port
+# Expose API port
 EXPOSE 3000
 
-# Set production environment
-ENV NODE_ENV=production
-
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+# Health check endpoint
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=5 \
   CMD curl -f http://localhost:3000/api/health || exit 1
 
-# Start the application
-CMD ["npm", "start"]
+# Start script: run migrations THEN start the app
+# This ensures schema is always up-to-date when the container boots
+CMD ["node", "server/index.js"]

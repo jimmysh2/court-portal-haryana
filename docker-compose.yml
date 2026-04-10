@@ -1,9 +1,19 @@
 version: '3.8'
 
+# ============================================================
+# Court Portal - Docker Compose (LOCAL / VM TESTING)
+# Uses bundled PostgreSQL for completely isolated local testing.
+# The app + DB are self-contained — no internet/Supabase needed.
+#
+# For VM test:   deploy.bat
+# For prod server: use docker-compose.prod.yml instead
+# ============================================================
+
 services:
+  # ── Local PostgreSQL (for testing only) ──────────────────
   db:
     image: postgres:15-alpine
-    restart: always
+    restart: unless-stopped
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: Hosting@123
@@ -13,25 +23,38 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U user -d court_portal" ]
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d court_portal" ]
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 10
+      start_period: 20s
 
+  # ── Application ──────────────────────────────────────────
   app:
-    build: .
-    restart: always
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: court-portal-app:latest
+    restart: unless-stopped
     ports:
       - "3000:3000"
-    env_file:
-      - .env
+    environment:
+      # Uses local postgres container — completely isolated from Supabase
+      DATABASE_URL: "postgresql://postgres:Hosting@123@db:5432/court_portal"
+      DIRECT_URL: "postgresql://postgres:Hosting@123@db:5432/court_portal"
+      NODE_ENV: "production"
+      PORT: "3000"
+      CORS_ORIGIN: "http://localhost:3000"
+      JWT_SECRET: "court-portal-local-test-secret"
+      JWT_REFRESH_SECRET: "court-portal-local-test-refresh-secret"
+      VITE_ENABLE_QUICK_LOGIN: "false"
     volumes:
       - ./backups:/app/backups
+      - ./uploads:/app/uploads
     depends_on:
       db:
         condition: service_healthy
-    environment:
-      - DATABASE_URL=postgresql://postgres:Hosting@123@db:5432/court_portal
 
 volumes:
   postgres_data:
+    driver: local
