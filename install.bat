@@ -248,8 +248,10 @@ Write-Ok "Database schema and seeds applied."
 # --- STEP 10: Start Services --------------------------------------------------
 Write-Step "10" "Starting PM2 Service"
 
-& pm2 delete court-portal >$null 2>&1
-& pm2 delete webhook-listener >$null 2>&1
+$ErrorActionPreference = "Continue"
+try { & pm2 delete court-portal >$null 2>&1 } catch {}
+try { & pm2 delete webhook-listener >$null 2>&1 } catch {}
+$ErrorActionPreference = "Stop"
 & pm2 start ecosystem.config.js
 if ($LASTEXITCODE -ne 0) { Write-Fail "Process manager failed to start apps." }
 & pm2 save
