@@ -1,5 +1,4 @@
 require('dotenv').config();
-throw new Error("🚀 INTENTIONAL ROLLBACK CRASH FOR SCENARIO 2 🚀");
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');

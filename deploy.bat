@@ -38,9 +38,18 @@ if not exist ".env" (
 )
 echo  OK
 
-REM ── 2. Pull latest code ───────────────────────────────────
+REM ── 2. Backup current build for rollback ─────────────────
 echo.
-echo [2/7] Pulling latest code from origin...
+echo [2/7] Backing up current build for rollback safety...
+if exist "_backup" rmdir /s /q _backup >nul 2>&1
+mkdir _backup >nul 2>&1
+if exist "client\dist" xcopy /e /q /i client\dist _backup\client_dist >nul 2>&1
+if exist "server" xcopy /e /q /i server _backup\server >nul 2>&1
+echo  OK - Backup saved to _backup\
+
+REM ── 3. Pull latest code ───────────────────────────────────
+echo.
+echo [3/7] Pulling latest code from origin...
 
 REM ⚠️ Temporarily changed to Lalit-deployBr for testing, but revert before merging!
 set TARGET_BRANCH=Lalit-deployBr
@@ -53,15 +62,6 @@ if errorlevel 1 (
     exit /b 1
 )
 echo  OK - Code up to date.
-
-REM ── 3. Backup current build for rollback ─────────────────
-echo.
-echo [3/7] Backing up current build for rollback safety...
-if exist "_backup" rmdir /s /q _backup >nul 2>&1
-mkdir _backup >nul 2>&1
-if exist "client\dist" xcopy /e /q /i client\dist _backup\client_dist >nul 2>&1
-if exist "server" xcopy /e /q /i server _backup\server >nul 2>&1
-echo  OK - Backup saved to _backup\
 
 REM ── 4. Install dependencies ───────────────────────────────
 echo.
