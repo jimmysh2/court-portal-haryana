@@ -67,7 +67,7 @@ REM ── 4. Install dependencies ───────────────
 echo.
 echo [4/7] Installing dependencies...
 echo  (Stopping server temporarily to release Windows File Locks)
-pm2 stop court-portal >nul 2>&1
+call pm2 stop court-portal >nul 2>&1
 
 call npm install --omit=dev
 if errorlevel 1 ( echo  ERROR: npm install failed & goto :rollback )
@@ -98,12 +98,12 @@ echo  OK - Migrations applied.
 REM ── 7. Restart app via PM2 ────────────────────────────────
 echo.
 echo [7/7] Restarting app...
-pm2 restart court-portal
+call pm2 restart court-portal
 if errorlevel 1 (
     echo  ERROR: PM2 restart failed. Starting fresh...
-    pm2 start ecosystem.config.js
+    call pm2 start ecosystem.config.js
 )
-pm2 save >nul 2>&1
+call pm2 save >nul 2>&1
 
 REM ── Health Check ──────────────────────────────────────────
 echo.
@@ -160,7 +160,7 @@ xcopy /e /q /i _backup\client_dist client\dist >nul 2>&1
 xcopy /e /q /y /i _backup\server server >nul 2>&1
 
 echo  Restarting with previous build...
-pm2 restart court-portal
+call pm2 restart court-portal
 timeout /t 10 /nobreak >nul
 curl -sf http://localhost:3000/api/health >nul 2>&1
 if errorlevel 1 (
