@@ -27,14 +27,14 @@ echo.
 REM ── 1. Check prerequisites ────────────────────────────────
 echo [1/7] Checking prerequisites...
 where node >nul 2>&1
-if errorlevel 1 ( echo  ERROR: Node.js not installed. Run install.bat first. & pause & exit /b 1 )
+if errorlevel 1 ( echo  ERROR: Node.js not installed. Run install.bat first. & exit /b 1 )
 where git >nul 2>&1
-if errorlevel 1 ( echo  ERROR: Git not installed. Run install.bat first. & pause & exit /b 1 )
+if errorlevel 1 ( echo  ERROR: Git not installed. Run install.bat first. & exit /b 1 )
 where pm2 >nul 2>&1
-if errorlevel 1 ( echo  ERROR: PM2 not installed. Run install.bat first. & pause & exit /b 1 )
+if errorlevel 1 ( echo  ERROR: PM2 not installed. Run install.bat first. & exit /b 1 )
 if not exist ".env" (
     echo  ERROR: .env file missing. Copy .env.server to .env first.
-    pause & exit /b 1
+    exit /b 1
 )
 echo  OK
 
@@ -50,7 +50,7 @@ git checkout %TARGET_BRANCH%
 git pull origin %TARGET_BRANCH%
 if errorlevel 1 (
     echo  ERROR: Git pull failed. Check network and repo access.
-    pause & exit /b 1
+    exit /b 1
 )
 echo  OK - Code up to date.
 
@@ -137,7 +137,6 @@ echo     Status : pm2 status
 echo     Logs   : pm2 logs court-portal
 echo     Stop   : pm2 stop court-portal
 echo.
-pause
 exit /b 0
 
 REM ── Rollback ─────────────────────────────────────────────
@@ -150,7 +149,7 @@ echo.
 if not exist "_backup\server" (
     echo  No backup found. Cannot auto-rollback.
     echo  Check logs: pm2 logs court-portal
-    pause & exit /b 1
+    exit /b 1
 )
 echo  Restoring previous build...
 if exist "client\dist" rmdir /s /q client\dist >nul 2>&1
