@@ -1,4 +1,4 @@
-﻿export const translations = {
+export const translations = {
     en: {
         // Navigation Labels
         dashboard: "Dashboard",
@@ -118,6 +118,12 @@
         dataLocked: "Data finalized and locked for",
         selectATable: "Select a table below:",
         allTables: "All Tables",
+        "next_date": "Next Date",
+        "category": "Category",
+        "status": "Status",
+        "case_details": "Case Details",
+        "informed_on_phone": "Informed on Phone",
+        "examined_through_vc": "Examined via VC",
         date: "Date",
         table: "Table",
         court: "Court",
@@ -388,5 +394,10 @@
         "jail_name": "αñ£αÑçαñ▓ αñòαñ╛ αñ¿αñ╛αñ«",
         "accused_details": "αñàαñ¡αñ┐αñ»αÑüαñòαÑìαññ αñòαñ╛ αñ╡αñ┐αñ╡αñ░αñú",
         "next_date": "αñàαñùαñ▓αÑÇ αññαñ┐αñÑαñ┐",
+        "category": "αñ╢αÑìαñ░αÑçαñúαÑÇ",
+        "status": "αñ╕αÑìαñÑαñ┐αññαñ┐",
+        "case_details": "αñ«αñ╛αñ«αñ▓αÑç αñòαñ╛ αñ╡αñ┐αñ╡αñ░αñú",
+        "informed_on_phone": "αñ½αÑïαñ¿ αñ¬αñ░ αñ╕αÑéαñÜαñ┐αññ αñòαñ┐αñ»αñ╛",
+        "examined_through_vc": "αñ╡αÑÇαñ╕αÑÇ αñòαÑç αñ«αñ╛αñºαÑìαñ»αñ« αñ╕αÑç αñ¬αñ░αÑÇαñòαÑìαñ╖αñ┐αññ",
     }
 };
