@@ -83,14 +83,11 @@ Write-Step "1" "Configuration Setup"
 $Branch = Read-Host "Enter Git Branch to deploy (Leave blank for default: master)"
 if ([string]::IsNullOrWhiteSpace($Branch)) { $Branch = "master" }
 
-$DbPassword = ""
-while ([string]::IsNullOrWhiteSpace($DbPassword)) {
-    $secure     = Read-Host "Enter PostgreSQL Password (to be set for postgres user)" -AsSecureString
-    $bstr       = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($secure)
-    $DbPassword = [Runtime.InteropServices.Marshal]::PtrToStringAuto($bstr)
-    [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($bstr)
-    if ([string]::IsNullOrWhiteSpace($DbPassword)) { Write-Host "Password cannot be empty!" -ForegroundColor Yellow }
-}
+$secure     = Read-Host "Enter PostgreSQL Password (Leave blank for default: Admin2026)" -AsSecureString
+$bstr       = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($secure)
+$DbPassword = [Runtime.InteropServices.Marshal]::PtrToStringAuto($bstr)
+[Runtime.InteropServices.Marshal]::ZeroFreeBSTR($bstr)
+if ([string]::IsNullOrWhiteSpace($DbPassword)) { $DbPassword = "Admin2026" }
 
 $AppPort = Read-Host "Enter Backend App Port (Leave blank for default: 4000)"
 if ([string]::IsNullOrWhiteSpace($AppPort)) { $AppPort = "4000" }
