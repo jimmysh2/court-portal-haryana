@@ -1,5 +1,4 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-THIS_MIMICS_A_CRASHING_BUG_BUILT_BY_A_DEVELOPER
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { LanguageProvider } from './context/LanguageContext';
 import Layout from './components/Layout';
