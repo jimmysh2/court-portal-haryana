@@ -135,19 +135,28 @@ npm run dev
 
 ---
 
-## 🔄 Syncing UI Changes to Git (CRITICAL)
+## 🔄 Syncing UI Changes to Git
 
-If you make changes via the admin UI (e.g., adding Police Stations or new Data Tables), those changes exist only in your local database. Run the sync script before committing:
+When you make changes via the admin UI (adding Police Stations, creating new Data Tables, modifying columns), the server **automatically** updates the relevant source files on disk via `auto-sync.js`:
+
+| File | Updated When |
+|---|---|
+| `prisma/table-definitions.js` | Any Data Table or column is created/modified/deleted |
+| `Disrtrict_PS.csv` | Any District or Police Station is created/modified/deleted |
+
+These changes take effect **immediately** on the running server — no restart needed.
+
+However, they only exist on the **current server's disk**. To save them to GitHub (so a fresh install or other deployments can inherit them), a developer must manually commit and push:
 
 ```bash
-npm run db:sync
-git add .
-git commit -m "sync: update seed data and district/PS CSV"
+git add prisma/table-definitions.js Disrtrict_PS.csv
+git commit -m "sync: update table definitions and district/PS data"
 git push
 ```
 
 > [!IMPORTANT]
-> Always run `npm run db:sync` before `git commit` when you have made UI-driven database changes. This keeps the repository as the single source of truth.
+> If you make UI-driven structural changes on the production server and do not commit them, a fresh `git clone` or Docker rebuild will lose those changes and revert to the last committed state.
+
 
 ---
 
