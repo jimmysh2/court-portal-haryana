@@ -1,4 +1,4 @@
-﻿export const translations = {
+export const translations = {
     en: {
         // Navigation Labels
         dashboard: "Dashboard",
@@ -168,6 +168,7 @@
         "accused-surrendered": "19. List of the accused who surrendered in court",
         "adverse-order-police": "20. Details of adverse order passed against police officials",
         "applications-dismissed": "21. Details of applications filed by police officials DISMISSED by the court",
+        "fir_date": "FIR Date",
     },
     hi: {
         // Navigation Labels
