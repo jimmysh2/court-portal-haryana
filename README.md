@@ -1,136 +1,156 @@
-# Court Portal Haryana - Installation Guide
+# Naib Court Portal — Haryana
 
-This guide describes how to install and run the Court Portal on a new machine or Virtual Machine (VM).
-
----
-
-## 🐳 Option 1: One-Click Install (Using Docker)
-This is the easiest and most recommended method. It sets up the database, backend, and frontend automatically.
-
-**Prerequisites:** [Docker Desktop](https://www.docker.com/products/docker-desktop/) must be installed and running.
-
-1.  **Clone and Configure**:
-    ```bash
-    git clone https://github.com/jimmysh2/court-portal-haryana.git
-    cd court-portal-haryana
-    
-    # Create configuration file from template
-    cp .env.example .env
-    ```
-    *Open `.env` and fill in your Google Drive credentials (if desired).*
-
-2.  **Start Services**:
-    ```bash
-    docker-compose up --build -d
-    ```
-2.  **Initialize Database (First time only)**:
-    ```bash
-    docker-compose exec app npx prisma migrate deploy
-    docker-compose exec app node prisma/seed-production.js
-    ```
-3.  **Access App**: Open http://localhost:3000
+A judicial data entry and reporting system for Haryana courts. Handles case data entry, report generation, multi-role access control, and district/court management.
 
 ---
 
-## 🛠️ Option 2: Manual Installation
-Use this if you prefer to run the components separately without Docker.
+## Deployment Options
 
-### Prerequisites (for manual install)
-Before starting, ensure the machine has the following installed:
-1.  **Node.js** (v20 or higher)
-2.  **npm** (usually comes with Node.js)
-3.  **PostgreSQL** (Active and running)
-4.  **Git**
+Choose the method that matches your server setup:
 
-### 1. Clone the Repository (Manual)
-Open a terminal and run:
+| Method | Best For | Prerequisites |
+|---|---|---|
+| [🪟 Windows Server (install.bat)](#-windows-server-recommended) | Govt Windows Server 2022 | None (auto-installs everything) |
+| [🐳 Docker (Linux/Cloud)](#-docker-linux--cloud) | Linux VMs, AWS, Azure, DigitalOcean | Docker & Docker Compose |
+| [🛠️ Manual (Development)](#️-manual-local-development) | Local development only | Node.js 20+, PostgreSQL, Git |
+
+---
+
+## 🪟 Windows Server (Recommended)
+
+This is the **primary deployment method** for the Haryana government server (Windows Server 2022). A single script handles everything — no manual setup required.
+
+### What `install.bat` does automatically:
+- Installs Node.js, Git, and PostgreSQL silently if not present
+- Clones the repository from GitHub
+- Generates the `.env` configuration file
+- Installs dependencies and builds the React frontend
+- Runs Prisma database migrations and seeds initial data
+- Configures PM2 to run the app as a background Windows service (auto-starts on reboot)
+- Sets up the GitHub Webhook listener for automatic future deployments
+
+### Steps:
+
+1. **Download** `install.bat` from the repository (or copy it to the server)
+2. **Double-click** `install.bat` — it will self-elevate to Administrator
+3. **Answer the 4 prompts** (press Enter to accept defaults):
+   - Git branch to deploy (default: `master`)
+   - PostgreSQL password (default: `Admin2026`)
+   - App port (default: `4000`)
+   - Webhook port (default: `4001`)
+4. **Wait** — the script handles everything (~5–10 minutes)
+5. **Access the app** at `http://localhost:4000`
+
+### After install — Auto-Deployment via GitHub Webhook:
+Any future `git push` to `master` will automatically redeploy the app on the server via `deploy.bat`. Set up the GitHub Webhook in your repository settings pointing to:
+```
+http://<SERVER_IP>:4001/webhook
+```
+
+---
+
+## 🐳 Docker (Linux / Cloud)
+
+Use this for Linux servers, cloud VMs (AWS EC2, Azure, DigitalOcean), or any machine where Docker is available.
+
+**Prerequisite:** [Docker](https://docs.docker.com/engine/install/) and Docker Compose must be installed.
+
+### Option A: Testing / Staging (includes bundled PostgreSQL)
+
 ```bash
+# 1. Clone the repo
 git clone https://github.com/jimmysh2/court-portal-haryana.git
 cd court-portal-haryana
+
+# 2. Build and start (app + database together)
+docker-compose up --build -d
+
+# 3. App is live at http://localhost:4000
 ```
 
-### 2. Install Dependencies
-You need to install packages for both the backend and the frontend:
+> Database migrations run automatically on every container boot. No manual step needed.
+
+To stop: `docker-compose down`  
+To view logs: `docker-compose logs -f app`
+
+### Option B: Production (connects to existing PostgreSQL)
+
 ```bash
-# Install root dependencies
-npm install
+# 1. Clone the repo
+git clone https://github.com/jimmysh2/court-portal-haryana.git
+cd court-portal-haryana
 
-# Install client dependencies
-cd client
-npm install
-cd ..
+# 2. Create and configure your .env file
+cp .env.server.example .env
+# Edit .env with your DB credentials, JWT secrets, CORS_ORIGIN, etc.
+
+# 3. Build and start
+docker-compose -f docker-compose.prod.yml up --build -d
+
+# 4. App is live at http://localhost:4000
 ```
 
-### 3. Environment Configuration
-Create a `.env` file in the root directory:
+### Updating a Docker deployment:
 ```bash
-touch .env
+git pull origin master
+docker-compose -f docker-compose.prod.yml up --build -d
 ```
-Open `.env` and add the following configuration:
-```env
-DATABASE_URL="postgresql://YOUR_DB_USER:YOUR_DB_PASSWORD@localhost:5432/court_portal?schema=public"
-JWT_SECRET="generate-a-random-secret-string"
-JWT_REFRESH_SECRET="generate-another-random-secret-string"
-PORT=3000
-CORS_ORIGIN="http://localhost:5173"
-NODE_ENV="development"
-```
-*Note: Replace `YOUR_DB_USER` and `YOUR_DB_PASSWORD` with your local PostgreSQL credentials.*
-
-### 4. Database Setup
-Initialize the database schema and seed the initial data:
-```bash
-# Generate Prisma Client
-npx prisma generate
-
-# Run migrations to create tables
-npx prisma migrate dev --name init
-
-# Seed the database with production data (Courts, Districts, etc.)
-node prisma/seed-production.js
-```
-
-### 5. Run the Application
-
-#### Option A: Development Mode (Hot Reload)
-Run the backend and frontend simultaneously:
-```bash
-npm run dev
-```
--   **Backend**: http://localhost:3000
--   **Frontend**: http://localhost:5173
-
-#### Option B: Production Mode
-Build the frontend and serve it via the backend:
-```bash
-# Build the frontend
-cd client
-npm run build
-cd ..
-
-# Start the server
-NODE_ENV=production npm start
-```
-The app will be available at http://localhost:3000
 
 ---
 
-## 🔄 Maintenance & Synchronization (CRITICAL)
+## 🛠️ Manual (Local Development)
 
-If you make any changes via the UI (e.g., adding **New Police Stations** or creating **New Data Entry Tables**), these changes exist only in your local database. To ensure they are saved to GitHub and propagated to other deployments (like Docker or Production):
+Use this only for active development on your local machine.
 
-1.  **Run the Sync Script**:
-    ```bash
-    npm run db:sync
-    ```
-    This will automatically update `prisma/seed-production.js` and `Disrtrict_PS.csv` with your latest database changes.
+### Prerequisites
+- Node.js v20+
+- PostgreSQL (running locally)
+- Git
 
-2.  **Commit and Push**:
-    ```bash
-    git add .
-    git commit -m "Sync UI changes to code"
-    git push
-    ```
+### Steps
+
+```bash
+# 1. Clone
+git clone https://github.com/jimmysh2/court-portal-haryana.git
+cd court-portal-haryana
+
+# 2. Install dependencies
+npm install
+cd client && npm install && cd ..
+
+# 3. Configure environment
+cp .env.local .env
+# Edit .env — set DATABASE_URL to your local PostgreSQL connection string
+
+# 4. Set up database
+npx prisma migrate dev
+node prisma/seed-production.js
+
+# 5. Run in development mode (hot reload)
+npm run dev
+```
+
+- **Backend API**: http://localhost:3000
+- **Frontend**: http://localhost:5173
+
+---
+
+## 🔄 Syncing UI Changes to Git (CRITICAL)
+
+If you make changes via the admin UI (e.g., adding Police Stations or new Data Tables), those changes exist only in your local database. Run the sync script before committing:
+
+```bash
+npm run db:sync
+git add .
+git commit -m "sync: update seed data and district/PS CSV"
+git push
+```
 
 > [!IMPORTANT]
-> **Antigravity Rule**: Always run `npm run db:sync` before any `git commit` to ensure the repository remains the single source of truth.
+> Always run `npm run db:sync` before `git commit` when you have made UI-driven database changes. This keeps the repository as the single source of truth.
+
+---
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for branch rules, PR workflow, and translation guidelines.
