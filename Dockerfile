@@ -52,9 +52,9 @@ RUN mkdir -p /app/uploads /app/backups
 # Expose API port (default 4000, overridable via PORT env var)
 EXPOSE 4000
 
-# Health check endpoint
+# Health check endpoint (port 4000 is the default, override PORT env var if needed)
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=5 \
-  CMD curl -f http://localhost:${PORT:-4000}/api/health || exit 1
+  CMD curl -f http://localhost:4000/api/health || exit 1
 
 # Start script: run migrations THEN start the app
 # This ensures schema is always up-to-date when the container boots
