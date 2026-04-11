@@ -757,43 +757,78 @@ export default function ReportsPage() {
                                         </div>
                                     </div>
 
-                                    <div className="data-table-wrapper" style={{ overflowX: 'auto', width: 'fit-content', maxWidth: '100%' }}>
-                                        <table className="data-table" style={{ width: 'auto' }}>
-                                            <thead>
-                                                <tr>
-                                                    <th>Sr. No.</th>
-                                                    <th>{rowHeaderLabel}</th>
-                                                    {tableColumns.map((col, idx) => (
-                                                        <th key={idx}>{col.header}</th>
+                                    {tableBlock.tableSlug === 'trials-disposed' ? (
+                                        <div className="data-table-wrapper" style={{ overflowX: 'auto', width: 'fit-content', maxWidth: '100%' }}>
+                                            <table className="data-table" style={{ width: '100%' }}>
+                                                <thead>
+                                                    <tr>
+                                                        <th>Sr. No.</th>
+                                                        <th>FIR No.</th>
+                                                        <th>Date & U/s</th>
+                                                        <th>Police Station</th>
+                                                        <th>Name of Accused</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {rawEntries.map((entry, idx) => {
+                                                        const u_s = entry.values?.sections || '';
+                                                        const firNo = entry.values?.fir_no || '';
+                                                        const firYear = entry.values?.fir_year || '';
+                                                        const dateVal = new Date(entry.entryDate).toLocaleDateString('en-IN');
+                                                        const accusedStr = entry.values?.accused_name || '';
+                                                        const ps = entry.values?.police_station || '';
+                                                        return (
+                                                            <tr key={entry.id}>
+                                                                <td>{idx + 1}</td>
+                                                                <td>{firNo}{firYear ? `/${firYear}` : ''}</td>
+                                                                <td>{dateVal} & {u_s}</td>
+                                                                <td>{ps}</td>
+                                                                <td>{accusedStr}</td>
+                                                            </tr>
+                                                        );
+                                                    })}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    ) : (
+                                        <div className="data-table-wrapper" style={{ overflowX: 'auto', width: 'fit-content', maxWidth: '100%' }}>
+                                            <table className="data-table" style={{ width: 'auto' }}>
+                                                <thead>
+                                                    <tr>
+                                                        <th>Sr. No.</th>
+                                                        <th>{rowHeaderLabel}</th>
+                                                        {tableColumns.map((col, idx) => (
+                                                            <th key={idx}>{col.header}</th>
+                                                        ))}
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {groupedData.map((row, idx) => (
+                                                        <tr key={idx}>
+                                                            <td>{idx + 1}</td>
+                                                            <td style={{ fontWeight: 'bold' }}>{row.label}</td>
+                                                            {tableColumns.map((col, cIdx) => (
+                                                                <td key={cIdx}>
+                                                                    {col.renderCell(row.entries, (modalEntries) => openAggregateModal(`Details for ${row.label} - ${col.header}`, modalEntries))}
+                                                                </td>
+                                                            ))}
+                                                        </tr>
                                                     ))}
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {groupedData.map((row, idx) => (
-                                                    <tr key={idx}>
-                                                        <td>{idx + 1}</td>
-                                                        <td style={{ fontWeight: 'bold' }}>{row.label}</td>
-                                                        {tableColumns.map((col, cIdx) => (
-                                                            <td key={cIdx}>
-                                                                {col.renderCell(row.entries, (modalEntries) => openAggregateModal(`Details for ${row.label} - ${col.header}`, modalEntries))}
-                                                            </td>
-                                                        ))}
-                                                    </tr>
-                                                ))}
-                                                {/* Total Row */}
-                                                {groupedData.length > 0 && (
-                                                    <tr style={{ background: 'var(--color-surface-hover)', fontWeight: 'bold' }}>
-                                                        <td colSpan="2" style={{ textAlign: 'right' }}>OVERALL TOTAL:</td>
-                                                        {tableColumns.map((col, cIdx) => (
-                                                            <td key={cIdx}>
-                                                                {col.renderCell(rawEntries, (modalEntries) => openAggregateModal(`Overall Total - ${col.header}`, modalEntries))}
-                                                            </td>
-                                                        ))}
-                                                    </tr>
-                                                )}
-                                            </tbody>
-                                        </table>
-                                    </div>
+                                                    {/* Total Row */}
+                                                    {groupedData.length > 0 && (
+                                                        <tr style={{ background: 'var(--color-surface-hover)', fontWeight: 'bold' }}>
+                                                            <td colSpan="2" style={{ textAlign: 'right' }}>OVERALL TOTAL:</td>
+                                                            {tableColumns.map((col, cIdx) => (
+                                                                <td key={cIdx}>
+                                                                    {col.renderCell(rawEntries, (modalEntries) => openAggregateModal(`Overall Total - ${col.header}`, modalEntries))}
+                                                                </td>
+                                                            ))}
+                                                        </tr>
+                                                    )}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    )}
                                 </div>
                             );
                         })}
