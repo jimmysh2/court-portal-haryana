@@ -227,11 +227,10 @@ export const getTableColumns = (tableSlug) => {
                     return <ClickableNum num={sum} entries={entries} onClick={openModal} />
                 }},
                 { header: '% examined through VC', renderCell: (entries) => {
-                    const sum3 = entries.reduce((acc, e) => acc + parseVal(e.values?.examined_physically), 0);
+                    const sum1 = entries.reduce((acc, e) => acc + parseVal(e.values?.supposed_to_appear), 0);
                     const sum4 = entries.reduce((acc, e) => acc + parseVal(e.values?.examined_via_vc), 0);
-                    const totalExamined = sum3 + sum4;
-                    if (totalExamined === 0) return <span>0%</span>;
-                    return <span>{((sum4 / totalExamined) * 100).toFixed(1)}%</span>;
+                    if (sum1 === 0) return <span>0%</span>;
+                    return <span>{((sum4 / sum1) * 100).toFixed(1)}%</span>;
                 }},
                 { header: 'Total Examined (Court+VC)', renderCell: (entries) => {
                     const sum3 = entries.reduce((acc, e) => acc + parseVal(e.values?.examined_physically), 0);
@@ -315,11 +314,10 @@ export const getTableColumns = (tableSlug) => {
                     return <ClickableNum num={sum} entries={entries} onClick={openModal} />
                 }},
                 { header: '% examined through VC', renderCell: (entries) => {
-                    const sum4 = entries.reduce((acc, e) => acc + parseVal(e.values?.examined_physically), 0);
+                    const sum1 = entries.reduce((acc, e) => acc + parseVal(e.values?.supposed_to_appear), 0);
                     const sum5 = entries.reduce((acc, e) => acc + parseVal(e.values?.examined_through_vc), 0);
-                    const totalExamined = sum4 + sum5;
-                    if (totalExamined === 0) return <span>0%</span>;
-                    return <span>{((sum5 / totalExamined) * 100).toFixed(1)}%</span>;
+                    if (sum1 === 0) return <span>0%</span>;
+                    return <span>{((sum5 / sum1) * 100).toFixed(1)}%</span>;
                 }},
                 { header: 'Total Examined (Court+VC)', renderCell: (entries) => {
                     const sum4 = entries.reduce((acc, e) => acc + parseVal(e.values?.examined_physically), 0);
