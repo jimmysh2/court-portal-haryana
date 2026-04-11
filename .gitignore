@@ -27,3 +27,8 @@ backups/
 
 uploads/
 .vercel
+
+# Junk and temporary scripts
+.vs/
+tmp/
+temp-parser/
