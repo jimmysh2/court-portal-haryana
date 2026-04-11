@@ -379,6 +379,21 @@ export const getTableColumns = (tableSlug) => {
                     return <span>{((pr / ex) * 100).toFixed(1)}%</span>;
                 }}
             ];
+        case 'accused-surrendered':
+            return [
+                { header: 'Granted Regular Bail', renderCell: (entries, openModal) => {
+                    const subset = filterByRegex(entries, 'status', /regular bail/i);
+                    return <ClickableNum num={subset.length} entries={subset} onClick={openModal} />
+                }},
+                { header: 'Sent to Judicial custody', renderCell: (entries, openModal) => {
+                    const subset = filterByRegex(entries, 'status', /judicial custody/i);
+                    return <ClickableNum num={subset.length} entries={subset} onClick={openModal} />
+                }},
+                { header: 'Sent to Police custody', renderCell: (entries, openModal) => {
+                    const subset = filterByRegex(entries, 'status', /police custody/i);
+                    return <ClickableNum num={subset.length} entries={subset} onClick={openModal} />
+                }}
+            ];
         case 'gangster-next-day':
         case 'property-offender-next-day':
             return [
