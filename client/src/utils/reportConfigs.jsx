@@ -200,7 +200,7 @@ export const getTableColumns = (tableSlug) => {
                     const sum4 = entries.reduce((acc, e) => acc + parseVal(e.values?.examined_via_vc), 0);
                     if (sum1 === 0) return <span>0%</span>;
                     const val = sum1 - (sum2 + sum4);
-                    return <span>{((val / sum1) * 100).toFixed(1)}%</span>;
+                    return <span>{((val / sum1) * 100).toFixed(2)}%</span>;
                 }},
                 { header: 'Attended Physically', renderCell: (entries, openModal) => {
                     const sum = entries.reduce((acc, e) => acc + parseVal(e.values?.appeared_physically), 0);
@@ -214,7 +214,7 @@ export const getTableColumns = (tableSlug) => {
                     const sum2 = entries.reduce((acc, e) => acc + parseVal(e.values?.appeared_physically), 0);
                     const sum3 = entries.reduce((acc, e) => acc + parseVal(e.values?.examined_physically), 0);
                     if (sum2 === 0) return <span>0%</span>;
-                    return <span>{((sum3 / sum2) * 100).toFixed(1)}%</span>;
+                    return <span>{((sum3 / sum2) * 100).toFixed(2)}%</span>;
                 }},
                 { header: 'Not Examined in Court after being Present', renderCell: (entries) => {
                     const sum2 = entries.reduce((acc, e) => acc + parseVal(e.values?.appeared_physically), 0);
@@ -230,7 +230,7 @@ export const getTableColumns = (tableSlug) => {
                     const sum1 = entries.reduce((acc, e) => acc + parseVal(e.values?.supposed_to_appear), 0);
                     const sum4 = entries.reduce((acc, e) => acc + parseVal(e.values?.examined_via_vc), 0);
                     if (sum1 === 0) return <span>0%</span>;
-                    return <span>{((sum4 / sum1) * 100).toFixed(1)}%</span>;
+                    return <span>{((sum4 / sum1) * 100).toFixed(2)}%</span>;
                 }},
                 { header: 'Total Examined (Court+VC)', renderCell: (entries) => {
                     const sum3 = entries.reduce((acc, e) => acc + parseVal(e.values?.examined_physically), 0);
@@ -242,7 +242,7 @@ export const getTableColumns = (tableSlug) => {
                     const sum3 = entries.reduce((acc, e) => acc + parseVal(e.values?.examined_physically), 0);
                     const sum4 = entries.reduce((acc, e) => acc + parseVal(e.values?.examined_via_vc), 0);
                     if (sum1 === 0) return <span>0%</span>;
-                    return <span>{(((sum3 + sum4) / sum1) * 100).toFixed(1)}%</span>;
+                    return <span>{(((sum3 + sum4) / sum1) * 100).toFixed(2)}%</span>;
                 }},
                 { header: 'Authorized Request', renderCell: (entries) => {
                     const sum1 = entries.reduce((acc, e) => acc + parseVal(e.values?.supposed_to_appear), 0);
@@ -264,7 +264,7 @@ export const getTableColumns = (tableSlug) => {
                     const sum5 = entries.reduce((acc, e) => acc + parseVal(e.values?.absent_unauthorized), 0);
                     const notAppeared = sum1 - (sum2 + sum4);
                     if (notAppeared === 0) return <span>0%</span>;
-                    return <span>{((sum5 / notAppeared) * 100).toFixed(1)}%</span>;
+                    return <span>{((sum5 / notAppeared) * 100).toFixed(2)}%</span>;
                 }}
             ];
         case 'deposition-govt-officials':
@@ -287,7 +287,7 @@ export const getTableColumns = (tableSlug) => {
                     const sum5 = entries.reduce((acc, e) => acc + parseVal(e.values?.examined_through_vc), 0);
                     if (sum1 === 0) return <span>0%</span>;
                     const val = sum1 - (sum3 + sum5);
-                    return <span>{((val / sum1) * 100).toFixed(1)}%</span>;
+                    return <span>{((val / sum1) * 100).toFixed(2)}%</span>;
                 }},
                 { header: 'Attended Physically', renderCell: (entries, openModal) => {
                     const sum = entries.reduce((acc, e) => acc + parseVal(e.values?.appeared_physically), 0);
@@ -301,7 +301,7 @@ export const getTableColumns = (tableSlug) => {
                     const sum3 = entries.reduce((acc, e) => acc + parseVal(e.values?.appeared_physically), 0);
                     const sum4 = entries.reduce((acc, e) => acc + parseVal(e.values?.examined_physically), 0);
                     if (sum3 === 0) return <span>0%</span>;
-                    return <span>{((sum4 / sum3) * 100).toFixed(1)}%</span>;
+                    return <span>{((sum4 / sum3) * 100).toFixed(2)}%</span>;
                 }},
                 { header: 'Not Examined in Court after being Present', renderCell: (entries) => {
                     const sum3 = entries.reduce((acc, e) => acc + parseVal(e.values?.appeared_physically), 0);
@@ -317,7 +317,7 @@ export const getTableColumns = (tableSlug) => {
                     const sum1 = entries.reduce((acc, e) => acc + parseVal(e.values?.supposed_to_appear), 0);
                     const sum5 = entries.reduce((acc, e) => acc + parseVal(e.values?.examined_through_vc), 0);
                     if (sum1 === 0) return <span>0%</span>;
-                    return <span>{((sum5 / sum1) * 100).toFixed(1)}%</span>;
+                    return <span>{((sum5 / sum1) * 100).toFixed(2)}%</span>;
                 }},
                 { header: 'Total Examined (Court+VC)', renderCell: (entries) => {
                     const sum4 = entries.reduce((acc, e) => acc + parseVal(e.values?.examined_physically), 0);
@@ -329,7 +329,7 @@ export const getTableColumns = (tableSlug) => {
                     const sum4 = entries.reduce((acc, e) => acc + parseVal(e.values?.examined_physically), 0);
                     const sum5 = entries.reduce((acc, e) => acc + parseVal(e.values?.examined_through_vc), 0);
                     if (sum1 === 0) return <span>0%</span>;
-                    return <span>{(((sum4 + sum5) / sum1) * 100).toFixed(1)}%</span>;
+                    return <span>{(((sum4 + sum5) / sum1) * 100).toFixed(2)}%</span>;
                 }},
                 { header: 'Telephonically informed', renderCell: (entries, openModal) => {
                     const sum = entries.reduce((acc, e) => acc + parseVal(e.values?.informed_on_phone), 0);
@@ -339,7 +339,7 @@ export const getTableColumns = (tableSlug) => {
                     const sum1 = entries.reduce((acc, e) => acc + parseVal(e.values?.supposed_to_appear), 0);
                     const sum2 = entries.reduce((acc, e) => acc + parseVal(e.values?.informed_on_phone), 0);
                     if (sum1 === 0) return <span>0%</span>;
-                    return <span>{((sum2 / sum1) * 100).toFixed(1)}%</span>;
+                    return <span>{((sum2 / sum1) * 100).toFixed(2)}%</span>;
                 }}
             ];
         case 'vc-prisoners':
