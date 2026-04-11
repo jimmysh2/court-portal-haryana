@@ -168,7 +168,7 @@ export const translations = {
         "accused-surrendered": "20. List of the accused who surrendered in court",
         "adverse-order-police": "21. Details of adverse order passed against police officials",
         "applications-dismissed": "22. Details of applications filed by police officials DISMISSED by the court",
-        "fir_date": "FIR Date",
+        "fir_year": "FIR Year",
         "case_details": "Case Details",
     },
     hi: {
