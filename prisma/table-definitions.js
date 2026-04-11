@@ -1121,28 +1121,12 @@ module.exports = [
         "sortOrder": 21,
         "columns": [
             {
-                "name": "FIR Number",
-                "slug": "fir_no",
+                "name": "Case Details",
+                "slug": "case_details",
                 "dataType": "text",
                 "enumOptions": null,
                 "isRequired": true,
                 "sortOrder": 0
-            },
-            {
-                "name": "FIR Year",
-                "slug": "fir_year",
-                "dataType": "year",
-                "enumOptions": null,
-                "isRequired": true,
-                "sortOrder": 1
-            },
-            {
-                "name": "Sections (U/s)",
-                "slug": "sections",
-                "dataType": "text",
-                "enumOptions": null,
-                "isRequired": true,
-                "sortOrder": 2
             },
             {
                 "name": "Police Station",
@@ -1150,7 +1134,7 @@ module.exports = [
                 "dataType": "text",
                 "enumOptions": null,
                 "isRequired": true,
-                "sortOrder": 3
+                "sortOrder": 1
             },
             {
                 "name": "Category",
@@ -1166,7 +1150,7 @@ module.exports = [
                     "Misbehaviour"
                 ],
                 "isRequired": true,
-                "sortOrder": 4
+                "sortOrder": 2
             }
         ]
     },
@@ -1178,28 +1162,12 @@ module.exports = [
         "sortOrder": 22,
         "columns": [
             {
-                "name": "FIR Number",
-                "slug": "fir_no",
+                "name": "Case Details",
+                "slug": "case_details",
                 "dataType": "text",
                 "enumOptions": null,
                 "isRequired": true,
                 "sortOrder": 0
-            },
-            {
-                "name": "FIR Year",
-                "slug": "fir_year",
-                "dataType": "year",
-                "enumOptions": null,
-                "isRequired": true,
-                "sortOrder": 1
-            },
-            {
-                "name": "Sections (U/s)",
-                "slug": "sections",
-                "dataType": "text",
-                "enumOptions": null,
-                "isRequired": true,
-                "sortOrder": 2
             },
             {
                 "name": "Police Station",
@@ -1207,7 +1175,7 @@ module.exports = [
                 "dataType": "text",
                 "enumOptions": null,
                 "isRequired": true,
-                "sortOrder": 3
+                "sortOrder": 1
             },
             {
                 "name": "Category",
@@ -1219,7 +1187,7 @@ module.exports = [
                     "Remand from judicial custody"
                 ],
                 "isRequired": true,
-                "sortOrder": 4
+                "sortOrder": 2
             }
         ]
     }

@@ -169,6 +169,7 @@ export const translations = {
         "adverse-order-police": "21. Details of adverse order passed against police officials",
         "applications-dismissed": "22. Details of applications filed by police officials DISMISSED by the court",
         "fir_date": "FIR Date",
+        "case_details": "Case Details",
     },
     hi: {
         // Navigation Labels
@@ -340,6 +341,7 @@ export const translations = {
         "accused-surrendered": "20. आत्मसमर्पण करने वाले अभियुक्तों की सूची",
         "adverse-order-police": "21. पुलिस अधिकारियों के खिलाफ पारित प्रतिकूल आदेश का विवरण",
         "applications-dismissed": "22. अदालत द्वारा खारिज किए गए पुलिस अधिकारियों के आवेदनों का विवरण",
+        "case_details": "केस विवरण",
 
         // Column Headings (Keyed by slug)
         "fir_no": "αñ¬αÑìαñ░αñ╛αñÑαñ«αñ┐αñòαÑÇ αñ╕αñéαñûαÑìαñ»αñ╛",
