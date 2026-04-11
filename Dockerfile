@@ -19,8 +19,8 @@ RUN npm run build
 # ── Stage 2: Production Runtime ──────────────────────────────
 FROM node:20-alpine AS production
 
-# Install system dependencies (pg client for health check, curl for healthcheck CMD)
-RUN apk add --no-cache postgresql-client gzip curl
+# Install system dependencies (curl for healthcheck CMD)
+RUN apk add --no-cache curl
 
 WORKDIR /app
 
@@ -49,13 +49,13 @@ COPY --from=frontend-builder /app/client/dist ./client/dist
 # Create uploads and backups directories
 RUN mkdir -p /app/uploads /app/backups
 
-# Expose API port
-EXPOSE 3000
+# Expose API port (default 4000, overridable via PORT env var)
+EXPOSE 4000
 
 # Health check endpoint
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=5 \
-  CMD curl -f http://localhost:3000/api/health || exit 1
+  CMD curl -f http://localhost:${PORT:-4000}/api/health || exit 1
 
 # Start script: run migrations THEN start the app
 # This ensures schema is always up-to-date when the container boots
-CMD ["node", "server/index.js"]
+CMD sh -c "npx prisma migrate deploy && node server/index.js"
