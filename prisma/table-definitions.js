@@ -68,9 +68,9 @@ module.exports = [
                 "sortOrder": 0
             },
             {
-                "name": "FIR Year",
-                "slug": "fir_year",
-                "dataType": "year",
+                "name": "FIR Date",
+                "slug": "fir_date",
+                "dataType": "date",
                 "enumOptions": null,
                 "isRequired": true,
                 "sortOrder": 1
