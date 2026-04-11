@@ -46,35 +46,41 @@ IF NOT EXIST "backups" mkdir backups
 IF NOT EXIST "uploads" mkdir uploads
 echo [OK] Directories are ready.
 
-:: 5. Build and Start Services
-echo [INFO] Building and starting Docker containers (this may take a few minutes)...
-docker compose up --build -d --remove-orphans
+:: 5. Start Database and Build App Natively
+echo [INFO] Starting Database using Docker...
+docker compose up -d db
 
 echo.
-echo [INFO] Waiting for app to be healthy...
-timeout /t 10 /nobreak > nul
+echo [INFO] Waiting for database to be healthy...
+timeout /t 5 /nobreak > nul
 
-:: 6. Health check request
-curl -s http://localhost:3000/api/health >nul 2>&1
-if errorlevel 1 (
-    echo [WARNING] App may not be ready yet. Check logs with: docker compose logs app
-) else (
-    echo [SUCCESS] Application is running!
-)
+echo [INFO] Installing backend dependencies...
+call npm install --omit=dev
 
-:: 7. Display Success
+echo [INFO] Installing frontend dependencies and building...
+cd client
+call npm install
+call npm run build
+cd ..
+
+echo [INFO] Setting up database...
+call npx prisma generate
+call npx prisma migrate deploy
+node prisma/seed-production.js
+
 echo.
 echo ==============================================================================
 echo                   Deployment Successful!
 echo ==============================================================================
-echo Your portal should be available shortly on port 3000 (or the PORT set in .env).
+echo Your portal will be available on port 3000.
+echo KEEP THIS WINDOW OPEN to keep the server running!
 echo.
-echo Useful commands:
-echo View logs:     docker compose logs -f
-echo Stop app:      docker compose stop
-echo Start app:     docker compose start
-echo.
+echo To stop the server, press Ctrl+C or close this window.
 echo Access the portal at: http://localhost:3000
+echo ==============================================================================
 echo.
+echo [INFO] Starting Server...
+set NODE_ENV=production
+node server/index.js
 pause
 
