@@ -354,7 +354,7 @@ export const getTableColumns = (tableSlug) => {
                     const sumV = entries.reduce((acc, e) => acc + parseVal(e.values?.produced_via_vc), 0);
                     const tot = sumP + sumV;
                     if (tot === 0) return <span>0%</span>;
-                    return <span>{((sumV / tot) * 100).toFixed(1)}%</span>;
+                    return <span>{((sumV / tot) * 100).toFixed(2)}%</span>;
                 }}
             ];
         case 'pairvi-witness':
@@ -371,7 +371,7 @@ export const getTableColumns = (tableSlug) => {
                     const ex = entries.reduce((acc, e) => acc + parseVal(e.values?.witnesses_examined), 0);
                     const pr = entries.reduce((acc, e) => acc + parseVal(e.values?.witnesses_prepared), 0);
                     if (ex === 0) return <span>0%</span>;
-                    return <span>{((pr / ex) * 100).toFixed(1)}%</span>;
+                    return <span>{((pr / ex) * 100).toFixed(2)}%</span>;
                 }}
             ];
         case 'accused-surrendered':
