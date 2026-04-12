@@ -709,7 +709,7 @@ export default function ReportsPage() {
                                 <div key={tableBlock.tableId} className="card mb-xl">
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '8px' }}>
                                         <h3 className="card-title" style={{ margin: 0, color: 'var(--color-primary)' }}>
-                                            {(tableBlock.tableName || '').replace(/today/gi, '').trim()}
+                                            {tTable(tableBlock.tableSlug, tableBlock.tableName)}
                                         </h3>
                                         <div style={{ position: 'relative' }}>
                                             <button 
