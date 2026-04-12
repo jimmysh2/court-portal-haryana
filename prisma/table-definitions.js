@@ -564,7 +564,7 @@ module.exports = [
     {
         "name": "10. Deposition of police officials",
         "slug": "police-deposition",
-        "description": "Deposition of police officials ΓÇö aggregate counts per court per day",
+        "description": "Deposition of police officials aggregate counts per court per day",
         "singleRow": true,
         "sortOrder": 10,
         "columns": [
@@ -613,7 +613,7 @@ module.exports = [
     {
         "name": "11. Deposition of other govt officials",
         "slug": "deposition-govt-officials",
-        "description": "Deposition of other govt officials ΓÇö aggregate counts per court per day",
+        "description": "Deposition of other govt officials aggregate counts per court per day",
         "singleRow": true,
         "sortOrder": 11,
         "columns": [
@@ -662,7 +662,7 @@ module.exports = [
     {
         "name": "12. Deposition of private individuals (public)",
         "slug": "deposition-private",
-        "description": "Deposition of private individuals (public) ΓÇö aggregate counts per court per day",
+        "description": "Deposition of private individuals (public) aggregate counts per court per day",
         "singleRow": true,
         "sortOrder": 12,
         "columns": [
@@ -711,7 +711,7 @@ module.exports = [
     {
         "name": "13. VC of prisoners",
         "slug": "vc-prisoners",
-        "description": "VC of prisoners ΓÇö aggregate counts per court per day",
+        "description": "VC of prisoners aggregate counts per court per day",
         "singleRow": true,
         "sortOrder": 13,
         "columns": [
@@ -777,7 +777,7 @@ module.exports = [
     {
         "name": "15. Pairvi for private witness",
         "slug": "pairvi-witness",
-        "description": "Pairvi for private witness ΓÇö aggregate counts per court per day",
+        "description": "Pairvi for private witness aggregate counts per court per day",
         "singleRow": true,
         "sortOrder": 15,
         "columns": [
