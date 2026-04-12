@@ -259,12 +259,9 @@ export const getTableColumns = (tableSlug) => {
                 }},
                 { header: '% Unauthorized Request', renderCell: (entries) => {
                     const sum1 = entries.reduce((acc, e) => acc + parseVal(e.values?.supposed_to_appear), 0);
-                    const sum2 = entries.reduce((acc, e) => acc + parseVal(e.values?.appeared_physically), 0);
-                    const sum4 = entries.reduce((acc, e) => acc + parseVal(e.values?.examined_via_vc), 0);
                     const sum5 = entries.reduce((acc, e) => acc + parseVal(e.values?.absent_unauthorized), 0);
-                    const notAppeared = sum1 - (sum2 + sum4);
-                    if (notAppeared === 0) return <span>0%</span>;
-                    return <span>{((sum5 / notAppeared) * 100).toFixed(2)}%</span>;
+                    if (sum1 === 0) return <span>0%</span>;
+                    return <span>{((sum5 / sum1) * 100).toFixed(2)}%</span>;
                 }}
             ];
         case 'deposition-govt-officials':
