@@ -5,8 +5,7 @@ version: '3.8'
 # Uses bundled PostgreSQL for completely isolated local testing.
 # The app + DB are self-contained — no internet/Supabase needed.
 #
-# For VM test:   deploy.bat
-# For prod server: use docker-compose.prod.yml instead
+# Usage:  docker-compose up --build
 # ============================================================
 
 services:
@@ -16,7 +15,7 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: Hosting@123
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-Admin2026}
       POSTGRES_DB: court_portal
     ports:
       - "5432:5432"
@@ -37,17 +36,15 @@ services:
     image: court-portal-app:latest
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "${PORT:-4000}:${PORT:-4000}"
     environment:
-      # Uses local postgres container — completely isolated from Supabase
-      DATABASE_URL: "postgresql://postgres:Hosting@123@db:5432/court_portal"
-      DIRECT_URL: "postgresql://postgres:Hosting@123@db:5432/court_portal"
+      DATABASE_URL: "postgresql://postgres:${DB_PASSWORD:-Admin2026}@db:5432/court_portal"
+      DIRECT_URL: "postgresql://postgres:${DB_PASSWORD:-Admin2026}@db:5432/court_portal"
       NODE_ENV: "production"
-      PORT: "3000"
-      CORS_ORIGIN: "http://localhost:3000"
-      JWT_SECRET: "court-portal-local-test-secret"
-      JWT_REFRESH_SECRET: "court-portal-local-test-refresh-secret"
-      VITE_ENABLE_QUICK_LOGIN: "false"
+      PORT: "${PORT:-4000}"
+      CORS_ORIGIN: "http://localhost:${PORT:-4000}"
+      JWT_SECRET: "${JWT_SECRET:-court-portal-local-test-secret}"
+      JWT_REFRESH_SECRET: "${JWT_REFRESH_SECRET:-court-portal-local-test-refresh-secret}"
     volumes:
       - ./backups:/app/backups
       - ./uploads:/app/uploads
