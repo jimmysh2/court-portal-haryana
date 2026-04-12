@@ -1129,7 +1129,7 @@ module.exports = [
                 "sortOrder": 0
             },
             {
-                "name": "Police Station (PS)",
+                "name": "Police Station",
                 "slug": "police_station",
                 "dataType": "text",
                 "enumOptions": null,
@@ -1170,7 +1170,7 @@ module.exports = [
                 "sortOrder": 0
             },
             {
-                "name": "Police Station (PS)",
+                "name": "Police Station",
                 "slug": "police_station",
                 "dataType": "text",
                 "enumOptions": null,
