@@ -199,7 +199,7 @@ export const getTableColumns = (tableSlug) => {
                     const sum2 = entries.reduce((acc, e) => acc + parseVal(e.values?.appeared_physically), 0);
                     const sum4 = entries.reduce((acc, e) => acc + parseVal(e.values?.examined_via_vc), 0);
                     if (sum1 === 0) return <span>0%</span>;
-                    const val = sum1 - (sum2 + sum4);
+                    const val = Math.max(0, sum1 - (sum2 + sum4));
                     return <span>{((val / sum1) * 100).toFixed(2)}%</span>;
                 }},
                 { header: 'Attended Physically', renderCell: (entries, openModal) => {
@@ -286,7 +286,7 @@ export const getTableColumns = (tableSlug) => {
                     const sum3 = entries.reduce((acc, e) => acc + parseVal(e.values?.appeared_physically), 0);
                     const sum5 = entries.reduce((acc, e) => acc + parseVal(e.values?.examined_through_vc), 0);
                     if (sum1 === 0) return <span>0%</span>;
-                    const val = sum1 - (sum3 + sum5);
+                    const val = Math.max(0, sum1 - (sum3 + sum5));
                     return <span>{((val / sum1) * 100).toFixed(2)}%</span>;
                 }},
                 { header: 'Attended Physically', renderCell: (entries, openModal) => {
