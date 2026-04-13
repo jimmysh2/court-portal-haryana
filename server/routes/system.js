@@ -110,6 +110,22 @@ router.delete('/backups/:filename', authenticate, requireRole('developer'), asyn
     }
 });
 
+// Download a backup file
+router.get('/backups/download/:filename', authenticate, requireRole('developer'), async (req, res) => {
+    try {
+        const { filename } = req.params;
+        const backupPath = path.join(BACKUP_DIR, filename);
+        
+        if (!fs.existsSync(backupPath)) {
+            return res.status(404).json({ error: 'Backup file not found' });
+        }
+
+        res.download(backupPath, filename);
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to download backup' });
+    }
+});
+
 // ─── 1. GET /api/v1/system/backups-list ────────────────────────────────────
 // List all available .sql backup files
 router.get('/backups-list', authenticate, requireRole('developer'), async (req, res, next) => {
