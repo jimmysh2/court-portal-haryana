@@ -170,6 +170,10 @@ export const translations = {
         "applications-dismissed": "22. Details of applications filed by police officials DISMISSED by the court",
         "fir_year": "FIR Year",
         "case_details": "Case Details",
+        "category": "Category",
+        "Bail Cancellation": "Bail Cancellation",
+        "Disposal of case property": "Disposal of case property",
+        "Remand from judicial custody": "Remand from judicial custody",
     },
     hi: {
         // Navigation Labels
@@ -342,6 +346,10 @@ export const translations = {
         "adverse-order-police": "21. पुलिस अधिकारियों के खिलाफ पारित प्रतिकूल आदेश का विवरण",
         "applications-dismissed": "22. अदालत द्वारा खारिज किए गए पुलिस अधिकारियों के आवेदनों का विवरण",
         "case_details": "केस विवरण",
+        "category": "श्रेणी",
+        "Bail Cancellation": "जमानत रद्द",
+        "Disposal of case property": "केस संपत्ति का निपटान",
+        "Remand from judicial custody": "न्यायिक हिरासत से रिमांड",
 
         // Column Headings (Keyed by slug)
         "fir_no": "αñ¬αÑìαñ░αñ╛αñÑαñ«αñ┐αñòαÑÇ αñ╕αñéαñûαÑìαñ»αñ╛",
