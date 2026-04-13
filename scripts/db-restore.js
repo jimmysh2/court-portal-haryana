@@ -50,7 +50,7 @@ async function runRestore(specificFile = null) {
         try {
             execSync('docker -v', { stdio: 'ignore' });
             hasDocker = true;
-        } catch (e) {}
+        } catch (e) { }
 
         if (hasDocker && !IS_CLOUD) {
             console.log('📡 Restoring to Local Docker container...');
@@ -60,7 +60,7 @@ async function runRestore(specificFile = null) {
             ]);
         } else if (process.env.DATABASE_URL) {
             console.log('📡 Restoring directly to DATABASE_URL...');
-            
+
             // Extract connection params from URL for psql
             // Note: simple psql [url] works best
             restoreProcess = spawn('psql', [process.env.DATABASE_URL]);
@@ -75,12 +75,12 @@ async function runRestore(specificFile = null) {
             restoreProcess.on('close', async (code) => {
                 if (code === 0) {
                     console.log('✅ Base Data Restored. Running Post-Restore Cleanup...');
-                    
+
                     // Deduplication & Integrity Check
                     try {
                         const { PrismaClient } = require('@prisma/client');
                         const prisma = new PrismaClient();
-                        
+
                         console.log('🔍 Checking for administrative account duplicates...');
                         // Ensure 'developer' and 'state_admin' remain unique and correct
                         // This fixes the '2 developer accounts' issue by merging or removing relics
