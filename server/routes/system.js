@@ -161,12 +161,12 @@ router.get('/backups/gdrive/latest', authenticate, requireRole('developer'), asy
         });
         const drive = google.drive({ version: 'v3', auth });
 
-        // Get the latest file
+        // Get the latest files to iterate and find the first non-empty valid backup
         const listResponse = await drive.files.list({
             q: `'${FOLDER_ID}' in parents and trashed = false`,
             orderBy: 'createdTime desc',
-            pageSize: 1,
-            fields: 'files(id, name, createdTime)'
+            pageSize: 20,
+            fields: 'files(id, name, createdTime, size)'
         });
 
         const files = listResponse.data.files;
@@ -174,8 +174,15 @@ router.get('/backups/gdrive/latest', authenticate, requireRole('developer'), asy
             return res.status(404).json({ error: 'No backups found in Google Drive.' });
         }
 
-        const latestFile = files[0];
-        console.log(`☁️ Downloading latest backup from GDrive: ${latestFile.name}`);
+        // pg_dump failures can result in 20-byte empty gzip files. Skip those.
+        const validFiles = files.filter(f => parseInt(f.size || 0) > 100);
+
+        if (validFiles.length === 0) {
+            return res.status(404).json({ error: 'Only empty backups were found in Google Drive.' });
+        }
+
+        const latestFile = validFiles[0];
+        console.log(`☁️ Downloading latest valid backup from GDrive: ${latestFile.name} (${latestFile.size} bytes)`);
 
         // Set headers for download
         res.setHeader('Content-Disposition', `attachment; filename="${latestFile.name}"`);
