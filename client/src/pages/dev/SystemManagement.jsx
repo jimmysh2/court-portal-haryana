@@ -243,6 +243,50 @@ export default function SystemManagement() {
         handleDownloadBackup(latestBackup.name);
     };
 
+    const handleDownloadGdriveLatestBackup = async () => {
+        setLoading(true);
+        try {
+            const token = localStorage.getItem('token');
+            const baseUrl = import.meta.env.VITE_API_URL || '/api/v1';
+            const response = await fetch(`${baseUrl}/system/backups/gdrive/latest`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || 'Failed to download from GDrive');
+            }
+
+            let filename = 'latest-gdrive-backup.sql.gz';
+            const disposition = response.headers.get('content-disposition');
+            if (disposition && disposition.indexOf('filename=') !== -1) {
+                const filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
+                const matches = filenameRegex.exec(disposition);
+                if (matches != null && matches[1]) { 
+                  filename = matches[1].replace(/['"]/g, '');
+                }
+            }
+
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+            showToast(`Started GDrive download for ${filename}`);
+        } catch (err) {
+            showToast(err.message || 'GDrive Download failed.', 'error');
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
         <div>
             <div className="page-header">
@@ -299,7 +343,15 @@ export default function SystemManagement() {
                                 disabled={loading || backups.length === 0}
                                 style={{ justifyContent: 'start' }}
                             >
-                                ⬇️ Download Latest Backup
+                                ⬇️ Download Latest Backup (Local)
+                            </button>
+                            <button 
+                                className="btn btn-secondary" 
+                                onClick={handleDownloadGdriveLatestBackup} 
+                                disabled={loading}
+                                style={{ justifyContent: 'start', borderColor: '#3b82f6', color: '#3b82f6' }}
+                            >
+                                ☁️ Download Latest Backup (GDrive)
                             </button>
                             <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', background: 'rgba(255,165,0,0.05)', padding: 'var(--space-sm) var(--space-md)', borderRadius: 'var(--radius-sm)', borderLeft: '3px solid var(--color-warning)' }}>
                                 Note: Backups are stored in the '/backups' directory and Google Drive of courtdataportal@gmail.com.

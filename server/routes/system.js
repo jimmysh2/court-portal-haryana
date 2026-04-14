@@ -148,6 +148,63 @@ router.get('/backups-list', authenticate, requireRole('developer'), async (req, 
     } catch (err) { next(err); }
 });
 
+// Download latest backup from Google Drive
+router.get('/backups/gdrive/latest', authenticate, requireRole('developer'), async (req, res) => {
+    try {
+        const { google } = require('googleapis');
+        const { getCredentials, FOLDER_ID } = require('../../scripts/gdrive-credentials');
+        
+        const credentials = getCredentials();
+        const auth = new google.auth.GoogleAuth({
+            credentials,
+            scopes: ['https://www.googleapis.com/auth/drive.readonly']
+        });
+        const drive = google.drive({ version: 'v3', auth });
+
+        // Get the latest file
+        const listResponse = await drive.files.list({
+            q: `'${FOLDER_ID}' in parents and trashed = false`,
+            orderBy: 'createdTime desc',
+            pageSize: 1,
+            fields: 'files(id, name, createdTime)'
+        });
+
+        const files = listResponse.data.files;
+        if (!files || files.length === 0) {
+            return res.status(404).json({ error: 'No backups found in Google Drive.' });
+        }
+
+        const latestFile = files[0];
+        console.log(`☁️ Downloading latest backup from GDrive: ${latestFile.name}`);
+
+        // Set headers for download
+        res.setHeader('Content-Disposition', `attachment; filename="${latestFile.name}"`);
+        res.setHeader('Content-Type', 'application/gzip'); 
+
+        // Stream the file content
+        const fileStream = await drive.files.get(
+            { fileId: latestFile.id, alt: 'media' },
+            { responseType: 'stream' }
+        );
+
+        fileStream.data
+            .on('end', () => console.log('✅ GDrive download completed.'))
+            .on('error', err => {
+                console.error('❌ Error streaming from GDrive:', err);
+                if (!res.headersSent) {
+                   res.end();
+                }
+            })
+            .pipe(res);
+
+    } catch (err) {
+        console.error('❌ GDrive API Error:', err);
+        if (!res.headersSent) {
+            res.status(500).json({ error: 'Failed to download from Google Drive' });
+        }
+    }
+});
+
 // Trigger a manual on-demand backup
 router.post('/backup', authenticate, requireRole('developer'), async (req, res, next) => {
     try {
