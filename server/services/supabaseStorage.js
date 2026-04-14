@@ -1,41 +1,57 @@
-const { createClient } = require('@supabase/supabase-js');
-require('dotenv').config();
+/**
+ * Local File Storage Service — Grievance Attachments
+ *
+ * Replaces the former Supabase Storage upload.
+ * Files are now stored on the local server at ./uploads/grievances/
+ * and served via the Express static route already configured in server/index.js.
+ *
+ * Works for: Government Windows Server deployment (and any future server).
+ * No cloud dependency.
+ */
 
-const supabaseUrl = process.env.SUPABASE_URL || 'https://kkhrghngknvkilbpeagw.supabase.co';
-const supabaseKey = process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtraHJnaG5na252a2lsYnBlYWd3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxMzU2NDksImV4cCI6MjA5MDcxMTY0OX0.9qQ9wMnZKRbGNZ99bx9XVz68pWmwUbZWb9OYyAad-ZQ';
+const path = require('path');
+const fs = require('fs');
 
-const supabase = createClient(supabaseUrl, supabaseKey);
+// Resolve uploads directory relative to project root (one level above /server)
+const UPLOADS_BASE_DIR = path.join(__dirname, '../../uploads');
 
+/**
+ * Saves an in-memory multer file (buffer) to local disk.
+ *
+ * @param {Object} file     - Multer file object (memoryStorage)
+ * @param {string} folder   - Sub-folder name, e.g. 'grievances'
+ * @returns {{ name, path, mimeType, size }}
+ *          `path` is the URL-ready relative path: /uploads/grievances/filename.ext
+ */
 const uploadFile = async (file, folder = 'grievances') => {
     try {
-        const fileExt = file.originalname.split('.').pop();
-        const fileName = `${Date.now()}-${Math.floor(Math.random() * 100000)}.${fileExt}`;
-        const filePath = `${folder}/${fileName}`;
+        const uploadDir = path.join(UPLOADS_BASE_DIR, folder);
 
-        const { data, error } = await supabase.storage
-            .from('grievances')
-            .upload(filePath, file.buffer, {
-                contentType: file.mimetype,
-                cacheControl: '3600',
-                upsert: false
-            });
+        // Ensure directory exists
+        if (!fs.existsSync(uploadDir)) {
+            fs.mkdirSync(uploadDir, { recursive: true });
+        }
 
-        if (error) throw error;
+        const fileExt = path.extname(file.originalname) || `.${file.mimetype.split('/')[1]}`;
+        const safeName = `${Date.now()}-${Math.floor(Math.random() * 100000)}${fileExt}`;
+        const diskPath = path.join(uploadDir, safeName);
 
-        const { data: { publicUrl } } = supabase.storage
-            .from('grievances')
-            .getPublicUrl(filePath);
+        // Write buffer to disk
+        fs.writeFileSync(diskPath, file.buffer);
+
+        // Return the URL-accessible relative path (Express serves /uploads statically)
+        const relativePath = `/uploads/${folder}/${safeName}`;
 
         return {
             name: file.originalname,
-            path: publicUrl,
+            path: relativePath,
             mimeType: file.mimetype,
             size: file.size
         };
     } catch (err) {
-        console.error('Supabase Storage Upload Error:', err.message);
+        console.error('Local File Storage Error:', err.message);
         throw err;
     }
 };
 
-module.exports = { uploadFile, supabase };
+module.exports = { uploadFile };
