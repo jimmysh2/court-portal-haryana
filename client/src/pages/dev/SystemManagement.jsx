@@ -254,34 +254,16 @@ export default function SystemManagement() {
                 }
             });
 
+            const data = await response.json();
+
             if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.error || 'Failed to download from GDrive');
+                throw new Error(data.error || 'Failed to pull from GDrive');
             }
 
-            let filename = 'latest-gdrive-backup.sql.gz';
-            const disposition = response.headers.get('content-disposition');
-            if (disposition && disposition.indexOf('filename=') !== -1) {
-                const filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
-                const matches = filenameRegex.exec(disposition);
-                if (matches != null && matches[1]) { 
-                  filename = matches[1].replace(/['"]/g, '');
-                }
-            }
-
-            const blob = await response.blob();
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.style.display = 'none';
-            a.href = url;
-            a.download = filename;
-            document.body.appendChild(a);
-            a.click();
-            window.URL.revokeObjectURL(url);
-            document.body.removeChild(a);
-            showToast(`Started GDrive download for ${filename}`);
+            showToast(data.message || 'GDrive backup pulled successfully!');
+            fetchBackups(); // Refresh the list below
         } catch (err) {
-            showToast(err.message || 'GDrive Download failed.', 'error');
+            showToast(err.message || 'GDrive Pull failed.', 'error');
         } finally {
             setLoading(false);
         }
@@ -349,9 +331,9 @@ export default function SystemManagement() {
                                 className="btn btn-secondary" 
                                 onClick={handleDownloadGdriveLatestBackup} 
                                 disabled={loading}
-                                style={{ justifyContent: 'start' }}
+                                style={{ justifyContent: 'start', borderColor: '#3b82f6', color: '#3b82f6' }}
                             >
-                                ☁️ Download Latest Backup (GDrive)
+                                ☁️ Pull Latest Backup from G Drive
                             </button>
                             <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', background: 'rgba(255,165,0,0.05)', padding: 'var(--space-sm) var(--space-md)', borderRadius: 'var(--radius-sm)', borderLeft: '3px solid var(--color-warning)' }}>
                                 Note: Backups are stored in the '/backups' directory and Google Drive of courtdataportal@gmail.com.

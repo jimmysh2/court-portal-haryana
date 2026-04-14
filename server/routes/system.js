@@ -184,9 +184,14 @@ router.get('/backups/gdrive/latest', authenticate, requireRole('developer'), asy
         const latestFile = validFiles[0];
         console.log(`☁️ Downloading latest valid backup from GDrive: ${latestFile.name} (${latestFile.size} bytes)`);
 
-        // Set headers for download
-        res.setHeader('Content-Disposition', `attachment; filename="${latestFile.name}"`);
-        res.setHeader('Content-Type', 'application/gzip'); 
+        const filePath = path.join(BACKUP_DIR, latestFile.name);
+        
+        // Ensure directory exists
+        if (!fs.existsSync(BACKUP_DIR)) {
+            fs.mkdirSync(BACKUP_DIR, { recursive: true });
+        }
+
+        const dest = fs.createWriteStream(filePath);
 
         // Stream the file content
         const fileStream = await drive.files.get(
@@ -195,14 +200,17 @@ router.get('/backups/gdrive/latest', authenticate, requireRole('developer'), asy
         );
 
         fileStream.data
-            .on('end', () => console.log('✅ GDrive download completed.'))
+            .on('end', () => {
+                console.log(`✅ GDrive pull completed. Saved to ${filePath}`);
+                res.json({ message: `Successfully pulled ${latestFile.name} from Google Drive.`, filename: latestFile.name });
+            })
             .on('error', err => {
                 console.error('❌ Error streaming from GDrive:', err);
                 if (!res.headersSent) {
-                   res.end();
+                   res.status(500).json({ error: 'Failed to write file to server' });
                 }
             })
-            .pipe(res);
+            .pipe(dest);
 
     } catch (err) {
         console.error('❌ GDrive API Error:', err);
