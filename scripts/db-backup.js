@@ -76,12 +76,13 @@ async function runBackup() {
         // 1. Check if we have a remote DATABASE_URL (e.g. Supabase)
         const isRemoteDB = process.env.DATABASE_URL && !process.env.DATABASE_URL.includes('localhost') && !process.env.DATABASE_URL.includes('127.0.0.1');
 
-        // 2. Check for Docker availability
+        // 2. Check if Docker daemon is actually running (not just CLI installed)
         let hasDocker = false;
         try {
-            execSync('docker -v', { stdio: 'ignore' });
+            // 'docker info' connects to the daemon — fails if daemon is stopped
+            execSync('docker info', { stdio: 'ignore' });
             hasDocker = true;
-        } catch (e) { /* No docker */ }
+        } catch (e) { /* Docker daemon not running */ }
 
         // 3. Determine if we can use host pg_dump
         let hasHostPgDump = false;
@@ -91,7 +92,9 @@ async function runBackup() {
         } catch (e) { /* No pg_dump on host */ }
 
         // 4. Select Extraction Method
+        // Priority: Docker local-container → host pg_dump → Docker pg_dump fallback
         if (hasDocker && !IS_CLOUD && !isRemoteDB) {
+            // Local development with a fully Dockerized DB
             console.log('📡 Extracting Full System Snapshot from Local Docker container...');
             dumpStream = spawn('docker', [
                 'exec', '-i', 'courtportalantigravity-db-1',
@@ -100,24 +103,29 @@ async function runBackup() {
         }
         else if (process.env.DATABASE_URL) {
             if (hasHostPgDump) {
-                console.log(`📡 Extracting Full System Snapshot from ${isRemoteDB ? 'Remote' : 'Local'} DATABASE_URL via host pg_dump...`);
+                // Host has pg_dump installed — works for any DATABASE_URL (local or remote/Supabase)
+                console.log(`📡 Extracting Full System Snapshot from ${isRemoteDB ? 'Remote (Supabase)' : 'Local'} DATABASE_URL via host pg_dump...`);
                 dumpStream = spawn('pg_dump', [
                     process.env.DATABASE_URL,
                     '--clean',
                     '--if-exists'
                 ]);
-            } else if (hasDocker && !IS_CLOUD) {
-                console.log(`📡 Extracting Full System Snapshot from ${isRemoteDB ? 'Remote' : 'Local'} DATABASE_URL via Docker fallback...`);
+            } else if (hasDocker) {
+                // No host pg_dump — use a temporary Docker container as a pg_dump runner
+                console.log(`📡 Extracting Full System Snapshot from ${isRemoteDB ? 'Remote (Supabase)' : 'Local'} DATABASE_URL via Docker pg_dump fallback...`);
                 dumpStream = spawn('docker', [
                     'run', '--rm', '-i', 'postgres:15-alpine',
                     'pg_dump', process.env.DATABASE_URL, '--clean', '--if-exists'
                 ]);
             } else {
-                throw new Error('pg_dump not found on host and Docker fallback not available.');
+                throw new Error(
+                    '❌ Backup requires either pg_dump installed on the host or Docker running. ' +
+                    'Install PostgreSQL client tools (pg_dump) or start Docker Desktop on this machine.'
+                );
             }
         }
         else {
-            throw new Error('No database extraction method available.');
+            throw new Error('No DATABASE_URL set and no local Docker database found. Backup cannot proceed.');
         }
 
         const gzip = zlib.createGzip();
