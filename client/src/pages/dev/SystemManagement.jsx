@@ -349,7 +349,7 @@ export default function SystemManagement() {
                                 className="btn btn-secondary" 
                                 onClick={handleDownloadGdriveLatestBackup} 
                                 disabled={loading}
-                                style={{ justifyContent: 'start', borderColor: '#3b82f6', color: '#3b82f6' }}
+                                style={{ justifyContent: 'start' }}
                             >
                                 ☁️ Download Latest Backup (GDrive)
                             </button>
