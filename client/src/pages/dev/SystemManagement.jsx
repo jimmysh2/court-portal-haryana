@@ -195,6 +195,20 @@ export default function SystemManagement() {
         finally { setLoading(false); }
     };
 
+    const handleSimulateWebhook = async () => {
+        if (!window.confirm("Simulate GitHub Webhook? This will pull the latest code from master and restart the server.")) return;
+        
+        setLoading(true);
+        try {
+            const res = await api.post('/system/simulate-webhook');
+            showToast(res.message);
+        } catch (err) {
+            showToast(err.message || 'Failed to trigger deployment.', 'error');
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
         <div>
             <div className="page-header">
@@ -234,6 +248,21 @@ export default function SystemManagement() {
                 {/* ========================================= COLUMN 1: BACKUPS & RESTORE ========================================= */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-xl)' }}>
                     
+                    <div className="card" style={{ border: '2px solid var(--color-primary)' }}>
+                        <div className="card-header"><div className="card-title">🚀 Manual CI/CD Deployment</div></div>
+                        <p style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)', marginBottom: 'var(--space-md)' }}>
+                            Bypasses the Geo-IP firewall block. Clicking this button sends a simulated webhook payload to the internal listener, securely pulling the latest code from GitHub and restarting the server without downtime.
+                        </p>
+                        <button 
+                            className="btn btn-primary" 
+                            style={{ width: '100%', fontWeight: 'bold' }}
+                            onClick={handleSimulateWebhook}
+                            disabled={loading}
+                        >
+                            ⬇️ Pull Latest Code & Restart Server
+                        </button>
+                    </div>
+
                     <div className="card">
                         <div className="card-header"><div className="card-title">Manual Data Backup</div></div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>

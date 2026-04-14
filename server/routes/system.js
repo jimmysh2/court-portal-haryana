@@ -572,4 +572,55 @@ router.post('/sync-to-code', authenticate, requireRole('developer'), async (req,
     }
 });
 
+// ─── 11. POST /api/v1/system/simulate-webhook ──────────────────────────────────
+// Manually triggers the webhook deployment process
+router.post('/simulate-webhook', authenticate, requireRole('developer'), async (req, res, next) => {
+    try {
+        const http = require('http');
+        const crypto = require('crypto');
+        
+        const payload = JSON.stringify({ ref: "refs/heads/master" });
+        const secret = process.env.GITHUB_WEBHOOK_SECRET || '';
+        
+        const hmac = crypto.createHmac('sha256', secret);
+        const signature = 'sha256=' + hmac.update(payload).digest('hex');
+
+        // webhook-listener.js runs on process.env.WEBHOOK_PORT or 4001
+        const targetPort = process.env.WEBHOOK_PORT ? parseInt(process.env.WEBHOOK_PORT, 10) : 4001;
+
+        const options = {
+            hostname: '127.0.0.1',
+            port: targetPort,
+            path: '/webhook',
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Content-Length': Buffer.byteLength(payload),
+                'x-github-event': 'push',
+                'x-hub-signature-256': signature
+            }
+        };
+
+        const reqHttp = http.request(options, (resHttp) => {
+            let data = '';
+            resHttp.on('data', (chunk) => { data += chunk; });
+            resHttp.on('end', () => {
+                if (resHttp.statusCode === 200) {
+                    res.json({ message: 'Deployment triggered successfully! Server is now pulling code and restarting.' });
+                } else {
+                    res.status(500).json({ error: `Webhook listener rejected request: ${resHttp.statusCode} - ${data}` });
+                }
+            });
+        });
+
+        reqHttp.on('error', (e) => {
+            res.status(500).json({ error: `Failed to contact local webhook listener on port ${targetPort}: ${e.message}` });
+        });
+
+        reqHttp.write(payload);
+        reqHttp.end();
+
+    } catch (err) { next(err); }
+});
+
 module.exports = router;
