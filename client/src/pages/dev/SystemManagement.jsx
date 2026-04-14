@@ -31,7 +31,7 @@ export default function SystemManagement() {
         fetchBackups();
         fetchDistricts();
         fetchTables();
-        
+
         // Update server time locally every 30s to keep it roughly sync'd
         const timer = setInterval(() => {
             setServerTime(prev => {
@@ -50,7 +50,7 @@ export default function SystemManagement() {
             const res = await api.get(`/system/settings/backup-time?t=${Date.now()}`);
             setBackupTime(res.value);
             setServerTime(res.serverTime);
-        } catch (err) { 
+        } catch (err) {
             console.error('Failed to load settings', err);
             // Fallback to local time if API fails for now
             const now = new Date();
@@ -125,7 +125,7 @@ export default function SystemManagement() {
             const res = await api.post('/system/backup');
             showToast(res.message || 'Backup created successfully!');
             fetchBackups();
-        } catch (err) { 
+        } catch (err) {
             showToast(`Error: ${err.message || 'Failed to create backup.'}`, 'error');
         }
         finally { setLoading(false); }
@@ -158,7 +158,7 @@ export default function SystemManagement() {
 
     const handleRestore = async (name) => {
         if (!window.confirm(`⚠️ DANGER: Restoration will overwrite all current data. Are you sure you want to restore from: ${name}?`)) return;
-        
+
         setLoading(true);
         try {
             await api.post('/system/restore', { filename: name });
@@ -169,12 +169,12 @@ export default function SystemManagement() {
 
     const handleCleanup = async (scope) => {
         const districtName = selectedDistrict ? districts.find(d => d.id === parseInt(selectedDistrict))?.name : 'ALL districts';
-        const msg = scope === 'full_wipe' 
-            ? '⚠️ DANGER: This will wipe ALL data (Courts, Entries, Users). Reset the system to zero? (Only the developer account will remain)' 
+        const msg = scope === 'full_wipe'
+            ? '⚠️ DANGER: This will wipe ALL data (Courts, Entries, Users). Reset the system to zero? (Only the developer account will remain)'
             : `Are you sure you want to clear "${scope.replace('_', ' ')}" for ${districtName}?`;
-            
+
         if (!window.confirm(msg)) return;
-        
+
         setLoading(true);
         try {
             const d = await api.post('/system/cleanup', { scope, districtId: selectedDistrict });
@@ -185,7 +185,7 @@ export default function SystemManagement() {
 
     const handleDeleteBackup = async (name) => {
         if (!window.confirm(`⚠️ PERMANENT DELETE: Are you sure you want to delete ${name}? This cannot be undone.`)) return;
-        
+
         setLoading(true);
         try {
             await api.delete(`/system/backups/${name}`);
@@ -233,13 +233,13 @@ export default function SystemManagement() {
             <div className="grid grid-2 mt-xl" style={{ alignItems: 'start' }}>
                 {/* ========================================= COLUMN 1: BACKUPS & RESTORE ========================================= */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-xl)' }}>
-                    
+
                     <div className="card">
                         <div className="card-header"><div className="card-title">Manual Data Backup</div></div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
-                            <button 
-                                className="btn btn-primary" 
-                                onClick={handleBackup} 
+                            <button
+                                className="btn btn-primary"
+                                onClick={handleBackup}
                                 disabled={loading}
                                 style={{ justifyContent: 'start' }}
                             >
@@ -259,12 +259,12 @@ export default function SystemManagement() {
                                     Automated Daily Data Snapshot
                                 </div>
                                 <div style={{ display: 'flex', gap: 'var(--space-md)' }}>
-                                    <div style={{ 
-                                        fontSize: '0.75rem', 
-                                        padding: '5px 12px', 
-                                        background: 'rgba(52, 211, 153, 0.2)', 
-                                        color: '#34d399', 
-                                        borderRadius: '8px', 
+                                    <div style={{
+                                        fontSize: '0.75rem',
+                                        padding: '5px 12px',
+                                        background: 'rgba(52, 211, 153, 0.2)',
+                                        color: '#34d399',
+                                        borderRadius: '8px',
                                         border: '1px solid rgba(52, 211, 153, 0.5)',
                                         fontWeight: 700,
                                         display: 'flex',
@@ -276,12 +276,12 @@ export default function SystemManagement() {
                                         SERVER CLOCK: {serverTime || '--:--'}
                                     </div>
                                     {backupTime && (
-                                        <div style={{ 
-                                            fontSize: '0.75rem', 
-                                            padding: '5px 12px', 
-                                            background: 'rgba(59, 130, 246, 0.2)', 
-                                            color: '#60a5fa', 
-                                            borderRadius: '8px', 
+                                        <div style={{
+                                            fontSize: '0.75rem',
+                                            padding: '5px 12px',
+                                            background: 'rgba(59, 130, 246, 0.2)',
+                                            color: '#60a5fa',
+                                            borderRadius: '8px',
                                             border: '1px solid rgba(59, 130, 246, 0.5)',
                                             fontWeight: 700,
                                             letterSpacing: '0.5px'
@@ -296,14 +296,14 @@ export default function SystemManagement() {
                                 <div style={{ height: '38px', background: 'var(--color-bg-secondary)', borderRadius: 'var(--radius-sm)', animate: 'pulse 1.5s infinite' }}></div>
                             ) : (
                                 <div style={{ display: 'flex', gap: 'var(--space-md)', alignItems: 'center' }}>
-                                    <input 
-                                        type="time" 
-                                        className="form-input" 
-                                        value={backupTime} 
-                                        onChange={(e) => setBackupTime(e.target.value)} 
-                                        style={{ 
-                                            width: '140px', 
-                                            padding: 'var(--space-sm) var(--space-md)', 
+                                    <input
+                                        type="time"
+                                        className="form-input"
+                                        value={backupTime}
+                                        onChange={(e) => setBackupTime(e.target.value)}
+                                        style={{
+                                            width: '140px',
+                                            padding: 'var(--space-sm) var(--space-md)',
                                             borderRadius: 'var(--radius-sm)',
                                             border: '1px solid var(--color-border)',
                                             background: 'var(--color-bg-secondary)',
@@ -333,12 +333,12 @@ export default function SystemManagement() {
                         ) : (
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
                                 {backups.map(b => (
-                                    <div key={b.name} style={{ 
-                                        display: 'flex', 
-                                        justifyContent: 'space-between', 
-                                        alignItems: 'center', 
-                                        padding: 'var(--space-md)', 
-                                        background: 'var(--color-bg-secondary)', 
+                                    <div key={b.name} style={{
+                                        display: 'flex',
+                                        justifyContent: 'space-between',
+                                        alignItems: 'center',
+                                        padding: 'var(--space-md)',
+                                        background: 'var(--color-bg-secondary)',
                                         borderRadius: 'var(--radius-md)',
                                         border: '1px solid var(--color-border)'
                                     }}>
@@ -349,16 +349,16 @@ export default function SystemManagement() {
                                             </div>
                                         </div>
                                         <div style={{ display: 'flex', gap: 'var(--space-xs)' }}>
-                                            <button 
-                                                className="btn btn-secondary btn-sm" 
+                                            <button
+                                                className="btn btn-secondary btn-sm"
                                                 onClick={() => handleRestore(b.name)}
                                                 disabled={loading}
                                                 style={{ fontSize: '11px', padding: '4px 8px' }}
                                             >
                                                 REVERT ↺
                                             </button>
-                                            <button 
-                                                className="btn btn-danger btn-sm" 
+                                            <button
+                                                className="btn btn-danger btn-sm"
                                                 onClick={() => handleDeleteBackup(b.name)}
                                                 disabled={loading}
                                                 style={{ fontSize: '11px', padding: '4px 8px', background: 'rgba(239, 68, 68, 0.1)', color: 'var(--color-danger)', border: '1px solid rgba(239, 68, 68, 0.3)' }}
@@ -375,15 +375,15 @@ export default function SystemManagement() {
 
                 {/* ========================================= COLUMN 2: DATA & TABLES ========================================= */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-xl)' }}>
-                    
+
                     <div className="card" style={{ border: '1px solid rgba(239, 68, 68, 0.3)' }}>
                         <div className="card-header"><div className="card-title" style={{ color: 'var(--color-danger)' }}>💣 Database Cleanup</div></div>
-                        
+
                         <div style={{ marginBottom: 'var(--space-md)' }}>
                             <label className="form-label" style={{ fontSize: '11px' }}>Apply cleanup to:</label>
-                            <select 
-                                className="form-select" 
-                                value={selectedDistrict} 
+                            <select
+                                className="form-select"
+                                value={selectedDistrict}
                                 onChange={e => setSelectedDistrict(e.target.value)}
                                 style={{ fontSize: 'var(--font-size-sm)' }}
                             >
@@ -419,17 +419,17 @@ export default function SystemManagement() {
                                 </button>
                             )}
                         </div>
-                        
+
                         <hr style={{ opacity: 0.1, margin: 'var(--space-md) 0' }} />
-                        
+
                         {!selectedDistrict && (
-                            <button 
-                                className="btn btn-danger" 
-                                onClick={() => handleCleanup('full_wipe')} 
+                            <button
+                                className="btn btn-danger"
+                                onClick={() => handleCleanup('full_wipe')}
                                 disabled={loading}
                                 style={{ width: '100%' }}
                             >
-                                🔥 FULL SYSTEM WIPE 
+                                🔥 FULL SYSTEM WIPE
                             </button>
                         )}
                         {selectedDistrict && (
@@ -478,9 +478,9 @@ export default function SystemManagement() {
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
                             <div>
                                 <label className="form-label" style={{ fontSize: '11px' }}>District</label>
-                                <select 
-                                    className="form-select" 
-                                    value={finalSelect.districtId} 
+                                <select
+                                    className="form-select"
+                                    value={finalSelect.districtId}
                                     onChange={e => {
                                         const id = e.target.value;
                                         setFinalSelect({ ...finalSelect, districtId: id, courtId: '' });
@@ -493,24 +493,24 @@ export default function SystemManagement() {
                             </div>
 
                             {finalSelect.districtId && (
-                            <div>
-                                <label className="form-label" style={{ fontSize: '11px' }}>Court (Optional)</label>
-                                <select 
-                                    className="form-select" 
-                                    value={finalSelect.courtId} 
-                                    onChange={e => setFinalSelect({ ...finalSelect, courtId: e.target.value })}
-                                >
-                                    <option value="">All Courts in District</option>
-                                    {courts.map(c => <option key={c.id} value={c.id}>Court {c.courtNo} - {c.name}</option>)}
-                                </select>
-                            </div>
+                                <div>
+                                    <label className="form-label" style={{ fontSize: '11px' }}>Court (Optional)</label>
+                                    <select
+                                        className="form-select"
+                                        value={finalSelect.courtId}
+                                        onChange={e => setFinalSelect({ ...finalSelect, courtId: e.target.value })}
+                                    >
+                                        <option value="">All Courts in District</option>
+                                        {courts.map(c => <option key={c.id} value={c.id}>Court {c.courtNo} - {c.name}</option>)}
+                                    </select>
+                                </div>
                             )}
 
                             <div>
                                 <label className="form-label" style={{ fontSize: '11px' }}>Specific Date (Leave blank for ALL history)</label>
-                                <input 
-                                    type="date" 
-                                    className="form-input" 
+                                <input
+                                    type="date"
+                                    className="form-input"
                                     value={finalSelect.date}
                                     onChange={e => setFinalSelect({ ...finalSelect, date: e.target.value })}
                                 />
@@ -526,26 +526,26 @@ export default function SystemManagement() {
                         <div className="card-header">
                             <div className="card-title">Table Reordering</div>
                             <div style={{ display: 'flex', gap: 'var(--space-xs)' }}>
-                                <button 
-                                    className="btn btn-secondary btn-sm" 
+                                <button
+                                    className="btn btn-secondary btn-sm"
                                     onClick={async () => {
-                                        if(!window.confirm('Reset all 17 tables to their default sequential order (1–17)?')) return;
+                                        if (!window.confirm('Reset all 17 tables to their default sequential order (1–17)?')) return;
                                         setLoading(true);
                                         try {
                                             const res = await api.post('/system/sync-table-sort-order');
                                             setSuccess(res.message);
                                             const data = await api.get('/data-tables');
                                             setTables(data.tables || []);
-                                        } catch(err) { setError(err.message || 'Reset failed'); }
+                                        } catch (err) { setError(err.message || 'Reset failed'); }
                                         finally { setLoading(false); }
-                                    }} 
+                                    }}
                                     disabled={loading}
                                 >
                                     🔃 Reset
                                 </button>
-                                <button 
-                                    className="btn btn-sm" 
-                                    onClick={handleSaveTableSort} 
+                                <button
+                                    className="btn btn-sm"
+                                    onClick={handleSaveTableSort}
                                     disabled={savingTables || tables.length === 0}
                                 >
                                     {savingTables ? 'Saving...' : '💾 Save Order'}
@@ -555,8 +555,8 @@ export default function SystemManagement() {
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                             {tables.map((t, index) => (
                                 <div key={t.id} style={{
-                                    display: 'flex', alignItems: 'center', justifyContent: 'space-between', 
-                                    padding: '0.5rem 1rem', background: 'var(--color-bg-secondary)', 
+                                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                                    padding: '0.5rem 1rem', background: 'var(--color-bg-secondary)',
                                     borderRadius: 'var(--radius-sm)', border: '1px solid var(--color-border)'
                                 }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
@@ -566,13 +566,13 @@ export default function SystemManagement() {
                                         <div style={{ fontWeight: 500 }}>{t.name}</div>
                                     </div>
                                     <div style={{ display: 'flex', gap: '0.25rem' }}>
-                                        <button 
-                                            className="btn btn-sm btn-secondary" 
+                                        <button
+                                            className="btn btn-sm btn-secondary"
                                             onClick={() => handleMoveTable(index, 'up')}
                                             disabled={index === 0}
                                         >⬆️</button>
-                                        <button 
-                                            className="btn btn-sm btn-secondary" 
+                                        <button
+                                            className="btn btn-sm btn-secondary"
                                             onClick={() => handleMoveTable(index, 'down')}
                                             disabled={index === tables.length - 1}
                                         >⬇️</button>
