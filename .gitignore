@@ -25,5 +25,6 @@ backups/
 *.iam.gserviceaccount.com.json
 *-df14c1b8eb5e.json
 
-uploads/
+uploads/*
+!uploads/**/.gitkeep
 .vercel
