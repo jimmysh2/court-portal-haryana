@@ -110,6 +110,22 @@ router.delete('/backups/:filename', authenticate, requireRole('developer'), asyn
     }
 });
 
+// Download a backup file
+router.get('/backups/download/:filename', authenticate, requireRole('developer'), async (req, res) => {
+    try {
+        const { filename } = req.params;
+        const backupPath = path.join(BACKUP_DIR, filename);
+        
+        if (!fs.existsSync(backupPath)) {
+            return res.status(404).json({ error: 'Backup file not found' });
+        }
+
+        res.download(backupPath, filename);
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to download backup' });
+    }
+});
+
 // ─── 1. GET /api/v1/system/backups-list ────────────────────────────────────
 // List all available .sql backup files
 router.get('/backups-list', authenticate, requireRole('developer'), async (req, res, next) => {
@@ -130,6 +146,78 @@ router.get('/backups-list', authenticate, requireRole('developer'), async (req, 
             .sort((a, b) => b.createdAt - a.createdAt);
         res.json({ backups: files });
     } catch (err) { next(err); }
+});
+
+// Download latest backup from Google Drive
+router.get('/backups/gdrive/latest', authenticate, requireRole('developer'), async (req, res) => {
+    try {
+        const { google } = require('googleapis');
+        const { getCredentials, FOLDER_ID } = require('../../scripts/gdrive-credentials');
+        
+        const credentials = getCredentials();
+        const auth = new google.auth.GoogleAuth({
+            credentials,
+            scopes: ['https://www.googleapis.com/auth/drive.readonly']
+        });
+        const drive = google.drive({ version: 'v3', auth });
+
+        // Get the latest files to iterate and find the first non-empty valid backup
+        const listResponse = await drive.files.list({
+            q: `'${FOLDER_ID}' in parents and trashed = false`,
+            orderBy: 'createdTime desc',
+            pageSize: 20,
+            fields: 'files(id, name, createdTime, size)'
+        });
+
+        const files = listResponse.data.files;
+        if (!files || files.length === 0) {
+            return res.status(404).json({ error: 'No backups found in Google Drive.' });
+        }
+
+        // pg_dump failures can result in 20-byte empty gzip files. Skip those.
+        const validFiles = files.filter(f => parseInt(f.size || 0) > 100);
+
+        if (validFiles.length === 0) {
+            return res.status(404).json({ error: 'Only empty backups were found in Google Drive.' });
+        }
+
+        const latestFile = validFiles[0];
+        console.log(`☁️ Downloading latest valid backup from GDrive: ${latestFile.name} (${latestFile.size} bytes)`);
+
+        const filePath = path.join(BACKUP_DIR, latestFile.name);
+        
+        // Ensure directory exists
+        if (!fs.existsSync(BACKUP_DIR)) {
+            fs.mkdirSync(BACKUP_DIR, { recursive: true });
+        }
+
+        const dest = fs.createWriteStream(filePath);
+
+        // Stream the file content
+        const fileStream = await drive.files.get(
+            { fileId: latestFile.id, alt: 'media' },
+            { responseType: 'stream' }
+        );
+
+        fileStream.data
+            .on('end', () => {
+                console.log(`✅ GDrive pull completed. Saved to ${filePath}`);
+                res.json({ message: `Successfully pulled ${latestFile.name} from Google Drive.`, filename: latestFile.name });
+            })
+            .on('error', err => {
+                console.error('❌ Error streaming from GDrive:', err);
+                if (!res.headersSent) {
+                   res.status(500).json({ error: 'Failed to write file to server' });
+                }
+            })
+            .pipe(dest);
+
+    } catch (err) {
+        console.error('❌ GDrive API Error:', err);
+        if (!res.headersSent) {
+            res.status(500).json({ error: 'Failed to download from Google Drive' });
+        }
+    }
 });
 
 // Trigger a manual on-demand backup

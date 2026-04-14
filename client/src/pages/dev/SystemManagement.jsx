@@ -209,6 +209,80 @@ export default function SystemManagement() {
         }
     };
 
+    const handleDownloadBackup = async (name) => {
+        try {
+            const token = localStorage.getItem('token');
+            // Assuming api.defaults.baseURL is not directly accessible without importing axios, we can use the environment variable directly or a relative URL
+            // Since api encapsulates the baseURL, let's use the fetch API with the global REACT_APP_API_URL or relative path.
+            // In vite it's typically import.meta.env.VITE_API_URL.
+            // We can also extract the base URL from the `api` instance if possible, or just parse window.location.
+            // The simplest way that ensures auth is attached and doesn't guess the base URL is calling a custom api function if existed, 
+            // but let's just do a direct fetch using `api.defaults.baseURL` or `import.meta.env.VITE_API_BASE_URL`.
+            // Looking at the frontend codebase might be needed, but for now `/api/v1` is standard. Let's just use the current origin if not separated.
+            // To be safe, standard JS fetch:
+            const baseUrl = import.meta.env.VITE_API_URL || '/api/v1';
+            const response = await fetch(`${baseUrl}/system/backups/download/${name}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || 'Failed to download backup');
+            }
+
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = name;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+            showToast(`Started download for ${name}`);
+        } catch (err) {
+            showToast(err.message || 'Download failed.', 'error');
+        }
+    };
+
+    const handleDownloadLatestBackup = async () => {
+        if (backups.length === 0) {
+            showToast('No backups available to download.', 'error');
+            return;
+        }
+        const latestBackup = backups[0];
+        handleDownloadBackup(latestBackup.name);
+    };
+
+    const handleDownloadGdriveLatestBackup = async () => {
+        setLoading(true);
+        try {
+            const token = localStorage.getItem('token');
+            const baseUrl = import.meta.env.VITE_API_URL || '/api/v1';
+            const response = await fetch(`${baseUrl}/system/backups/gdrive/latest`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || 'Failed to pull from GDrive');
+            }
+
+            showToast(data.message || 'GDrive backup pulled successfully!');
+            fetchBackups(); // Refresh the list below
+        } catch (err) {
+            showToast(err.message || 'GDrive Pull failed.', 'error');
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
         <div>
             <div className="page-header">
@@ -273,6 +347,22 @@ export default function SystemManagement() {
                                 style={{ justifyContent: 'start' }}
                             >
                                 📦 Create Manual Data Backup
+                            </button>
+                            <button 
+                                className="btn btn-secondary" 
+                                onClick={handleDownloadLatestBackup} 
+                                disabled={loading || backups.length === 0}
+                                style={{ justifyContent: 'start' }}
+                            >
+                                ⬇️ Download Latest Backup (Local)
+                            </button>
+                            <button 
+                                className="btn btn-secondary" 
+                                onClick={handleDownloadGdriveLatestBackup} 
+                                disabled={loading}
+                                style={{ justifyContent: 'start', borderColor: '#3b82f6', color: '#3b82f6' }}
+                            >
+                                ☁️ Pull Latest Backup from G Drive
                             </button>
                             <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', background: 'rgba(255,165,0,0.05)', padding: 'var(--space-sm) var(--space-md)', borderRadius: 'var(--radius-sm)', borderLeft: '3px solid var(--color-warning)' }}>
                                 Note: Backups are stored in the '/backups' directory and Google Drive of courtdataportal@gmail.com.
@@ -378,6 +468,14 @@ export default function SystemManagement() {
                                             </div>
                                         </div>
                                         <div style={{ display: 'flex', gap: 'var(--space-xs)' }}>
+                                            <button 
+                                                className="btn btn-secondary btn-sm" 
+                                                onClick={() => handleDownloadBackup(b.name)}
+                                                disabled={loading}
+                                                style={{ fontSize: '11px', padding: '4px 8px', background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', border: '1px solid rgba(59, 130, 246, 0.3)' }}
+                                            >
+                                                DOWNLOAD ⬇️
+                                            </button>
                                             <button
                                                 className="btn btn-secondary btn-sm"
                                                 onClick={() => handleRestore(b.name)}
