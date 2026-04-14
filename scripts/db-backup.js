@@ -73,29 +73,48 @@ async function runBackup() {
     try {
         let dumpStream;
 
-        // 1. Try Docker First (Best for Local Development)
-        // We check for Docker by attempting to run 'docker -v'
+        // 1. Check if we have a remote DATABASE_URL (e.g. Supabase)
+        const isRemoteDB = process.env.DATABASE_URL && !process.env.DATABASE_URL.includes('localhost') && !process.env.DATABASE_URL.includes('127.0.0.1');
+
+        // 2. Check for Docker availability
         let hasDocker = false;
         try {
             execSync('docker -v', { stdio: 'ignore' });
             hasDocker = true;
         } catch (e) { /* No docker */ }
 
-        if (hasDocker && !IS_CLOUD) {
+        // 3. Determine if we can use host pg_dump
+        let hasHostPgDump = false;
+        try {
+            execSync('pg_dump --version', { stdio: 'ignore' });
+            hasHostPgDump = true;
+        } catch (e) { /* No pg_dump on host */ }
+
+        // 4. Select Extraction Method
+        if (hasDocker && !IS_CLOUD && !isRemoteDB) {
             console.log('📡 Extracting Full System Snapshot from Local Docker container...');
             dumpStream = spawn('docker', [
                 'exec', '-i', 'courtportalantigravity-db-1',
                 'sh', '-c', 'PGPASSWORD=password pg_dump -U user --clean --if-exists court_portal'
             ]);
         }
-        // 2. Fallback to pg_dump (Best for Cloud or local with Postgres installed)
         else if (process.env.DATABASE_URL) {
-            console.log('📡 Extracting Full System Snapshot from DATABASE_URL...');
-            dumpStream = spawn('pg_dump', [
-                process.env.DATABASE_URL,
-                '--clean',
-                '--if-exists'
-            ]);
+            if (hasHostPgDump) {
+                console.log(`📡 Extracting Full System Snapshot from ${isRemoteDB ? 'Remote' : 'Local'} DATABASE_URL via host pg_dump...`);
+                dumpStream = spawn('pg_dump', [
+                    process.env.DATABASE_URL,
+                    '--clean',
+                    '--if-exists'
+                ]);
+            } else if (hasDocker && !IS_CLOUD) {
+                console.log(`📡 Extracting Full System Snapshot from ${isRemoteDB ? 'Remote' : 'Local'} DATABASE_URL via Docker fallback...`);
+                dumpStream = spawn('docker', [
+                    'run', '--rm', '-i', 'postgres:15-alpine',
+                    'pg_dump', process.env.DATABASE_URL, '--clean', '--if-exists'
+                ]);
+            } else {
+                throw new Error('pg_dump not found on host and Docker fallback not available.');
+            }
         }
         else {
             throw new Error('No database extraction method available.');
@@ -106,21 +125,52 @@ async function runBackup() {
         dumpStream.stdout.pipe(gzip).pipe(output);
 
         await new Promise((resolve, reject) => {
-            output.on('finish', resolve);
-            dumpStream.stdout.on('error', (err) => {
-                console.error('⚠️ Database extract failed:', err.message);
-                reject(new Error(`Extraction failed: ${err.message}`));
+            // Error in the spawning process
+            dumpStream.on('error', (err) => {
+                console.error(`❌ Process Error: ${err.message}`);
+                reject(new Error(`Failed to start extraction process: ${err.message}`));
             });
-            gzip.on('error', reject);
-            output.on('error', reject);
 
-            // Capture stderr to diagnose credential issues
+            dumpStream.stdout.on('error', (err) => {
+                console.error('⚠️ Database extract stdout failed:', err.message);
+                reject(new Error(`Extraction stdout failed: ${err.message}`));
+            });
+
+            gzip.on('error', (err) => {
+                console.error('⚠️ Gzip failed:', err.message);
+                reject(err);
+            });
+
+            output.on('error', (err) => {
+                console.error('⚠️ Write stream failed:', err.message);
+                reject(err);
+            });
+
             let stderrData = '';
             dumpStream.stderr.on('data', (d) => { stderrData += d.toString(); });
+
+            // We must wait for BOTH the process to exit and the output to finish
+            let processClosed = false;
+            let outputFinished = false;
+
+            const checkDone = () => {
+                if (processClosed && outputFinished) {
+                    resolve();
+                }
+            };
+
+            output.on('finish', () => {
+                outputFinished = true;
+                checkDone();
+            });
+
             dumpStream.on('close', (code) => {
+                processClosed = true;
                 if (code !== 0) {
-                    console.error(`⚠️ pg_dump exited with code ${code}: ${stderrData}`);
-                    reject(new Error(`pg_dump failed (exit code ${code}): ${stderrData}`));
+                    console.error(`⚠️ Extraction exited with code ${code}: ${stderrData}`);
+                    reject(new Error(`Extraction failed (exit code ${code}): ${stderrData}`));
+                } else {
+                    checkDone();
                 }
             });
         });
