@@ -198,8 +198,8 @@ export default function ReportsPage() {
         }
     };
 
-    const openAggregateModal = (title, entries) => {
-        setModalData({ title, entries });
+    const openAggregateModal = (title, entries, sortedColumns) => {
+        setModalData({ title, entries, sortedColumns });
     };
 
     const exportRawToExcel = async (tableId, tableName, entries) => {
@@ -247,6 +247,14 @@ export default function ReportsPage() {
             }
         }
         return 0;
+    };
+
+    // Returns sorted raw columns definitions (name + slug) from the table block
+    const getSortedRawColumns = (tableBlock) => {
+        if (!tableBlock.columns) return [];
+        return [...tableBlock.columns]
+            .filter(c => !c.deletedAt)
+            .sort((a, b) => a.sortOrder - b.sortOrder);
     };
 
     const getAggregatedMatrix = (tableBlock, groupedData, rowHeaderLabel, rawEntries) => {
@@ -775,7 +783,7 @@ export default function ReportsPage() {
                                                         <td style={{ fontWeight: 'bold' }}>{row.label}</td>
                                                         {tableColumns.map((col, cIdx) => (
                                                             <td key={cIdx}>
-                                                                {col.renderCell(row.entries, (modalEntries) => openAggregateModal(`Details for ${row.label} - ${col.header}`, modalEntries))}
+                                                                {col.renderCell(row.entries, (modalEntries) => openAggregateModal(`Details for ${row.label} - ${col.header}`, modalEntries, getSortedRawColumns(tableBlock)))}
                                                             </td>
                                                         ))}
                                                     </tr>
@@ -786,7 +794,7 @@ export default function ReportsPage() {
                                                         <td colSpan="2" style={{ textAlign: 'right' }}>OVERALL TOTAL:</td>
                                                         {tableColumns.map((col, cIdx) => (
                                                             <td key={cIdx}>
-                                                                {col.renderCell(rawEntries, (modalEntries) => openAggregateModal(`Overall Total - ${col.header}`, modalEntries))}
+                                                                {col.renderCell(rawEntries, (modalEntries) => openAggregateModal(`Overall Total - ${col.header}`, modalEntries, getSortedRawColumns(tableBlock)))}
                                                             </td>
                                                         ))}
                                                     </tr>
@@ -818,8 +826,8 @@ export default function ReportsPage() {
                                             <th>Date</th>
                                             <th>District</th>
                                             <th>Court</th>
-                                            {Object.keys(modalData.entries[0]?.values || {}).map(k => (
-                                                <th key={k}>{k.replace(/_/g, ' ').toUpperCase()}</th>
+                                            {(modalData.sortedColumns || []).map(col => (
+                                                <th key={col.slug}>{col.name}</th>
                                             ))}
                                         </tr>
                                     </thead>
@@ -829,9 +837,10 @@ export default function ReportsPage() {
                                                 <td>{new Date(entry.entryDate).toLocaleDateString('en-IN')}</td>
                                                 <td>{entry.district?.name}</td>
                                                 <td>Court {entry.court?.courtNo} - {entry.court?.name}</td>
-                                                {Object.values(entry.values || {}).map((val, i) => (
-                                                    <td key={i}>{val !== null && val !== undefined ? val : '—'}</td>
-                                                ))}
+                                                {(modalData.sortedColumns || []).map(col => {
+                                                    const val = entry.values?.[col.slug];
+                                                    return <td key={col.slug}>{val !== null && val !== undefined ? val : '—'}</td>;
+                                                })}
                                             </tr>
                                         ))}
                                     </tbody>
