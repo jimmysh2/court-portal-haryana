@@ -4,29 +4,88 @@ const fs = require('fs');
 const zlib = require('zlib');
 const { RELAY_URL } = require('./gdrive-credentials');
 
-/**
- * Deployment Awareness
- */
-const IS_CLOUD = !!(process.env.RENDER || process.env.VERCEL);
-const BACKUP_DIR = IS_CLOUD ? path.join(require('os').tmpdir(), 'backups') : path.join(__dirname, '../backups');
+// ─────────────────────────────────────────────────────────────────────────────
+//  COURT PORTAL — DATABASE BACKUP ENGINE
+//
+//  Designed to work across ALL deployment phases WITHOUT Docker dependency:
+//
+//  Phase 1 (Current):  Supabase Cloud DB  + Vercel/PM2  → pg_dump via DATABASE_URL
+//  Phase 2 (Future):   Local Windows PostgreSQL + Windows Server → pg_dump native
+//  Dev only (local):   Docker Compose local container → docker exec pg_dump
+//
+//  PRODUCTION REQUIREMENT: PostgreSQL client tools must be installed on the host.
+//  Windows: https://www.postgresql.org/download/windows/ (select "Command Line Tools")
+//  Linux:   apt install postgresql-client  OR  yum install postgresql
+// ─────────────────────────────────────────────────────────────────────────────
 
-// Ensure directory exists as soon as module is loaded
+const IS_CLOUD = !!(process.env.RENDER || process.env.VERCEL);
+const BACKUP_DIR = IS_CLOUD
+    ? path.join(require('os').tmpdir(), 'backups')
+    : path.join(__dirname, '../backups');
+
+// Ensure backup directory exists when this module is loaded
 if (!fs.existsSync(BACKUP_DIR)) {
     try {
         fs.mkdirSync(BACKUP_DIR, { recursive: true });
     } catch (e) {
-        console.error(`❌ Failed to create backup directory ${BACKUP_DIR}:`, e.message);
+        console.error(`❌ Failed to create backup directory: ${e.message}`);
     }
 }
 
-/**
- * Uploads a file to Google Drive via the Apps Script Relay
- */
+// ─────────────────────────────────────────────────────────────────────────────
+//  ENVIRONMENT DETECTOR
+//  Returns a human-readable description of the current DB backend for logs.
+// ─────────────────────────────────────────────────────────────────────────────
+function detectDatabaseLabel() {
+    const url = process.env.DATABASE_URL || '';
+    if (!url) return 'UNKNOWN';
+    if (url.includes('supabase.co')) return 'Supabase Cloud';
+    if (url.includes('localhost') || url.includes('127.0.0.1')) return 'Local PostgreSQL';
+    return 'Remote PostgreSQL';
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  pg_dump AVAILABILITY CHECK
+//  Production servers (Supabase now, Windows Postgres later) both have pg_dump
+//  available on the host. Docker is NOT required and NOT used in production.
+// ─────────────────────────────────────────────────────────────────────────────
+function checkPgDump() {
+    try {
+        const version = execSync('pg_dump --version', { encoding: 'utf8' }).trim();
+        return { available: true, version };
+    } catch (e) {
+        return { available: false };
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  DOCKER LOCAL DEV CHECK
+//  Only used when Docker daemon is running AND the DB is local (dev docker-compose).
+//  This is never the production path.
+// ─────────────────────────────────────────────────────────────────────────────
+function checkDockerLocalDev() {
+    const url = process.env.DATABASE_URL || '';
+    const isLocalUrl = url.includes('localhost') || url.includes('127.0.0.1');
+    if (!isLocalUrl) return false;  // Supabase / remote — skip Docker entirely
+
+    try {
+        execSync('docker info', { stdio: 'ignore' });  // Checks daemon is running
+        return true;
+    } catch (e) {
+        return false;  // Docker daemon not running → fall through to host pg_dump
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  GOOGLE DRIVE UPLOAD
+//  Uploads backup via the Google Apps Script relay to avoid service account
+//  credentials being stored in environment variables.
+// ─────────────────────────────────────────────────────────────────────────────
 async function uploadToDrive(filePath, fileName) {
     console.log(`☁️  Relaying ${fileName} to Google Drive...`);
 
     if (!RELAY_URL) {
-        console.warn('⚠️  Cloud Backup skipped: No Relay URL configured.');
+        console.warn('⚠️  Cloud Backup skipped: No RELAY_URL configured in gdrive-credentials.js');
         return false;
     }
 
@@ -36,34 +95,40 @@ async function uploadToDrive(filePath, fileName) {
 
         const response = await fetch(RELAY_URL, {
             method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 name: fileName,
                 mimeType: 'application/gzip',
                 content: base64Content
-            }),
-            headers: { 'Content-Type': 'application/json' }
+            })
         });
 
         const result = await response.json();
 
         if (result.success) {
-            console.log(`✅ Cloud Backup Successful via Relay! Drive ID: ${result.id}`);
+            console.log(`✅ Google Drive backup successful! File ID: ${result.id}`);
             return true;
         } else {
-            console.error('❌ Relay Upload Failed:', result);
+            console.error('❌ Google Drive relay failed:', JSON.stringify(result));
             return false;
         }
     } catch (err) {
-        console.error('❌ Relay Process Failed:', err.message);
+        console.error('❌ Google Drive upload error:', err.message);
         return false;
     }
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+//  CORE BACKUP ENGINE
+// ─────────────────────────────────────────────────────────────────────────────
 async function runBackup() {
-    console.log(`📦 Starting ${IS_CLOUD ? 'Cloud' : 'Local'} Compressed Backup...`);
+    const dbLabel = detectDatabaseLabel();
+    console.log(`\n📦 ═══════════════════════════════════════════════════`);
+    console.log(`📦  Court Portal DB Backup — Target: ${dbLabel}`);
+    console.log(`📦 ═══════════════════════════════════════════════════`);
+
     const result = { success: false, filename: null, cloudSync: false, error: null };
 
-    // Final safety check
     if (!fs.existsSync(BACKUP_DIR)) fs.mkdirSync(BACKUP_DIR, { recursive: true });
 
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
@@ -71,151 +136,179 @@ async function runBackup() {
     const backupPath = path.join(BACKUP_DIR, filename);
 
     try {
+        // ── GUARD: DATABASE_URL is mandatory ──────────────────────────────
+        if (!process.env.DATABASE_URL) {
+            throw new Error(
+                'DATABASE_URL is not set. Cannot perform backup.\n' +
+                '  • For Supabase: set the Supabase connection string\n' +
+                '  • For local Windows Postgres: set postgresql://user:pass@localhost:5432/dbname'
+            );
+        }
+
+        // ── SELECT EXTRACTION METHOD ──────────────────────────────────────
+        //
+        //  PRODUCTION PATH (Supabase now / Windows Postgres later):
+        //    → pg_dump on the host OS. No Docker needed.
+        //
+        //  LOCAL DEV FALLBACK (Docker Compose):
+        //    → docker exec into the running container.
+        //    This branch is ONLY reached when Docker daemon is running AND
+        //    DATABASE_URL points to localhost (pure local dev scenario).
+        //
         let dumpStream;
 
-        // 1. Check if we have a remote DATABASE_URL (e.g. Supabase)
-        const isRemoteDB = process.env.DATABASE_URL && !process.env.DATABASE_URL.includes('localhost') && !process.env.DATABASE_URL.includes('127.0.0.1');
+        const pgDump = checkPgDump();
+        const useDockerLocalDev = !pgDump.available && checkDockerLocalDev();
 
-        // 2. Check if Docker daemon is actually running (not just CLI installed)
-        let hasDocker = false;
-        try {
-            // 'docker info' connects to the daemon — fails if daemon is stopped
-            execSync('docker info', { stdio: 'ignore' });
-            hasDocker = true;
-        } catch (e) { /* Docker daemon not running */ }
+        if (pgDump.available) {
+            // ─── PRIMARY PRODUCTION PATH ───────────────────────────────────
+            // Works for: Supabase, local Windows Postgres, any DATABASE_URL
+            console.log(`📡 Using host pg_dump (${pgDump.version})`);
+            console.log(`📡 Connecting to: ${dbLabel} via DATABASE_URL...`);
 
-        // 3. Determine if we can use host pg_dump
-        let hasHostPgDump = false;
-        try {
-            execSync('pg_dump --version', { stdio: 'ignore' });
-            hasHostPgDump = true;
-        } catch (e) { /* No pg_dump on host */ }
+            dumpStream = spawn('pg_dump', [
+                process.env.DATABASE_URL,
+                '--clean',
+                '--if-exists',
+                '--no-password'
+            ]);
 
-        // 4. Select Extraction Method
-        // Priority: Docker local-container → host pg_dump → Docker pg_dump fallback
-        if (hasDocker && !IS_CLOUD && !isRemoteDB) {
-            // Local development with a fully Dockerized DB
-            console.log('📡 Extracting Full System Snapshot from Local Docker container...');
+        } else if (useDockerLocalDev) {
+            // ─── LOCAL DEV ONLY FALLBACK ───────────────────────────────────
+            // Only reached on developer machines with Docker running and localhost DB.
+            // NEVER runs in production because production always has pg_dump installed.
+            console.warn('⚠️  pg_dump not found on host. Using Docker local-dev fallback.');
+            console.log('📡 Extracting from local Docker container (dev only)...');
+
             dumpStream = spawn('docker', [
                 'exec', '-i', 'courtportalantigravity-db-1',
-                'sh', '-c', 'PGPASSWORD=password pg_dump -U user --clean --if-exists court_portal'
+                'sh', '-c',
+                'PGPASSWORD=password pg_dump -U user --clean --if-exists court_portal'
             ]);
-        }
-        else if (process.env.DATABASE_URL) {
-            if (hasHostPgDump) {
-                // Host has pg_dump installed — works for any DATABASE_URL (local or remote/Supabase)
-                console.log(`📡 Extracting Full System Snapshot from ${isRemoteDB ? 'Remote (Supabase)' : 'Local'} DATABASE_URL via host pg_dump...`);
-                dumpStream = spawn('pg_dump', [
-                    process.env.DATABASE_URL,
-                    '--clean',
-                    '--if-exists'
-                ]);
-            } else if (hasDocker) {
-                // No host pg_dump — use a temporary Docker container as a pg_dump runner
-                console.log(`📡 Extracting Full System Snapshot from ${isRemoteDB ? 'Remote (Supabase)' : 'Local'} DATABASE_URL via Docker pg_dump fallback...`);
-                dumpStream = spawn('docker', [
-                    'run', '--rm', '-i', 'postgres:15-alpine',
-                    'pg_dump', process.env.DATABASE_URL, '--clean', '--if-exists'
-                ]);
-            } else {
-                throw new Error(
-                    '❌ Backup requires either pg_dump installed on the host or Docker running. ' +
-                    'Install PostgreSQL client tools (pg_dump) or start Docker Desktop on this machine.'
-                );
-            }
-        }
-        else {
-            throw new Error('No DATABASE_URL set and no local Docker database found. Backup cannot proceed.');
+
+        } else {
+            // ─── FATAL: Production is misconfigured ───────────────────────
+            throw new Error(
+                'pg_dump is not installed on this server. Backup cannot proceed.\n\n' +
+                '  REQUIRED ACTION (run once on the production server):\n' +
+                '  ┌─ Windows Server (current Supabase / future local Postgres):\n' +
+                '  │   Download PostgreSQL for Windows:\n' +
+                '  │   https://www.postgresql.org/download/windows/\n' +
+                '  │   Select "Command Line Tools" component (no DB server needed).\n' +
+                '  │   Then add PostgreSQL\\bin to the system PATH.\n' +
+                '  └─ Linux server:\n' +
+                '      sudo apt install postgresql-client  (Debian/Ubuntu)\n' +
+                '      sudo yum install postgresql          (RHEL/CentOS)\n\n' +
+                '  After installing, restart PM2: pm2 restart court-portal'
+            );
         }
 
+        // ── PIPE: pg_dump → gzip → file ──────────────────────────────────
         const gzip = zlib.createGzip();
         const output = fs.createWriteStream(backupPath);
         dumpStream.stdout.pipe(gzip).pipe(output);
 
         await new Promise((resolve, reject) => {
-            // Error in the spawning process
-            dumpStream.on('error', (err) => {
-                console.error(`❌ Process Error: ${err.message}`);
-                reject(new Error(`Failed to start extraction process: ${err.message}`));
-            });
-
-            dumpStream.stdout.on('error', (err) => {
-                console.error('⚠️ Database extract stdout failed:', err.message);
-                reject(new Error(`Extraction stdout failed: ${err.message}`));
-            });
-
-            gzip.on('error', (err) => {
-                console.error('⚠️ Gzip failed:', err.message);
-                reject(err);
-            });
-
-            output.on('error', (err) => {
-                console.error('⚠️ Write stream failed:', err.message);
-                reject(err);
-            });
-
             let stderrData = '';
-            dumpStream.stderr.on('data', (d) => { stderrData += d.toString(); });
+            let processDone = false;
+            let writeDone = false;
 
-            // We must wait for BOTH the process to exit and the output to finish
-            let processClosed = false;
-            let outputFinished = false;
-
-            const checkDone = () => {
-                if (processClosed && outputFinished) {
-                    resolve();
-                }
+            const tryResolve = () => {
+                if (processDone && writeDone) resolve();
             };
 
-            output.on('finish', () => {
-                outputFinished = true;
-                checkDone();
+            // Capture stderr (credentials errors, connection refused, etc.)
+            dumpStream.stderr.on('data', (chunk) => {
+                stderrData += chunk.toString();
             });
 
+            // Process-level errors (binary not found, permission denied, etc.)
+            dumpStream.on('error', (err) => {
+                reject(new Error(`pg_dump process failed to start: ${err.message}`));
+            });
+
+            // Wait for pg_dump to exit with code 0
             dumpStream.on('close', (code) => {
-                processClosed = true;
+                processDone = true;
                 if (code !== 0) {
-                    console.error(`⚠️ Extraction exited with code ${code}: ${stderrData}`);
-                    reject(new Error(`Extraction failed (exit code ${code}): ${stderrData}`));
+                    // Delete the corrupt empty/partial file so it is not uploaded
+                    try { fs.unlinkSync(backupPath); } catch (_) { /* ignore */ }
+                    reject(new Error(
+                        `pg_dump exited with code ${code}.\n` +
+                        `  Stderr: ${stderrData.trim() || '(no output)'}\n` +
+                        `  Check: DATABASE_URL credentials, firewall rules, SSL settings.`
+                    ));
                 } else {
-                    checkDone();
+                    tryResolve();
                 }
+            });
+
+            // Errors in the pipeline
+            dumpStream.stdout.on('error', (err) => reject(new Error(`stdout pipe error: ${err.message}`)));
+            gzip.on('error', (err) => reject(new Error(`gzip error: ${err.message}`)));
+            output.on('error', (err) => reject(new Error(`file write error: ${err.message}`)));
+
+            // Confirm file write is complete before resolving
+            output.on('finish', () => {
+                writeDone = true;
+                tryResolve();
             });
         });
 
-        console.log(`✅ Local backup saved: ${backupPath}`);
+        // ── VALIDATE: Reject suspiciously small backups ───────────────────
+        const fileSizeBytes = fs.statSync(backupPath).size;
+        console.log(`✅ Backup written: ${filename} (${(fileSizeBytes / 1024).toFixed(1)} KB)`);
 
-        // Sync to cloud via Relay
+        if (fileSizeBytes < 1024) {  // Less than 1 KB is always wrong
+            try { fs.unlinkSync(backupPath); } catch (_) { /* ignore */ }
+            throw new Error(
+                `Backup file is suspiciously small (${fileSizeBytes} bytes). ` +
+                `pg_dump likely produced no output — check DATABASE_URL and DB connectivity.`
+            );
+        }
+
+        // ── UPLOAD TO GOOGLE DRIVE ────────────────────────────────────────
         result.cloudSync = await uploadToDrive(backupPath, filename);
         result.success = true;
         result.filename = filename;
 
-        // Rotation logic
-        const files = fs.readdirSync(BACKUP_DIR)
-            .filter(f => f.startsWith('court-portal-backup-') && f.endsWith('.sql.gz'))
-            .map(f => ({ name: f, time: fs.statSync(path.join(BACKUP_DIR, f)).mtime.getTime() }))
-            .sort((a, b) => b.time - a.time);
+        // ── ROTATION: Keep last 50 backups, remove files >30 days old ────
+        try {
+            const allFiles = fs.readdirSync(BACKUP_DIR)
+                .filter(f => f.startsWith('court-portal-backup-') && f.endsWith('.sql.gz'))
+                .map(f => ({ name: f, time: fs.statSync(path.join(BACKUP_DIR, f)).mtime.getTime() }))
+                .sort((a, b) => b.time - a.time);
 
-        const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
-        let removed = 0;
-        files.slice(50).forEach(file => { // Keep 50 latest
-            if (file.time < thirtyDaysAgo) {
-                fs.unlinkSync(path.join(BACKUP_DIR, file.name));
-                removed++;
-            }
-        });
-        if (removed > 0) console.log(`🗑️  Rotated ${removed} backups.`);
+            const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
+            let removed = 0;
+            allFiles.slice(50).forEach(file => {
+                if (file.time < Date.now() - thirtyDaysMs) {
+                    fs.unlinkSync(path.join(BACKUP_DIR, file.name));
+                    removed++;
+                }
+            });
+            if (removed > 0) console.log(`🗑️  Rotated ${removed} expired backup(s).`);
+        } catch (rotErr) {
+            console.warn('⚠️  Rotation failed (non-critical):', rotErr.message);
+        }
 
+        console.log(`📦 ═══════════════════════════════════════════════════\n`);
         return result;
+
     } catch (error) {
-        console.error('❌ Backup Engine Failed:', error.message);
+        console.error('\n❌ ═══════════════════════════════════════════════════');
+        console.error('❌  BACKUP FAILED:', error.message);
+        console.error('❌ ═══════════════════════════════════════════════════\n');
         result.error = error.message;
         return result;
     }
 }
 
+// Allow running directly: node scripts/db-backup.js
 if (require.main === module) {
-    runBackup();
+    runBackup().then(res => {
+        process.exit(res.success ? 0 : 1);
+    });
 }
 
 module.exports = { runBackup, uploadToDrive, BACKUP_DIR };
