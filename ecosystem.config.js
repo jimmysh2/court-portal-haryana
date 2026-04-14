@@ -37,12 +37,13 @@ module.exports = {
             interpreter: 'node',
         },
         {
-            name: 'github-webhook',
-            script: 'scripts/webhook-listener.js',
+            name: 'github-auto-puller',
+            script: 'scripts/auto-puller.js',
             cwd: './',
 
             // Environment
             env: {
+                POLLING_INTERVAL: 300000 // 5 minutes in milliseconds
             },
 
             // Auto-restart settings
@@ -51,8 +52,8 @@ module.exports = {
 
             // Logging
             log_date_format: 'YYYY-MM-DD HH:mm:ss',
-            out_file: './logs/webhook-out.log',
-            error_file: './logs/webhook-error.log',
+            out_file: './logs/puller-out.log',
+            error_file: './logs/puller-error.log',
             merge_logs: true,
 
             interpreter: 'node',
