@@ -56,24 +56,6 @@ module.exports = {
             merge_logs: true,
 
             interpreter: 'node',
-        },
-        {
-            name: 'github-poller',
-            script: 'scripts/github-poller.js',
-            cwd: './',
-
-            // Auto-restart settings
-            watch: false,
-            autorestart: true,
-            restart_delay: 5000,
-
-            // Logging
-            log_date_format: 'YYYY-MM-DD HH:mm:ss',
-            out_file: './logs/poller-out.log',
-            error_file: './logs/poller-error.log',
-            merge_logs: true,
-            
-            interpreter: 'node',
         }
     ]
 };

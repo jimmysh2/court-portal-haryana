@@ -335,7 +335,7 @@ router.post('/generate', authenticate, async (req, res, next) => {
         const entries = await prisma.dataEntry.findMany({
             where: entryWhere,
             include: {
-                table: { select: { id: true, name: true, slug: true, columns: true, singleRow: true } },
+                table: { select: { id: true, name: true, slug: true, columns: true, singleRow: true, sortOrder: true } },
                 court: { select: { id: true, name: true, courtNo: true } },
                 district: { select: { id: true, name: true } },
                 // Use select inside include which returns null if user is missing rather than failing the whole row
@@ -357,13 +357,15 @@ router.post('/generate', authenticate, async (req, res, next) => {
                     tableSlug: e.table.slug,
                     singleRow: e.table.singleRow,
                     columns: e.table.columns,
+                    sortOrder: e.table.sortOrder,
                     entries: []
                 };
             }
             reportByTable[e.tableId].entries.push(e);
         }
 
-        res.json({ tables: Object.values(reportByTable) });
+        const sortedTables = Object.values(reportByTable).sort((a, b) => a.sortOrder - b.sortOrder);
+        res.json({ tables: sortedTables });
     } catch (err) { next(err); }
 });
 
