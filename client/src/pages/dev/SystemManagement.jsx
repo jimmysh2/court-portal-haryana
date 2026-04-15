@@ -695,7 +695,7 @@ export default function SystemManagement() {
                                         onChange={e => setFinalSelect({ ...finalSelect, courtId: e.target.value })}
                                     >
                                         <option value="">All Courts in District</option>
-                                        {courts.map(c => <option key={c.id} value={c.id}>Court {c.courtNo} - {c.name}</option>)}
+                                        {courts.map(c => <option key={c.id} value={c.id}>{c.courtNo} - {c.name}</option>)}
                                     </select>
                                 </div>
                             )}
@@ -804,7 +804,7 @@ export default function SystemManagement() {
                             onChange={e => setLiveFilters(f => ({ ...f, courtId: e.target.value }))}
                             disabled={!liveFilters.districtId}>
                             <option value="">All Courts</option>
-                            {liveCourts.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                            {liveCourts.map(c => <option key={c.id} value={c.id}>{c.courtNo} - {c.name}</option>)}
                         </select>
                     </div>
                     <div className="form-group" style={{ flex: '1 1 180px', marginBottom: 0 }}>
