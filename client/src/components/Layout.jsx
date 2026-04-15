@@ -45,7 +45,6 @@ export default function Layout() {
                         { to: '/dev/magistrates', icon: '👨‍⚖️', text: t('judicialOfficers') },
                         { to: '/dev/naib-courts', icon: '👤', text: t('naibCourts') },
                         { to: '/dev/data-tables', icon: '📋', text: t('dataTables') },
-                        { to: '/dev/live-data', icon: '📝', text: 'Live Data Edit' },
                     ],
                 },
                 {

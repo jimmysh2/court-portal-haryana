@@ -19,7 +19,6 @@ import AiAssistant from './pages/shared/AiAssistant';
 import DevDashboard from './pages/dev/DevDashboard';
 import ResetPasswords from './pages/dev/ResetPasswords';
 import ManageDataTables from './pages/dev/ManageDataTables';
-import LiveDataModification from './pages/dev/LiveDataModification';
 import ManagePoliceStations from './pages/dev/ManagePoliceStations';
 import SystemManagement from './pages/dev/SystemManagement';
 import StateDashboard from './pages/state/StateDashboard';
@@ -73,7 +72,6 @@ function App() {
               <Route path="/dev/magistrates" element={<ManageMagistrates />} />
               <Route path="/dev/naib-courts" element={<ManageNaibCourts />} />
               <Route path="/dev/data-tables" element={<ManageDataTables />} />
-              <Route path="/dev/live-data" element={<LiveDataModification />} />
               <Route path="/dev/alerts" element={<AlertsPage />} />
               <Route path="/dev/grievances" element={<GrievancesPage />} />
               <Route path="/dev/reports" element={<ReportsPage />} />
