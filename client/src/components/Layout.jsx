@@ -16,10 +16,10 @@ export default function Layout() {
             const checkAlerts = () => {
                 api.get('/alerts?resolved=false').then(res => {
                     setUnreadAlerts(res.alerts?.length || 0);
-                }).catch(() => {});
+                }).catch(() => { });
             };
             checkAlerts();
-            
+
             // Listen for cross-component read events strictly for instant UX
             const handleAlertsRead = () => setUnreadAlerts(0);
             window.addEventListener('alertsRead', handleAlertsRead);
@@ -45,6 +45,7 @@ export default function Layout() {
                         { to: '/dev/magistrates', icon: '👨‍⚖️', text: t('judicialOfficers') },
                         { to: '/dev/naib-courts', icon: '👤', text: t('naibCourts') },
                         { to: '/dev/data-tables', icon: '📋', text: t('dataTables') },
+                        { to: '/dev/live-data', icon: '📝', text: 'Live Data Edit' },
                     ],
                 },
                 {
@@ -179,10 +180,10 @@ export default function Layout() {
                                         {item.icon}
                                         {item.icon === '🔔' && unreadAlerts > 0 && (
                                             <span style={{
-                                                position: 'absolute', top: '-6px', right: '-8px', 
-                                                background: 'var(--color-danger)', color: 'white', fontSize: '10px', 
-                                                fontWeight: 'bold', borderRadius: '50%', minWidth: '16px', 
-                                                height: '16px', display: 'flex', alignItems: 'center', 
+                                                position: 'absolute', top: '-6px', right: '-8px',
+                                                background: 'var(--color-danger)', color: 'white', fontSize: '10px',
+                                                fontWeight: 'bold', borderRadius: '50%', minWidth: '16px',
+                                                height: '16px', display: 'flex', alignItems: 'center',
                                                 justifyContent: 'center', padding: '0 4px', pointerEvents: 'none',
                                                 boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
                                             }}>
@@ -220,12 +221,12 @@ export default function Layout() {
                         </button>
                         <h1 className="header-title">{t('appTitle')}</h1>
                     </div>
-                    
+
                     <div className="flex items-center gap-xl">
                         <div className="header-date">
                             {new Date().toLocaleDateString(lang === 'hi' ? 'hi-IN' : 'en-IN', { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric' })}
                         </div>
-                        
+
                         <button className="lang-toggle" onClick={toggleLanguage} title={lang === 'en' ? 'हिन्दी में बदलें' : 'Switch to English'}>
                             <span className={`lang-label ${lang === 'en' ? 'active' : ''}`}>EN</span>
                             <div className="toggle-track">
@@ -253,10 +254,10 @@ export default function Layout() {
                                 {item.icon}
                                 {item.icon === '🔔' && unreadAlerts > 0 && (
                                     <span style={{
-                                        position: 'absolute', top: '-6px', right: '-8px', 
-                                        background: 'var(--color-danger)', color: 'white', fontSize: '10px', 
-                                        fontWeight: 'bold', borderRadius: '50%', minWidth: '16px', 
-                                        height: '16px', display: 'flex', alignItems: 'center', 
+                                        position: 'absolute', top: '-6px', right: '-8px',
+                                        background: 'var(--color-danger)', color: 'white', fontSize: '10px',
+                                        fontWeight: 'bold', borderRadius: '50%', minWidth: '16px',
+                                        height: '16px', display: 'flex', alignItems: 'center',
                                         justifyContent: 'center', padding: '0 4px', pointerEvents: 'none',
                                         boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
                                     }}>
