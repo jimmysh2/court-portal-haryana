@@ -85,7 +85,7 @@ router.get('/summary', authenticate, requireRole('naib_court'), async (req, res,
         if (!courtId || !entryDate) return res.status(400).json({ error: 'courtId and entryDate are required' });
 
         const entryDateObj = new Date(entryDate);
-        
+
         // Get all active tables
         const tables = await prisma.dataEntryTable.findMany({
             where: { deletedAt: null },
@@ -298,7 +298,7 @@ router.put('/:id', authenticate, requireRole('naib_court', 'district_admin', 'de
         }
 
         const entryDateStr = entry.entryDate.toISOString().split('T')[0];
-        if (await checkCourtDateLocked(entry.courtId, entryDateStr)) {
+        if (req.user.role !== 'developer' && await checkCourtDateLocked(entry.courtId, entryDateStr)) {
             return res.status(403).json({ error: 'Data entry for this date has been finalized and cannot be modified.' });
         }
 
@@ -351,7 +351,7 @@ router.delete('/:id', authenticate, requireRole('naib_court', 'district_admin', 
         }
 
         const entryDateStr = entry.entryDate.toISOString().split('T')[0];
-        if (await checkCourtDateLocked(entry.courtId, entryDateStr)) {
+        if (req.user.role !== 'developer' && await checkCourtDateLocked(entry.courtId, entryDateStr)) {
             return res.status(403).json({ error: 'Data entry for this date has been finalized and cannot be deleted.' });
         }
 

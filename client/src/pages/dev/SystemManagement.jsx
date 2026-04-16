@@ -26,6 +26,15 @@ export default function SystemManagement() {
     const [tables, setTables] = useState([]);
     const [savingTables, setSavingTables] = useState(false);
 
+    // ── Live Data Modification state ──
+    const [liveFilters, setLiveFilters] = useState({ districtId: '', courtId: '', tableId: '', dateFrom: '', dateTo: '' });
+    const [liveCourts, setLiveCourts] = useState([]);
+    const [liveEntries, setLiveEntries] = useState([]);
+    const [liveLoading, setLiveLoading] = useState(false);
+    const [liveEditItem, setLiveEditItem] = useState(null);
+    const [liveEditValues, setLiveEditValues] = useState({});
+    const [liveEditError, setLiveEditError] = useState('');
+
     useEffect(() => {
         fetchSettings();
         fetchBackups();
@@ -43,6 +52,64 @@ export default function SystemManagement() {
         }, 30000);
         return () => clearInterval(timer);
     }, []);
+
+    // ── Live Data Modification handlers ──
+    const handleLiveDistrictChange = async (districtId) => {
+        setLiveFilters(f => ({ ...f, districtId, courtId: '' }));
+        if (!districtId) { setLiveCourts([]); return; }
+        try {
+            const res = await api.get(`/courts?districtId=${districtId}`);
+            setLiveCourts(res.courts || []);
+        } catch (err) { console.error(err); }
+    };
+
+    const handleLiveSearch = async () => {
+        try {
+            setLiveLoading(true);
+            const params = new URLSearchParams();
+            if (liveFilters.districtId) params.append('districtId', liveFilters.districtId);
+            if (liveFilters.courtId) params.append('courtId', liveFilters.courtId);
+            if (liveFilters.tableId) params.append('tableId', liveFilters.tableId);
+            if (liveFilters.dateFrom) params.append('dateFrom', liveFilters.dateFrom);
+            if (liveFilters.dateTo) params.append('dateTo', liveFilters.dateTo);
+            const res = await api.get(`/data-entries?${params.toString()}`);
+            setLiveEntries(res.entries || []);
+        } catch (err) { showToast(err.message || 'Search failed', 'error'); }
+        finally { setLiveLoading(false); }
+    };
+
+    const handleLiveDelete = async (id) => {
+        if (!window.confirm('Permanently delete this data entry? This cannot be undone.')) return;
+        try {
+            await api.delete(`/data-entries/${id}`);
+            showToast('Entry deleted successfully.');
+            handleLiveSearch();
+        } catch (err) { showToast(err.message || 'Delete failed', 'error'); }
+    };
+
+    const handleLiveEdit = (entry) => {
+        setLiveEditItem(entry);
+        setLiveEditValues(entry.values || {});
+        setLiveEditError('');
+    };
+
+    const handleLiveEditValueChange = (slug, value, dataType) => {
+        let v = value;
+        if (dataType === 'number') v = value === '' ? '' : Number(value);
+        if (dataType === 'boolean') v = value === 'true';
+        setLiveEditValues(prev => ({ ...prev, [slug]: v }));
+    };
+
+    const submitLiveEdit = async (e) => {
+        e.preventDefault();
+        setLiveEditError('');
+        try {
+            await api.put(`/data-entries/${liveEditItem.id}`, { values: liveEditValues });
+            showToast('Entry updated successfully.');
+            setLiveEditItem(null);
+            handleLiveSearch();
+        } catch (err) { setLiveEditError(err.message || 'Update failed'); }
+    };
 
     const fetchSettings = async () => {
         try {
@@ -197,7 +264,7 @@ export default function SystemManagement() {
 
     const handleSimulateWebhook = async () => {
         if (!window.confirm("Simulate GitHub Webhook? This will pull the latest code from master and restart the server.")) return;
-        
+
         setLoading(true);
         try {
             const res = await api.post('/system/simulate-webhook');
@@ -321,14 +388,14 @@ export default function SystemManagement() {
             <div className="grid grid-2 mt-xl" style={{ alignItems: 'start' }}>
                 {/* ========================================= COLUMN 1: BACKUPS & RESTORE ========================================= */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-xl)' }}>
-                    
+
                     <div className="card" style={{ border: '2px solid var(--color-primary)' }}>
                         <div className="card-header"><div className="card-title">🚀 Manual CI/CD Deployment</div></div>
                         <p style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)', marginBottom: 'var(--space-md)' }}>
                             Bypasses the Geo-IP firewall block. Clicking this button sends a simulated webhook payload to the internal listener, securely pulling the latest code from GitHub and restarting the server without downtime.
                         </p>
-                        <button 
-                            className="btn btn-primary" 
+                        <button
+                            className="btn btn-primary"
                             style={{ width: '100%', fontWeight: 'bold' }}
                             onClick={handleSimulateWebhook}
                             disabled={loading}
@@ -348,17 +415,17 @@ export default function SystemManagement() {
                             >
                                 📦 Create Manual Data Backup
                             </button>
-                            <button 
-                                className="btn btn-secondary" 
-                                onClick={handleDownloadLatestBackup} 
+                            <button
+                                className="btn btn-secondary"
+                                onClick={handleDownloadLatestBackup}
                                 disabled={loading || backups.length === 0}
                                 style={{ justifyContent: 'start' }}
                             >
                                 ⬇️ Download Latest Backup (Local)
                             </button>
-                            <button 
-                                className="btn btn-secondary" 
-                                onClick={handleDownloadGdriveLatestBackup} 
+                            <button
+                                className="btn btn-secondary"
+                                onClick={handleDownloadGdriveLatestBackup}
                                 disabled={loading}
                                 style={{ justifyContent: 'start', borderColor: '#3b82f6', color: '#3b82f6' }}
                             >
@@ -468,8 +535,8 @@ export default function SystemManagement() {
                                             </div>
                                         </div>
                                         <div style={{ display: 'flex', gap: 'var(--space-xs)' }}>
-                                            <button 
-                                                className="btn btn-secondary btn-sm" 
+                                            <button
+                                                className="btn btn-secondary btn-sm"
                                                 onClick={() => handleDownloadBackup(b.name)}
                                                 disabled={loading}
                                                 style={{ fontSize: '11px', padding: '4px 8px', background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', border: '1px solid rgba(59, 130, 246, 0.3)' }}
@@ -628,7 +695,7 @@ export default function SystemManagement() {
                                         onChange={e => setFinalSelect({ ...finalSelect, courtId: e.target.value })}
                                     >
                                         <option value="">All Courts in District</option>
-                                        {courts.map(c => <option key={c.id} value={c.id}>Court {c.courtNo} - {c.name}</option>)}
+                                        {courts.map(c => <option key={c.id} value={c.id}>{c.courtNo} - {c.name}</option>)}
                                     </select>
                                 </div>
                             )}
@@ -711,6 +778,171 @@ export default function SystemManagement() {
                     </div>
                 </div>
             </div>
+
+            {/* ═══════════════════════════════════════════════════════════════
+                LIVE DATA MODIFICATION — Full-width section below the grid
+            ═══════════════════════════════════════════════════════════════ */}
+            <div className="card mt-xl" style={{ border: '1px solid rgba(245,158,11,0.4)' }}>
+                <div className="card-header">
+                    <div className="card-title" style={{ color: 'var(--color-warning)' }}>📝 Live Data Modification</div>
+                    <span style={{ fontSize: '0.78rem', color: 'var(--color-text-muted)' }}>Developer Only — bypasses date-locks to fix Naib Court data entry mistakes</span>
+                </div>
+
+                {/* Filters */}
+                <div className="flex gap-md mb-lg" style={{ flexWrap: 'wrap', alignItems: 'flex-end' }}>
+                    <div className="form-group" style={{ flex: '1 1 180px', marginBottom: 0 }}>
+                        <label className="form-label" style={{ fontSize: '11px' }}>District</label>
+                        <select className="form-select" value={liveFilters.districtId}
+                            onChange={e => handleLiveDistrictChange(e.target.value)}>
+                            <option value="">All Districts</option>
+                            {districts.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                        </select>
+                    </div>
+                    <div className="form-group" style={{ flex: '1 1 180px', marginBottom: 0 }}>
+                        <label className="form-label" style={{ fontSize: '11px' }}>Court</label>
+                        <select className="form-select" value={liveFilters.courtId}
+                            onChange={e => setLiveFilters(f => ({ ...f, courtId: e.target.value }))}
+                            disabled={!liveFilters.districtId}>
+                            <option value="">All Courts</option>
+                            {liveCourts.map(c => <option key={c.id} value={c.id}>{c.courtNo} - {c.name}</option>)}
+                        </select>
+                    </div>
+                    <div className="form-group" style={{ flex: '1 1 180px', marginBottom: 0 }}>
+                        <label className="form-label" style={{ fontSize: '11px' }}>Table / Form</label>
+                        <select className="form-select" value={liveFilters.tableId}
+                            onChange={e => setLiveFilters(f => ({ ...f, tableId: e.target.value }))}>
+                            <option value="">All Tables</option>
+                            {tables.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                        </select>
+                    </div>
+                    <div className="form-group" style={{ flex: '1 1 130px', marginBottom: 0 }}>
+                        <label className="form-label" style={{ fontSize: '11px' }}>Date From</label>
+                        <input type="date" className="form-input" value={liveFilters.dateFrom}
+                            onChange={e => setLiveFilters(f => ({ ...f, dateFrom: e.target.value }))} />
+                    </div>
+                    <div className="form-group" style={{ flex: '1 1 130px', marginBottom: 0 }}>
+                        <label className="form-label" style={{ fontSize: '11px' }}>Date To</label>
+                        <input type="date" className="form-input" value={liveFilters.dateTo}
+                            onChange={e => setLiveFilters(f => ({ ...f, dateTo: e.target.value }))} />
+                    </div>
+                    <button className="btn btn-primary btn-sm" onClick={handleLiveSearch} disabled={liveLoading}>
+                        {liveLoading ? 'Searching...' : '🔍 Search'}
+                    </button>
+                    <button className="btn btn-secondary btn-sm" onClick={() => { setLiveFilters({ districtId: '', courtId: '', tableId: '', dateFrom: '', dateTo: '' }); setLiveEntries([]); }}>
+                        Clear
+                    </button>
+                </div>
+
+                {/* Results Table */}
+                {liveEntries.length > 0 && (
+                    <div className="data-table-wrapper">
+                        <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', marginBottom: 'var(--space-sm)' }}>
+                            Found <strong>{liveEntries.length}</strong> entries
+                        </div>
+                        <table className="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>District / Court</th>
+                                    <th>Table</th>
+                                    <th>Data (preview)</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {liveEntries.map(e => (
+                                    <tr key={e.id}>
+                                        <td data-label="Date" style={{ whiteSpace: 'nowrap', fontSize: '0.85rem' }}>
+                                            {new Date(e.entryDate).toLocaleDateString('en-IN')}
+                                        </td>
+                                        <td data-label="District / Court">
+                                            <div style={{ fontWeight: 500, fontSize: '0.85rem' }}>{e.district?.name}</div>
+                                            <div style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>{e.court?.name}</div>
+                                        </td>
+                                        <td data-label="Table">
+                                            <span className="badge badge-secondary" style={{ fontSize: '11px' }}>{e.table?.name}</span>
+                                        </td>
+                                        <td data-label="Data" style={{ fontSize: '11px', fontFamily: 'monospace', color: 'var(--color-text-secondary)', maxWidth: '180px' }}>
+                                            {JSON.stringify(e.values).substring(0, 80)}{JSON.stringify(e.values).length > 80 ? '…' : ''}
+                                        </td>
+                                        <td data-label="Actions">
+                                            <div className="flex gap-sm">
+                                                <button className="btn btn-secondary btn-sm" style={{ fontSize: '11px', padding: '3px 8px' }} onClick={() => handleLiveEdit(e)}>✏️ Edit</button>
+                                                <button className="btn btn-danger btn-sm" style={{ fontSize: '11px', padding: '3px 8px' }} onClick={() => handleLiveDelete(e.id)}>🗑️ Del</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
+
+                {liveEntries.length === 0 && !liveLoading && (
+                    <div style={{ textAlign: 'center', padding: 'var(--space-lg)', color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>
+                        Use filters above and click Search to find entries to modify or delete.
+                    </div>
+                )}
+            </div>
+
+            {/* Edit Modal */}
+            {liveEditItem && (() => {
+                const tableDef = tables.find(t => t.id === liveEditItem.tableId);
+                if (!tableDef) return null;
+                return (
+                    <>
+                        <div className="sidebar-overlay" style={{ zIndex: 998, display: 'block' }} onClick={() => setLiveEditItem(null)} />
+                        <div className="card" style={{
+                            position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+                            zIndex: 999, width: '90%', maxWidth: '580px', maxHeight: '90vh',
+                            overflowY: 'auto', boxShadow: 'var(--shadow-xl)'
+                        }}>
+                            <h3 className="card-title mb-sm">✏️ Edit Entry</h3>
+                            <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', marginBottom: 'var(--space-md)' }}>
+                                {tableDef.name} &nbsp;·&nbsp; {new Date(liveEditItem.entryDate).toLocaleDateString('en-IN')} &nbsp;·&nbsp; {liveEditItem.court?.name}
+                            </div>
+                            {liveEditError && <div className="form-error mb-md">{liveEditError}</div>}
+                            <form onSubmit={submitLiveEdit}>
+                                {tableDef.columns.map(col => (
+                                    <div className="form-group" key={col.slug}>
+                                        <label className="form-label" style={{ fontSize: '12px' }}>
+                                            {col.name} {col.isRequired && <span style={{ color: 'var(--color-danger)' }}>*</span>}
+                                        </label>
+                                        {col.dataType === 'enum' ? (
+                                            <select className="form-select" value={liveEditValues[col.slug] || ''}
+                                                onChange={e => handleLiveEditValueChange(col.slug, e.target.value, col.dataType)}
+                                                required={col.isRequired}>
+                                                <option value="">Select...</option>
+                                                {col.enumOptions?.map(o => <option key={o} value={o}>{o}</option>)}
+                                            </select>
+                                        ) : col.dataType === 'boolean' ? (
+                                            <select className="form-select" value={liveEditValues[col.slug] !== undefined ? String(liveEditValues[col.slug]) : ''}
+                                                onChange={e => handleLiveEditValueChange(col.slug, e.target.value, col.dataType)}
+                                                required={col.isRequired}>
+                                                <option value="">Yes / No</option>
+                                                <option value="true">Yes</option>
+                                                <option value="false">No</option>
+                                            </select>
+                                        ) : (
+                                            <input
+                                                type={col.dataType === 'number' ? 'number' : col.dataType === 'date' ? 'date' : 'text'}
+                                                className="form-input"
+                                                value={liveEditValues[col.slug] !== undefined ? liveEditValues[col.slug] : ''}
+                                                onChange={e => handleLiveEditValueChange(col.slug, e.target.value, col.dataType)}
+                                                required={col.isRequired}
+                                            />
+                                        )}
+                                    </div>
+                                ))}
+                                <div className="flex gap-md mt-lg">
+                                    <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>Save Changes</button>
+                                    <button type="button" className="btn btn-secondary" style={{ flex: 1 }} onClick={() => setLiveEditItem(null)}>Cancel</button>
+                                </div>
+                            </form>
+                        </div>
+                    </>
+                );
+            })()}
         </div>
     );
 }
