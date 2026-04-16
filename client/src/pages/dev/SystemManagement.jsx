@@ -106,6 +106,18 @@ export default function SystemManagement() {
     const submitLiveEdit = async (e) => {
         e.preventDefault();
         setLiveEditError('');
+
+        // Mirror the cross-field table validation from NaibDataEntry
+        const tableDef = tables.find(t => t.id === liveEditItem.tableId);
+        if (tableDef?.name?.toLowerCase().includes('pairvi') || Object.keys(liveEditValues).includes('witnesses_prepared')) {
+            const examined = parseFloat(liveEditValues['witnesses_examined'] || 0);
+            const prepared = parseFloat(liveEditValues['witnesses_prepared'] || 0);
+            if (prepared > examined) {
+                setLiveEditError('Validation Error: Witnesses Prepared to Testify cannot be greater than Witnesses Examined.');
+                return;
+            }
+        }
+
         try {
             await api.put(`/data-entries/${liveEditItem.id}`, { values: liveEditValues });
             showToast('Entry updated successfully.');
