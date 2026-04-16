@@ -34,12 +34,15 @@ export default function SystemManagement() {
     const [liveEditItem, setLiveEditItem] = useState(null);
     const [liveEditValues, setLiveEditValues] = useState({});
     const [liveEditError, setLiveEditError] = useState('');
+    const [policeStations, setPoliceStations] = useState([]);
+    const [showOtherDistrictsLive, setShowOtherDistrictsLive] = useState(false);
 
     useEffect(() => {
         fetchSettings();
         fetchBackups();
         fetchDistricts();
         fetchTables();
+        api.get('/districts/all-police-stations').then(d => setPoliceStations(d.policeStations || [])).catch(console.error);
 
         // Update server time locally every 30s to keep it roughly sync'd
         const timer = setInterval(() => {
@@ -103,12 +106,166 @@ export default function SystemManagement() {
     const submitLiveEdit = async (e) => {
         e.preventDefault();
         setLiveEditError('');
+
+        // Mirror the cross-field table validation from NaibDataEntry
+        const tableDef = tables.find(t => t.id === liveEditItem.tableId);
+        if (tableDef?.name?.toLowerCase().includes('pairvi') || Object.keys(liveEditValues).includes('witnesses_prepared')) {
+            const examined = parseFloat(liveEditValues['witnesses_examined'] || 0);
+            const prepared = parseFloat(liveEditValues['witnesses_prepared'] || 0);
+            if (prepared > examined) {
+                setLiveEditError('Validation Error: Witnesses Prepared to Testify cannot be greater than Witnesses Examined.');
+                return;
+            }
+        }
+
         try {
             await api.put(`/data-entries/${liveEditItem.id}`, { values: liveEditValues });
             showToast('Entry updated successfully.');
             setLiveEditItem(null);
+            setShowOtherDistrictsLive(false);
             handleLiveSearch();
         } catch (err) { setLiveEditError(err.message || 'Update failed'); }
+    };
+
+    const renderLiveEditField = (col) => {
+        const value = liveEditValues[col.slug] !== undefined ? liveEditValues[col.slug] : '';
+
+        if (col.slug === 'police_station' && policeStations.length > 0) {
+            const homeDistrictId = liveEditItem?.district?.id || liveFilters.districtId;
+            const homeDistrictPS = policeStations.filter(ps => ps.districtId === homeDistrictId);
+
+            const currentSelectedPS = policeStations.find(ps => ps.name === value);
+            const isExternalSelected = currentSelectedPS && currentSelectedPS.districtId !== homeDistrictId;
+
+            const grouped = policeStations.reduce((acc, ps) => {
+                const distName = ps.district?.name || 'Other';
+                if (!acc[distName]) acc[distName] = [];
+                acc[distName].push(ps);
+                return acc;
+            }, {});
+
+            const handlePSChange = (e) => {
+                const val = e.target.value;
+                if (val === '__SHOW_ALL__') {
+                    setShowOtherDistrictsLive(true);
+                } else {
+                    handleLiveEditValueChange(col.slug, val, col.dataType);
+                }
+            };
+
+            return (
+                <select
+                    className="form-select"
+                    value={value}
+                    onChange={handlePSChange}
+                    onBlur={() => setTimeout(() => setShowOtherDistrictsLive(false), 250)}
+                    required={col.isRequired}
+                >
+                    <option value="">Select Police Station...</option>
+                    {!showOtherDistrictsLive ? (
+                        <>
+                            {homeDistrictPS.map(ps => (
+                                <option key={ps.id} value={ps.name}>{ps.name}</option>
+                            ))}
+                            {isExternalSelected && (
+                                <option key={currentSelectedPS.id} value={currentSelectedPS.name}>
+                                    📍 {currentSelectedPS.name} ({currentSelectedPS.district?.name})
+                                </option>
+                            )}
+                            <option value="__SHOW_ALL__" style={{ color: 'var(--color-primary)', fontWeight: 600 }}>
+                                ➕ Other District PS
+                            </option>
+                        </>
+                    ) : (
+                        Object.entries(grouped).map(([district, pss]) => (
+                            <optgroup key={district} label={district}>
+                                {pss.map(ps => (
+                                    <option key={ps.id} value={ps.name}>
+                                        {ps.name} {ps.districtId !== homeDistrictId ? `(${ps.district?.name})` : ''}
+                                    </option>
+                                ))}
+                            </optgroup>
+                        ))
+                    )}
+                </select>
+            );
+        }
+
+        switch (col.dataType) {
+            case 'enum':
+                return (
+                    <select className="form-select" value={value} onChange={e => handleLiveEditValueChange(col.slug, e.target.value, col.dataType)} required={col.isRequired}>
+                        <option value="">Select...</option>
+                        {col.enumOptions?.map(o => <option key={o} value={o}>{o}</option>)}
+                    </select>
+                );
+            case 'year':
+                const currentYear = new Date().getFullYear();
+                const years = Array.from({ length: 100 }, (_, i) => currentYear - i);
+                return (
+                    <select className="form-select" value={value} onChange={e => handleLiveEditValueChange(col.slug, e.target.value, col.dataType)} required={col.isRequired}>
+                        <option value="">Select Year...</option>
+                        {years.map(y => <option key={y} value={y}>{y}</option>)}
+                    </select>
+                );
+            case 'boolean':
+                return (
+                    <select className="form-select" value={value !== '' ? String(value) : ''} onChange={e => handleLiveEditValueChange(col.slug, e.target.value, col.dataType)} required={col.isRequired}>
+                        <option value="">Yes / No</option>
+                        <option value="true">Yes</option>
+                        <option value="false">No</option>
+                    </select>
+                );
+            case 'number': {
+                const rawNum = value === '' || value === undefined ? '' : value;
+                const formatIndian = (n) => {
+                    if (n === '' || n === null || n === undefined) return '';
+                    return Number(n).toLocaleString('en-IN');
+                };
+                return (
+                    <input
+                        className="form-input"
+                        type="text"
+                        inputMode="numeric"
+                        value={rawNum === '' ? '' : formatIndian(rawNum)}
+                        onChange={e => {
+                            const stripped = e.target.value.replace(/,/g, '').replace(/[^0-9]/g, '');
+                            const num = stripped === '' ? '' : parseInt(stripped, 10);
+                            handleLiveEditValueChange(col.slug, num, col.dataType);
+                        }}
+                        onKeyDown={e => {
+                            const allowed = ['Backspace', 'Delete', 'Tab', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'];
+                            if (!allowed.includes(e.key) && !/^\d$/.test(e.key)) {
+                                e.preventDefault();
+                            }
+                        }}
+                        placeholder="0"
+                        style={{ textAlign: 'right' }}
+                        required={col.isRequired}
+                    />
+                );
+            }
+            case 'date':
+                return (
+                    <input
+                        type="date"
+                        className="form-input"
+                        value={value}
+                        onChange={e => handleLiveEditValueChange(col.slug, e.target.value, col.dataType)}
+                        required={col.isRequired}
+                    />
+                );
+            default:
+                return (
+                    <input
+                        type="text"
+                        className="form-input"
+                        value={value}
+                        onChange={e => handleLiveEditValueChange(col.slug, e.target.value, col.dataType)}
+                        required={col.isRequired}
+                    />
+                );
+        }
     };
 
     const fetchSettings = async () => {
@@ -908,30 +1065,7 @@ export default function SystemManagement() {
                                         <label className="form-label" style={{ fontSize: '12px' }}>
                                             {col.name} {col.isRequired && <span style={{ color: 'var(--color-danger)' }}>*</span>}
                                         </label>
-                                        {col.dataType === 'enum' ? (
-                                            <select className="form-select" value={liveEditValues[col.slug] || ''}
-                                                onChange={e => handleLiveEditValueChange(col.slug, e.target.value, col.dataType)}
-                                                required={col.isRequired}>
-                                                <option value="">Select...</option>
-                                                {col.enumOptions?.map(o => <option key={o} value={o}>{o}</option>)}
-                                            </select>
-                                        ) : col.dataType === 'boolean' ? (
-                                            <select className="form-select" value={liveEditValues[col.slug] !== undefined ? String(liveEditValues[col.slug]) : ''}
-                                                onChange={e => handleLiveEditValueChange(col.slug, e.target.value, col.dataType)}
-                                                required={col.isRequired}>
-                                                <option value="">Yes / No</option>
-                                                <option value="true">Yes</option>
-                                                <option value="false">No</option>
-                                            </select>
-                                        ) : (
-                                            <input
-                                                type={col.dataType === 'number' ? 'number' : col.dataType === 'date' ? 'date' : 'text'}
-                                                className="form-input"
-                                                value={liveEditValues[col.slug] !== undefined ? liveEditValues[col.slug] : ''}
-                                                onChange={e => handleLiveEditValueChange(col.slug, e.target.value, col.dataType)}
-                                                required={col.isRequired}
-                                            />
-                                        )}
+                                        {renderLiveEditField(col)}
                                     </div>
                                 ))}
                                 <div className="flex gap-md mt-lg">
