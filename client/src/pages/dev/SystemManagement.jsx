@@ -34,12 +34,14 @@ export default function SystemManagement() {
     const [liveEditItem, setLiveEditItem] = useState(null);
     const [liveEditValues, setLiveEditValues] = useState({});
     const [liveEditError, setLiveEditError] = useState('');
+    const [policeStations, setPoliceStations] = useState([]);
 
     useEffect(() => {
         fetchSettings();
         fetchBackups();
         fetchDistricts();
         fetchTables();
+        api.get('/districts/all-police-stations').then(d => setPoliceStations(d.policeStations || [])).catch(console.error);
 
         // Update server time locally every 30s to keep it roughly sync'd
         const timer = setInterval(() => {
@@ -109,6 +111,94 @@ export default function SystemManagement() {
             setLiveEditItem(null);
             handleLiveSearch();
         } catch (err) { setLiveEditError(err.message || 'Update failed'); }
+    };
+
+    const renderLiveEditField = (col) => {
+        const value = liveEditValues[col.slug] !== undefined ? liveEditValues[col.slug] : '';
+
+        if (col.slug === 'police_station' && policeStations.length > 0) {
+            const grouped = policeStations.reduce((acc, ps) => {
+                const distName = ps.district?.name || 'Other';
+                if (!acc[distName]) acc[distName] = [];
+                acc[distName].push(ps);
+                return acc;
+            }, {});
+
+            return (
+                <select
+                    className="form-select"
+                    value={value}
+                    onChange={e => handleLiveEditValueChange(col.slug, e.target.value, col.dataType)}
+                    required={col.isRequired}
+                >
+                    <option value="">Select Police Station...</option>
+                    {Object.entries(grouped).map(([district, pss]) => (
+                        <optgroup key={district} label={district}>
+                            {pss.map(ps => (
+                                <option key={ps.id} value={ps.name}>{ps.name}</option>
+                            ))}
+                        </optgroup>
+                    ))}
+                </select>
+            );
+        }
+
+        switch (col.dataType) {
+            case 'enum':
+                return (
+                    <select className="form-select" value={value} onChange={e => handleLiveEditValueChange(col.slug, e.target.value, col.dataType)} required={col.isRequired}>
+                        <option value="">Select...</option>
+                        {col.enumOptions?.map(o => <option key={o} value={o}>{o}</option>)}
+                    </select>
+                );
+            case 'year':
+                const currentYear = new Date().getFullYear();
+                const years = Array.from({ length: 100 }, (_, i) => currentYear - i);
+                return (
+                    <select className="form-select" value={value} onChange={e => handleLiveEditValueChange(col.slug, e.target.value, col.dataType)} required={col.isRequired}>
+                        <option value="">Select Year...</option>
+                        {years.map(y => <option key={y} value={y}>{y}</option>)}
+                    </select>
+                );
+            case 'boolean':
+                return (
+                    <select className="form-select" value={value !== '' ? String(value) : ''} onChange={e => handleLiveEditValueChange(col.slug, e.target.value, col.dataType)} required={col.isRequired}>
+                        <option value="">Yes / No</option>
+                        <option value="true">Yes</option>
+                        <option value="false">No</option>
+                    </select>
+                );
+            case 'number':
+                return (
+                    <input
+                        type="number"
+                        className="form-input"
+                        value={value}
+                        onChange={e => handleLiveEditValueChange(col.slug, e.target.value, col.dataType)}
+                        required={col.isRequired}
+                    />
+                );
+            case 'date':
+                return (
+                    <input
+                        type="date"
+                        className="form-input"
+                        value={value}
+                        onChange={e => handleLiveEditValueChange(col.slug, e.target.value, col.dataType)}
+                        required={col.isRequired}
+                    />
+                );
+            default:
+                return (
+                    <input
+                        type="text"
+                        className="form-input"
+                        value={value}
+                        onChange={e => handleLiveEditValueChange(col.slug, e.target.value, col.dataType)}
+                        required={col.isRequired}
+                    />
+                );
+        }
     };
 
     const fetchSettings = async () => {
@@ -908,30 +998,7 @@ export default function SystemManagement() {
                                         <label className="form-label" style={{ fontSize: '12px' }}>
                                             {col.name} {col.isRequired && <span style={{ color: 'var(--color-danger)' }}>*</span>}
                                         </label>
-                                        {col.dataType === 'enum' ? (
-                                            <select className="form-select" value={liveEditValues[col.slug] || ''}
-                                                onChange={e => handleLiveEditValueChange(col.slug, e.target.value, col.dataType)}
-                                                required={col.isRequired}>
-                                                <option value="">Select...</option>
-                                                {col.enumOptions?.map(o => <option key={o} value={o}>{o}</option>)}
-                                            </select>
-                                        ) : col.dataType === 'boolean' ? (
-                                            <select className="form-select" value={liveEditValues[col.slug] !== undefined ? String(liveEditValues[col.slug]) : ''}
-                                                onChange={e => handleLiveEditValueChange(col.slug, e.target.value, col.dataType)}
-                                                required={col.isRequired}>
-                                                <option value="">Yes / No</option>
-                                                <option value="true">Yes</option>
-                                                <option value="false">No</option>
-                                            </select>
-                                        ) : (
-                                            <input
-                                                type={col.dataType === 'number' ? 'number' : col.dataType === 'date' ? 'date' : 'text'}
-                                                className="form-input"
-                                                value={liveEditValues[col.slug] !== undefined ? liveEditValues[col.slug] : ''}
-                                                onChange={e => handleLiveEditValueChange(col.slug, e.target.value, col.dataType)}
-                                                required={col.isRequired}
-                                            />
-                                        )}
+                                        {renderLiveEditField(col)}
                                     </div>
                                 ))}
                                 <div className="flex gap-md mt-lg">
