@@ -35,6 +35,7 @@ export default function SystemManagement() {
     const [liveEditValues, setLiveEditValues] = useState({});
     const [liveEditError, setLiveEditError] = useState('');
     const [policeStations, setPoliceStations] = useState([]);
+    const [showOtherDistrictsLive, setShowOtherDistrictsLive] = useState(false);
 
     useEffect(() => {
         fetchSettings();
@@ -109,6 +110,7 @@ export default function SystemManagement() {
             await api.put(`/data-entries/${liveEditItem.id}`, { values: liveEditValues });
             showToast('Entry updated successfully.');
             setLiveEditItem(null);
+            setShowOtherDistrictsLive(false);
             handleLiveSearch();
         } catch (err) { setLiveEditError(err.message || 'Update failed'); }
     };
@@ -117,6 +119,12 @@ export default function SystemManagement() {
         const value = liveEditValues[col.slug] !== undefined ? liveEditValues[col.slug] : '';
 
         if (col.slug === 'police_station' && policeStations.length > 0) {
+            const homeDistrictId = liveEditItem?.district?.id || liveFilters.districtId;
+            const homeDistrictPS = policeStations.filter(ps => ps.districtId === homeDistrictId);
+
+            const currentSelectedPS = policeStations.find(ps => ps.name === value);
+            const isExternalSelected = currentSelectedPS && currentSelectedPS.districtId !== homeDistrictId;
+
             const grouped = policeStations.reduce((acc, ps) => {
                 const distName = ps.district?.name || 'Other';
                 if (!acc[distName]) acc[distName] = [];
@@ -124,21 +132,49 @@ export default function SystemManagement() {
                 return acc;
             }, {});
 
+            const handlePSChange = (e) => {
+                const val = e.target.value;
+                if (val === '__SHOW_ALL__') {
+                    setShowOtherDistrictsLive(true);
+                } else {
+                    handleLiveEditValueChange(col.slug, val, col.dataType);
+                }
+            };
+
             return (
                 <select
                     className="form-select"
                     value={value}
-                    onChange={e => handleLiveEditValueChange(col.slug, e.target.value, col.dataType)}
+                    onChange={handlePSChange}
+                    onBlur={() => setTimeout(() => setShowOtherDistrictsLive(false), 250)}
                     required={col.isRequired}
                 >
                     <option value="">Select Police Station...</option>
-                    {Object.entries(grouped).map(([district, pss]) => (
-                        <optgroup key={district} label={district}>
-                            {pss.map(ps => (
+                    {!showOtherDistrictsLive ? (
+                        <>
+                            {homeDistrictPS.map(ps => (
                                 <option key={ps.id} value={ps.name}>{ps.name}</option>
                             ))}
-                        </optgroup>
-                    ))}
+                            {isExternalSelected && (
+                                <option key={currentSelectedPS.id} value={currentSelectedPS.name}>
+                                    📍 {currentSelectedPS.name} ({currentSelectedPS.district?.name})
+                                </option>
+                            )}
+                            <option value="__SHOW_ALL__" style={{ color: 'var(--color-primary)', fontWeight: 600 }}>
+                                ➕ Other District PS
+                            </option>
+                        </>
+                    ) : (
+                        Object.entries(grouped).map(([district, pss]) => (
+                            <optgroup key={district} label={district}>
+                                {pss.map(ps => (
+                                    <option key={ps.id} value={ps.name}>
+                                        {ps.name} {ps.districtId !== homeDistrictId ? `(${ps.district?.name})` : ''}
+                                    </option>
+                                ))}
+                            </optgroup>
+                        ))
+                    )}
                 </select>
             );
         }
@@ -168,16 +204,35 @@ export default function SystemManagement() {
                         <option value="false">No</option>
                     </select>
                 );
-            case 'number':
+            case 'number': {
+                const rawNum = value === '' || value === undefined ? '' : value;
+                const formatIndian = (n) => {
+                    if (n === '' || n === null || n === undefined) return '';
+                    return Number(n).toLocaleString('en-IN');
+                };
                 return (
                     <input
-                        type="number"
                         className="form-input"
-                        value={value}
-                        onChange={e => handleLiveEditValueChange(col.slug, e.target.value, col.dataType)}
+                        type="text"
+                        inputMode="numeric"
+                        value={rawNum === '' ? '' : formatIndian(rawNum)}
+                        onChange={e => {
+                            const stripped = e.target.value.replace(/,/g, '').replace(/[^0-9]/g, '');
+                            const num = stripped === '' ? '' : parseInt(stripped, 10);
+                            handleLiveEditValueChange(col.slug, num, col.dataType);
+                        }}
+                        onKeyDown={e => {
+                            const allowed = ['Backspace', 'Delete', 'Tab', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'];
+                            if (!allowed.includes(e.key) && !/^\d$/.test(e.key)) {
+                                e.preventDefault();
+                            }
+                        }}
+                        placeholder="0"
+                        style={{ textAlign: 'right' }}
                         required={col.isRequired}
                     />
                 );
+            }
             case 'date':
                 return (
                     <input
