@@ -66,6 +66,30 @@ export default function SystemManagement() {
         } catch (err) { console.error(err); }
     };
 
+    const handleLiveAdd = () => {
+        if (!liveFilters.tableId || !liveFilters.courtId || !liveFilters.districtId || !liveFilters.dateFrom) {
+            return showToast('Please select District, Court, Table, and Date From filters to add a new entry.', 'error');
+        }
+        
+        const selectedTable = tables.find(t => t.id === parseInt(liveFilters.tableId));
+        if (!selectedTable) return;
+
+        setLiveEditItem({
+            isNew: true,
+            id: 'new',
+            tableId: selectedTable.id,
+            table: selectedTable,
+            district: districts.find(d => d.id === parseInt(liveFilters.districtId)),
+            court: liveCourts.find(c => c.id === parseInt(liveFilters.courtId)),
+            entryDate: liveFilters.dateFrom,
+        });
+
+        const initValues = {};
+        selectedTable.columns?.forEach(c => initValues[c.slug] = '');
+        setLiveEditValues(initValues);
+        setLiveEditError('');
+    };
+
     const handleLiveSearch = async () => {
         try {
             setLiveLoading(true);
@@ -119,12 +143,22 @@ export default function SystemManagement() {
         }
 
         try {
-            await api.put(`/data-entries/${liveEditItem.id}`, { values: liveEditValues });
-            showToast('Entry updated successfully.');
+            if (liveEditItem.isNew) {
+                await api.post('/data-entries', {
+                    tableId: liveEditItem.tableId,
+                    courtId: liveEditItem.court?.id,
+                    entryDate: liveEditItem.entryDate,
+                    values: liveEditValues
+                });
+                showToast('Entry added successfully.');
+            } else {
+                await api.put(`/data-entries/${liveEditItem.id}`, { values: liveEditValues });
+                showToast('Entry updated successfully.');
+            }
             setLiveEditItem(null);
             setShowOtherDistrictsLive(false);
             handleLiveSearch();
-        } catch (err) { setLiveEditError(err.message || 'Update failed'); }
+        } catch (err) { setLiveEditError(err.message || 'Operation failed'); }
     };
 
     const renderLiveEditField = (col) => {
@@ -988,6 +1022,9 @@ export default function SystemManagement() {
                     <button className="btn btn-secondary btn-sm" onClick={() => { setLiveFilters({ districtId: '', courtId: '', tableId: '', dateFrom: '', dateTo: '' }); setLiveEntries([]); }}>
                         Clear
                     </button>
+                    <button className="btn btn-sm" style={{ background: 'var(--color-success)', color: 'white', border: 'none' }} onClick={handleLiveAdd}>
+                        ➕ Add New Entry
+                    </button>
                 </div>
 
                 {/* Results Table */}
@@ -1054,12 +1091,18 @@ export default function SystemManagement() {
                             zIndex: 999, width: '90%', maxWidth: '580px', maxHeight: '90vh',
                             overflowY: 'auto', boxShadow: 'var(--shadow-xl)'
                         }}>
-                            <h3 className="card-title mb-sm">✏️ Edit Entry</h3>
+                            <h3 className="card-title mb-sm">{liveEditItem.isNew ? '✨ Add New Entry' : '✏️ Edit Entry'}</h3>
                             <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', marginBottom: 'var(--space-md)' }}>
                                 {tableDef.name} &nbsp;·&nbsp; {new Date(liveEditItem.entryDate).toLocaleDateString('en-IN')} &nbsp;·&nbsp; {liveEditItem.court?.name}
                             </div>
                             {liveEditError && <div className="form-error mb-md">{liveEditError}</div>}
                             <form onSubmit={submitLiveEdit}>
+                                {liveEditItem.isNew && (
+                                    <div className="form-group">
+                                        <label className="form-label" style={{ fontSize: '12px' }}>Entry Date <span style={{ color: 'var(--color-danger)' }}>*</span></label>
+                                        <input type="date" className="form-input" value={liveEditItem.entryDate} onChange={e => setLiveEditItem({ ...liveEditItem, entryDate: e.target.value })} required />
+                                    </div>
+                                )}
                                 {tableDef.columns.map(col => (
                                     <div className="form-group" key={col.slug}>
                                         <label className="form-label" style={{ fontSize: '12px' }}>

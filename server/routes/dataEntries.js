@@ -182,7 +182,7 @@ router.post('/submit-day', authenticate, requireRole('naib_court'), async (req, 
 });
 
 // POST /api/v1/data-entries
-router.post('/', authenticate, requireRole('naib_court'), async (req, res, next) => {
+router.post('/', authenticate, requireRole('naib_court', 'developer'), async (req, res, next) => {
     try {
         const { tableId, courtId, entryDate, values } = req.body;
 
@@ -198,22 +198,27 @@ router.post('/', authenticate, requireRole('naib_court'), async (req, res, next)
 
         const reqDateStr = entryDate || todayStr;
 
-        if (reqDateStr !== todayStr && reqDateStr !== yesterdayStr) {
-            return res.status(400).json({ error: 'Entry date must be today or yesterday' });
-        }
+        if (req.user.role !== 'developer') {
+            if (reqDateStr !== todayStr && reqDateStr !== yesterdayStr) {
+                return res.status(400).json({ error: 'Entry date must be today or yesterday' });
+            }
 
-        if (await checkCourtDateLocked(courtId, reqDateStr)) {
-            return res.status(403).json({ error: 'Data entry for this date has been finalized and cannot be modified.' });
+            if (await checkCourtDateLocked(courtId, reqDateStr)) {
+                return res.status(403).json({ error: 'Data entry for this date has been finalized and cannot be modified.' });
+            }
         }
 
         const entryDateObj = new Date(reqDateStr); // Will be UTC midnight
 
-        // Verify court is in naib's district
+        // Verify court
+        const courtWhere = { id: parseInt(courtId), deletedAt: null };
+        if (req.user.role !== 'developer') courtWhere.districtId = req.user.districtId;
+
         const court = await prisma.court.findFirst({
-            where: { id: parseInt(courtId), districtId: req.user.districtId, deletedAt: null },
+            where: courtWhere,
             include: { magistrate: true },
         });
-        if (!court) return res.status(404).json({ error: 'Court not found in your district' });
+        if (!court) return res.status(404).json({ error: 'Court not found or not in your district' });
 
         // Get table and columns for validation
         const table = await prisma.dataEntryTable.findFirst({
@@ -248,7 +253,7 @@ router.post('/', authenticate, requireRole('naib_court'), async (req, res, next)
         const entry = await prisma.dataEntry.create({
             data: {
                 tableId: parseInt(tableId),
-                districtId: req.user.districtId,
+                districtId: court.districtId,
                 courtId: parseInt(courtId),
                 magistrateId: court.magistrateId,
                 entryDate: entryDateObj,
