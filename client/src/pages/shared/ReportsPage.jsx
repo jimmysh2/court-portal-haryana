@@ -26,6 +26,7 @@ export default function ReportsPage() {
     // Tables selection
     const [tables, setTables] = useState([]);
     const [selectedTables, setSelectedTables] = useState([]); 
+    const [includeUnfinalized, setIncludeUnfinalized] = useState(user?.role === 'developer'); 
 
     const [reportData, setReportData] = useState(null);
     const [pendingData, setPendingData] = useState(null);
@@ -180,7 +181,8 @@ export default function ReportsPage() {
                 districtId: isStateLevel ? selectedDistrict : user.districtId,
                 dateFrom,
                 dateTo,
-                tableIds: selectedTables
+                tableIds: selectedTables,
+                includeUnfinalized
             };
 
             const data = await api.post('/reports/generate', payload);
@@ -534,6 +536,23 @@ export default function ReportsPage() {
                                 </label>
                             ))}
                         </div>
+                    </div>
+                )}
+
+                {mode !== 'pending-entries' && ['developer', 'state_admin', 'district_admin'].includes(user.role) && (
+                    <div className="form-group mt-md" style={{ background: 'rgba(245, 158, 11, 0.05)', padding: '12px', borderRadius: 'var(--radius-md)', border: '1px solid rgba(245, 158, 11, 0.2)' }}>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '14px', fontWeight: 600, color: 'var(--color-warning)' }}>
+                            <input 
+                                type="checkbox" 
+                                checked={includeUnfinalized} 
+                                onChange={e => setIncludeUnfinalized(e.target.checked)}
+                                style={{ width: '18px', height: '18px' }}
+                            />
+                            {t('includeUnfinalized')}
+                        </label>
+                        <p style={{ margin: '4px 0 0 28px', fontSize: '11px', color: 'var(--color-text-secondary)' }}>
+                            {t('unfinalizedWarning')}
+                        </p>
                     </div>
                 )}
 
