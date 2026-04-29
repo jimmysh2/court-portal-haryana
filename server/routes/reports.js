@@ -345,7 +345,11 @@ router.post('/generate', authenticate, async (req, res, next) => {
         });
 
         // Filter out entries whose (courtId, date) are not in validSet
-        const filteredEntries = entries.filter(e => validSet.has(`${e.courtId}_${e.entryDate.toISOString().split('T')[0]}`));
+        // DEVELOPER BYPASS: If includeUnfinalized is true or user is developer, skip filtering
+        const includeUnfinalized = req.body.includeUnfinalized || req.user.role === 'developer';
+        const filteredEntries = includeUnfinalized 
+            ? entries 
+            : entries.filter(e => validSet.has(`${e.courtId}_${e.entryDate.toISOString().split('T')[0]}`));
 
         // Group the valid entries by table so the frontend can easily iterate over each table checked
         const reportByTable = {};
